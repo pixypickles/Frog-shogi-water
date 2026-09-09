@@ -105,11 +105,18 @@ function freshState(opts=setupChoice){
   return{schemaVersion:220,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,handsMode,turn:'angel',hands:emptyHands(),winner:null,lastMessage:'天使軍の手番'}
 }
 function normalizeState(s){
-  if(!s||!s.board||s.schemaVersion!==219)return null;
+  // v2.2.0 では freshState が schemaVersion:220 なのに、
+  // 復帰時は 219 だけを許可していたため、格闘後に保存対局を無効扱いして
+  // 対局設定メニューへ戻ってしまっていた。219/220 を受け入れて 220 へ統一する。
+  if(!s||!s.board||![219,220].includes(s.schemaVersion))return null;
+  s.schemaVersion=220;
   s.stage=s.stage||((s.board.length===7)?'compact':'standard');
   s.difficulty=s.difficulty||'normal';
   s.boardSize=s.board.length;
   s.hands=s.hands||emptyHands();
+  s.handsMode=s.handsMode||((s.stage==='standard')?'on':'off');
+  s.turn=s.turn||'angel';
+  s.winner=s.winner||null;
   return s;
 }
 function save(){localStorage.setItem('waterFrogShogiState',JSON.stringify(state))}
