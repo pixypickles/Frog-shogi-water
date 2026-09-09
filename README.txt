@@ -1,3 +1,8 @@
+v2.1.1 修正
+- GitHub Pages の入口 index.html を水中蛙将棋に変更
+- 水中格闘は water-fighter.html に移動
+- 駒同士の戦闘時のみ water-fighter.html を呼び出し、終了後 index.html の将棋盤へ戻る
+
 水中格闘2 Prototype v1.4
 起動：index.html
 
