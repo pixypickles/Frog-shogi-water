@@ -3407,7 +3407,6 @@
 
   function hasBackBackCommand(f, windowMs=820){
     const back=f.face>0?'left':'right';
-    if(tryV2CompatSpecial(f,kind,forward,back)) return true;
     const diagUp=f.face>0?'upLeft':'upRight';
     const diagDown=f.face>0?'downLeft':'downRight';
     const valid=new Set([back,diagUp,diagDown]);
@@ -4073,59 +4072,71 @@
     f.face=oldFace; f.specialType='compatBurst'; f.specialT=.38; f.attackT=.38;
     compatLabel(label); return true;
   }
+  function compatHeldDir(f,dir){
+    if(!f || !f.isPlayer) return false;
+    const x=input.x||0, y=input.y||0;
+    if(dir==='up') return y<-.32;
+    if(dir==='down') return y>.32;
+    if(dir==='forward') return f.face>0 ? x>.32 : x<-.32;
+    if(dir==='back') return f.face>0 ? x<-.32 : x>.32;
+    return false;
+  }
+  function compatDir(f,dir,commandDir,windowMs=520){
+    return compatHeldDir(f,dir) || hasCommand([commandDir],windowMs);
+  }
   function tryV2CompatSpecial(f,kind,forward,back){
     if(!f)return false;
     if(f.type==='mob'){
-      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'カエル跳びアッパー!');}
-      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'バブルショット!');}
-      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'トリプルキック!');}
+      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'カエル跳びアッパー!');}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'バブルショット!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'トリプルキック!');}
     }
     if(f.type==='jihal'){
-      if(kind==='punch'&&hasCommand(['down'],520)){clearCommand();return compatBurst(f,'スパークバースト!');}
-      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ボルトショット!');}
-      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'ライトニングダッシュ!');}
-      if(kind==='kick'&&hasCommand([back],520)){clearCommand();return compatRush(f,'サンダーチャージ!');}
+      if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return compatBurst(f,'スパークバースト!');}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ボルトショット!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'ライトニングダッシュ!');}
+      if(kind==='kick'&&compatDir(f,'back',back,520)){clearCommand();return compatRush(f,'サンダーチャージ!');}
     }
     if(f.type==='remiel'){
-      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'フロストショット!');}
-      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'ミラージュキック!');}
-      if(kind==='guard'&&hasCommand(['up'],520)){f.hp=Math.min(100,f.hp+4);if(f.isPlayer)updateHud();compatLabel('ミラージュ!');clearCommand();return true;}
-      if(kind==='guard'&&hasCommand([back],520)){f.counterReady=true;f.counterT=.7;compatLabel('ミラージュカウンター!');clearCommand();return true;}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'フロストショット!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'ミラージュキック!');}
+      if(kind==='guard'&&compatDir(f,'up','up',520)){f.hp=Math.min(100,f.hp+4);if(f.isPlayer)updateHud();compatLabel('ミラージュ!');clearCommand();return true;}
+      if(kind==='guard'&&compatDir(f,'back',back,520)){f.counterReady=true;f.counterT=.7;compatLabel('ミラージュカウンター!');clearCommand();return true;}
     }
     if(f.type==='seraphiel'){
       if(kind==='punch'&&hasCommand(['down',forward],720)){clearCommand();return compatBurst(f,'セラフィックレイ!');}
-      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'セラフィックアッパー!');}
-      if(kind==='punch'&&hasCommand([back],520)){clearCommand();return compatShot(f,'セラフィックショット!');}
-      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'セラフィックキック!');}
+      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'セラフィックアッパー!');}
+      if(kind==='punch'&&compatDir(f,'back',back,520)){clearCommand();return compatShot(f,'セラフィックショット!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'セラフィックキック!');}
     }
     if(f.type==='sariel'){
-      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatShot(f,'ルナ・スラッシュ!');}
-      if(kind==='kick'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'ムーンサルトキック!');}
-      if(kind==='guard'&&hasCommand([forward],520)){f.counterReady=true;f.counterT=.55;compatLabel('イーブルアイ!');clearCommand();return true;}
-      if(kind==='guard'&&hasCommand([back],520)){f.hp=Math.min(100,f.hp+2);if(f.isPlayer)updateHud();compatLabel('ブラッドムーン!');clearCommand();return true;}
+      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatShot(f,'ルナ・スラッシュ!');}
+      if(kind==='kick'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'ムーンサルトキック!');}
+      if(kind==='guard'&&compatDir(f,'forward',forward,520)){f.counterReady=true;f.counterT=.55;compatLabel('イーブルアイ!');clearCommand();return true;}
+      if(kind==='guard'&&compatDir(f,'back',back,520)){f.hp=Math.min(100,f.hp+2);if(f.isPlayer)updateHud();compatLabel('ブラッドムーン!');clearCommand();return true;}
     }
     if(f.type==='kokabiel'){
-      if(kind==='punch'&&hasCommand(['down'],520)){clearCommand();return compatBurst(f,'メテオレイン!');}
-      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'グラビティボール!');}
-      if(kind==='kick'&&hasCommand(['down'],520)){clearCommand();return compatRush(f,'グラビティダイブ!');}
-      if(kind==='guard'&&hasCommand([back],520)){f.counterReady=true;f.counterT=.75;compatLabel('グラビティゾーン!');clearCommand();return true;}
+      if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return compatBurst(f,'メテオレイン!');}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'グラビティボール!');}
+      if(kind==='kick'&&compatDir(f,'down','down',520)){clearCommand();return compatRush(f,'グラビティダイブ!');}
+      if(kind==='guard'&&compatDir(f,'back',back,520)){f.counterReady=true;f.counterT=.75;compatLabel('グラビティゾーン!');clearCommand();return true;}
     }
     if(f.type==='flauros'){
-      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'ヘルフレイム!');}
-      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'フレイムクロー!');}
-      if(kind==='kick'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'インフェルノクロー!');}
-      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'レオパードラッシュ!');}
+      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'ヘルフレイム!');}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'フレイムクロー!');}
+      if(kind==='kick'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'インフェルノクロー!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'レオパードラッシュ!');}
     }
     if(f.type==='samael'){
-      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ポイズンゲート!');}
-      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'デッドリー・アクア!');}
-      if(kind==='tongue'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ヴェノムタン!');}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ポイズンゲート!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'デッドリー・アクア!');}
+      if(kind==='tongue'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ヴェノムタン!');}
     }
     if(f.type==='satanael'){
-      if(kind==='punch'&&hasCommand(['down'],520)){clearCommand();return compatBurst(f,'アビスウェーブ!');}
-      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'サタナエルレイ!');}
-      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ヘルフレア!');}
-      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'ダークラッシュ!');}
+      if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return compatBurst(f,'アビスウェーブ!');}
+      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'サタナエルレイ!');}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ヘルフレア!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'ダークラッシュ!');}
     }
     return false;
   }
@@ -4134,6 +4145,7 @@
     if(!f) return false;
     const forward=f.face>0?'right':'left';
     const back=f.face>0?'left':'right';
+    if(tryV2CompatSpecial(f,kind,forward,back)) return true;
     if((f.type==='pascal'||f.type==='malphas') && kind==='punch'){
       clearCommand();
       return specialEngineerMiniVortex(f);
