@@ -41,3 +41,13 @@ button,a{font:inherit}
 .formation-slot select{min-width:0;width:100%;border:1px solid rgba(255,255,255,.25);border-radius:8px;background:#086578;color:#fff;padding:6px 4px;font-size:11px;font-weight:800}
 .stage-grid{grid-template-columns:repeat(4,1fr)}
 @media(max-height:620px) and (orientation:landscape){.formation-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}.formation-slot{padding:4px}.formation-slot label,.formation-slot select{font-size:9px}.formation-slot select{padding:4px 2px}.formation-help{font-size:8px;margin-bottom:4px}}
+
+/* v2.2.0 terrain squares */
+.cell.terrain-water{--cell:#b7e7e7;--cell2:#8dcfd5}
+.cell.terrain-shallow{--cell:#d7edd8;--cell2:#afd9c4}
+.cell.terrain-lotus{--cell:#b9df9f;--cell2:#83bf76}
+.cell.terrain-current-water{--cell:#8bdbe8;--cell2:#50b7d0}
+.cell.terrain-current-shallow{--cell:#b8e7c6;--cell2:#76c7ae}
+.cell.terrain-current-lotus{--cell:#a5d786;--cell2:#67b86b}
+.cell.terrain-current-water::before,.cell.terrain-current-shallow::before,.cell.terrain-current-lotus::before{content:'››';position:absolute;right:3px;bottom:1px;font-size:clamp(8px,1.6vmin,14px);font-weight:1000;color:rgba(3,70,85,.42);letter-spacing:-2px;pointer-events:none}
+.cell.terrain-lotus::before,.cell.terrain-current-lotus::after{content:'●';position:absolute;left:4px;top:1px;font-size:clamp(8px,1.3vmin,12px);color:rgba(33,110,48,.42);pointer-events:none}

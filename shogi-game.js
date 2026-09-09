@@ -15,7 +15,8 @@ const STAGES={
   channel:{id:'channel',label:'狭水路',size:7,promoDepth:2,shape:'channel'},
   heroes:{id:'heroes',label:'七英雄戦',size:7,promoDepth:2,special:'heroes'},
   rookbishop:{id:'rookbishop',label:'飛角決戦',size:5,promoDepth:1,special:'rookbishop',annihilation:true},
-  pawnwar:{id:'pawnwar',label:'歩兵乱戦',size:7,promoDepth:2,special:'pawnwar',annihilation:true}
+  pawnwar:{id:'pawnwar',label:'歩兵乱戦',size:7,promoDepth:2,special:'pawnwar',annihilation:true},
+  temple:{id:'temple',label:'水上神殿',size:7,promoDepth:2,terrainMap:true}
 };
 const DIFFICULTIES={
   easy:{id:'easy',label:'やさしい',think:700,pool:12,captureMul:1.55,promoBonus:30,noise:70},
@@ -55,7 +56,7 @@ const info={portrait:document.getElementById('piecePortrait'),name:document.getE
 const promoModal=document.getElementById('promotionModal'),promoText=document.getElementById('promotionText');
 const promoteStandard=document.getElementById('promoteStandard'),promoteSpecial=document.getElementById('promoteSpecial'),promoteNo=document.getElementById('promoteNo');
 const gameOverModal=document.getElementById('gameOverModal');
-const battleLoading=document.getElementById('battleLoading'),loadingAttacker=document.getElementById('loadingAttacker'),loadingDefender=document.getElementById('loadingDefender');
+const battleLoading=document.getElementById('battleLoading'),loadingAttacker=document.getElementById('loadingAttacker'),loadingDefender=document.getElementById('loadingDefender'),loadingTerrain=document.getElementById('loadingTerrain');
 const boardResultEffect=document.getElementById('boardResultEffect'),boardResultKicker=document.getElementById('boardResultKicker'),boardResultMain=document.getElementById('boardResultMain'),boardResultSub=document.getElementById('boardResultSub');
 const startModal=document.getElementById('startModal'),startGameBtn=document.getElementById('startGameBtn'),modeSummary=document.getElementById('modeSummary');
 const formationBlock=document.getElementById('formationBlock'),formationGrid=document.getElementById('formationGrid'),formationHelp=document.getElementById('formationHelp');
@@ -83,7 +84,7 @@ function initialBoard(stageId='standard') {
   }else if(stageId==='pawnwar'){
     const af=formationFor('pawnwar','angel'),df=formationFor('pawnwar','devil');
     for(let x=0;x<n;x++){b[1][x]=mk('devil','P',false,null,df[x]);b[n-2][x]=mk('angel','P',false,null,af[x])}
-  }else if(stageId==='compact'||stageId==='current'||stageId==='channel'){
+  }else if(stageId==='compact'||stageId==='current'||stageId==='channel'||stageId==='temple'){
     const back=['L','N','S','K','G','B','R'];
     back.forEach((r,x)=>b[0][x]=mk('devil',r));
     b[1][Math.floor(n/2)]=mk('devil','P');
@@ -101,7 +102,7 @@ function emptyHands(){return{angel:{R:0,B:0,G:0,S:0,N:0,L:0,P:0},devil:{R:0,B:0,
 function freshState(opts=setupChoice){
   const stage=opts.stage||'standard',difficulty=opts.difficulty||'normal';
   const handsMode=stage==='standard'?'on':(opts.hands||'off');
-  return{schemaVersion:219,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,handsMode,turn:'angel',hands:emptyHands(),winner:null,lastMessage:'天使軍の手番'}
+  return{schemaVersion:220,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,handsMode,turn:'angel',hands:emptyHands(),winner:null,lastMessage:'天使軍の手番'}
 }
 function normalizeState(s){
   if(!s||!s.board||s.schemaVersion!==219)return null;
@@ -127,6 +128,26 @@ function updateInfo(piece){
   const label=piece.promoted?(PROMO_LABEL[piece.role]||ROLE_LABEL[piece.role]):ROLE_LABEL[piece.role];
   const form=piece.promoted?(piece.promotionForm==='special'?'・特殊成':'・通常成'):'';
   info.role.textContent=`${TEAMS[piece.team].label} / ${label}（${ROLE_NAME[piece.role]}${form}）`;info.skills.innerHTML=c.skills.map(s=>`<div class="skill">${s}</div>`).join('');
+}
+const TERRAIN={
+  water:{label:'水マス',cls:'terrain-water',page:'water-fighter.html',hazard:null},
+  shallow:{label:'浅瀬マス',cls:'terrain-shallow',page:'shallow-fighter.html',hazard:null},
+  lotus:{label:'蓮の葉マス',cls:'terrain-lotus',page:'lotus-fighter.html',hazard:null},
+  waterCurrent:{label:'急流水',cls:'terrain-current-water',page:'water-fighter.html',hazard:'current'},
+  shallowCurrent:{label:'急流浅瀬',cls:'terrain-current-shallow',page:'shallow-fighter.html',hazard:'shallow-current'},
+  lotusCurrent:{label:'流れる蓮',cls:'terrain-current-lotus',page:'lotus-fighter.html',hazard:'lotus-current'}
+};
+function terrainAt(x,y){
+  if(state?.stage==='current')return TERRAIN.waterCurrent;
+  if(state?.stage!=='temple')return TERRAIN.water;
+  // 水上神殿: 外周は水、中央帯は浅瀬、対角に蓮。急流は右寄りの縦帯。
+  const n=boardSize();
+  if(x===n-2 && (y===2||y===3||y===4))return TERRAIN.shallowCurrent;
+  if((x===1&&y===1)||(x===3&&y===1)||(x===5&&y===1)||(x===1&&y===5)||(x===3&&y===5)||(x===5&&y===5))return TERRAIN.lotus;
+  if((x===2&&y===2)||(x===4&&y===2)||(x===2&&y===4)||(x===4&&y===4))return TERRAIN.lotusCurrent;
+  if(y===3)return TERRAIN.shallow;
+  if(x===0||x===n-1||y===0||y===n-1)return TERRAIN.waterCurrent;
+  return TERRAIN.water;
 }
 function isBlocked(x,y){if(state?.stage!=='channel')return false;const n=boardSize();return (y===2||y===4)&&(x<2||x>n-3)}
 function inBounds(x,y){const n=boardSize();return x>=0&&x<n&&y>=0&&y<n&&!isBlocked(x,y)}
@@ -162,7 +183,7 @@ function render(){
   boardEl.innerHTML='';
   const n=boardSize(),d=stageConfig().promoDepth;boardEl.style.setProperty('--board-size',n);boardEl.classList.toggle('compact-stage',boardSize()<=7);boardEl.setAttribute('aria-label',`${n}×${n}の水中蛙将棋盤`);
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-    const cell=document.createElement('button');cell.className='cell';if(isBlocked(x,y)){cell.classList.add('blocked');cell.disabled=true;boardEl.appendChild(cell);continue;}if(y<d||y>=n-d)cell.classList.add('promo-zone');if(x===n-1)cell.classList.add('last-col');if(y===n-1)cell.classList.add('last-row');cell.dataset.x=x;cell.dataset.y=y;
+    const cell=document.createElement('button');const terr=terrainAt(x,y);cell.className='cell '+terr.cls;cell.title=terr.label;if(isBlocked(x,y)){cell.classList.add('blocked');cell.disabled=true;boardEl.appendChild(cell);continue;}if(y<d||y>=n-d)cell.classList.add('promo-zone');if(x===n-1)cell.classList.add('last-col');if(y===n-1)cell.classList.add('last-row');cell.dataset.x=x;cell.dataset.y=y;
     if(selected&&selected.x===x&&selected.y===y)cell.classList.add('selected');const l=legal.find(m=>m.x===x&&m.y===y);if(l)cell.classList.add(l.drop?'drop':l.capture?'capture':'legal');
     const p=state.board[y][x];if(p){const wrap=document.createElement('div');wrap.className=`piece ${p.team}`;wrap.innerHTML=tokenHTML(p);cell.appendChild(wrap)}
     cell.addEventListener('click',()=>onCell(x,y));boardEl.appendChild(cell);
@@ -210,12 +231,13 @@ promoteStandard.onclick=()=>resolvePromotion('standard');promoteSpecial.onclick=
 
 function finishTurn(msg){notice.hidden=false;notice.textContent=msg;setTimeout(()=>{notice.hidden=true},1400);state.turn=other(state.turn);clearSelection();cpuBusy=false;render()}
 function launchBattle(m){
-  const attacker=m.attacker,defender=m.defender;
-  loadingAttacker.textContent=charOf(attacker).name;loadingDefender.textContent=charOf(defender).name;battleLoading.hidden=false;
+  const attacker=m.attacker,defender=m.defender,terr=terrainAt(m.tx,m.ty);
+  loadingAttacker.textContent=charOf(attacker).name;loadingDefender.textContent=charOf(defender).name;
+  if(loadingTerrain)loadingTerrain.textContent=terr.label+'で格闘';battleLoading.hidden=false;
   sessionStorage.removeItem('mixBattleResult');sessionStorage.setItem('frogShogiPendingMove',JSON.stringify(m));
-  sessionStorage.setItem('mixBattle',JSON.stringify({mode:'shogi',source:'water-frog-shogi',playerRole:attacker.team==='angel'?'attacker':'defender',attackerTeam:attacker.team,defenderTeam:defender.team,attacker:'shogi-attacker',defender:'shogi-defender',attackerType:fighterType(attacker),defenderType:fighterType(defender),attackerHp:100,defenderHp:33,battleHazard:stageConfig().battleHazard||null,returnUrl:'index.html'}));
+  sessionStorage.setItem('mixBattle',JSON.stringify({mode:'shogi',source:'water-frog-shogi',playerRole:attacker.team==='angel'?'attacker':'defender',attackerTeam:attacker.team,defenderTeam:defender.team,attacker:'shogi-attacker',defender:'shogi-defender',attackerType:fighterType(attacker),defenderType:fighterType(defender),attackerHp:100,defenderHp:33,battleHazard:terr.hazard||null,battleTerrain:terr.label,returnUrl:'index.html'}));
   save();
-  setTimeout(()=>{location.href='water-fighter.html?mix=1&battle=1&shogi=1'},700);
+  setTimeout(()=>{location.href=terr.page+'?mix=1&battle=1&shogi=1'},700);
 }
 
 function showBoardBattleEffect(attackerWon,attacker,defender){

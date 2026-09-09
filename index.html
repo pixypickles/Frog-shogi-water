@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#087d91" />
-  <title>水中蛙将棋 Prototype v2.1.9</title>
-  <link rel="stylesheet" href="shogi-style.css?v=0.1.9" />
+  <title>水中蛙将棋 Prototype v2.2.0</title>
+  <link rel="stylesheet" href="shogi-style.css?v=0.2.0" />
 </head>
 <body>
   <div id="shogiPortraitOverlay" class="shogi-portrait-overlay" aria-live="polite">
@@ -72,16 +72,16 @@
         <section class="status-panel">
           <strong>遊び方</strong>
           <span>自分の駒をタップ → 移動先をタップ</span>
-          <span>敵駒へ進むと、その2人で水中格闘</span>
+          <span>敵駒へ進むと、そのマスの地形で格闘</span>
           <span>赤枠：格闘が発生するマス</span>
-          <span>緑点：移動できるマス</span>
+          <span>緑点：移動できるマス</span><span>水・浅瀬・蓮で格闘ステージが変化</span>
         </section>
       </aside>
     </section>
 
     <div id="battleLoading" class="battle-loading" hidden>
       <div class="battle-loading-card">
-        <div class="battle-loading-title">水中格闘</div>
+        <div class="battle-loading-title" id="loadingTerrain">地形格闘</div>
         <div class="versus-line"><span>攻撃側</span><strong id="loadingAttacker">---</strong></div>
         <div class="versus-vs">VS</div>
         <div class="versus-line defender"><span>防御側</span><strong id="loadingDefender">---</strong></div>
@@ -113,6 +113,7 @@
             <button class="choice-btn" data-stage="heroes"><strong>七英雄戦</strong><small>7×7・7人を自由配役</small></button>
             <button class="choice-btn" data-stage="rookbishop"><strong>飛角決戦</strong><small>5×5・飛車と角だけの殲滅戦</small></button>
             <button class="choice-btn" data-stage="pawnwar"><strong>歩兵乱戦</strong><small>7×7・全員が歩、キャラは別々</small></button>
+            <button class="choice-btn" data-stage="temple"><strong>水上神殿</strong><small>7×7・水／浅瀬／蓮／急流が混在</small></button>
           </div>
         </div>
         <div class="setup-block">
@@ -154,6 +155,6 @@
       </div>
     </div>
   </main>
-  <script src="shogi-game.js?v=0.1.9"></script>
+  <script src="shogi-game.js?v=0.2.0"></script>
 </body>
 </html>
