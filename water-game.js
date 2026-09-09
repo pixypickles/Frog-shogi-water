@@ -56,6 +56,7 @@
   const mixPracticeParams=new URLSearchParams(location.search);
   const mixPracticeMode=mixPracticeParams.get('mixpractice')==='1';
   const mixPracticeFighter=mixPracticeParams.get('fighter')||'green';
+  const mixPracticeHazard=mixPracticeParams.get('hazard')||null;
   let mixBattleContext=null;
   try{ if(mixBattleMode) mixBattleContext=JSON.parse(sessionStorage.getItem('mixBattle')||'null'); }catch(e){}
 
@@ -7040,7 +7041,7 @@ function drawBackground(dt){
       }
       enemyAI(dt);
       // 水中蛙将棋『急流回廊』: 格闘中も全員が画面左→右へ流され続ける。
-      if(mixBattleMode&&mixBattleContext?.battleHazard==='current'){const flow=150;player.vx+=flow*dt;enemy.vx+=flow*dt;}
+      if(((mixBattleMode&&mixBattleContext?.battleHazard==='current')||(mixPracticeMode&&mixPracticeHazard==='current'))){const flow=150;player.vx+=flow*dt;enemy.vx+=flow*dt;}
       player.update(dt);enemy.update(dt);
       updateNewSpecialMoves(player,dt);
       updateNewSpecialMoves(enemy,dt);
@@ -8983,7 +8984,7 @@ function drawBackground(dt){
   // MIXタイトルの「地上/水中バトル練習」から直接開始。
   if(mixPracticeMode){
     setTimeout(()=>{
-      selectedFighter=['green','blue','yellow','orange'].includes(mixPracticeFighter)?mixPracticeFighter:'green';
+      selectedFighter=mixTypeFor(mixPracticeFighter)||'green';
       show('game');resize();startPractice();
       if(practiceExitButton){
         practiceExitButton.hidden=false;

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#087d91" />
-  <title>水中蛙将棋 Prototype v2.2.0</title>
+  <title>水中蛙将棋 Prototype v2.2.3</title>
   <link rel="stylesheet" href="shogi-style.css?v=0.2.1" />
 </head>
 <body>
@@ -22,7 +22,7 @@
       </div>
       <div class="top-actions">
         <button id="resetBtn" class="soft-btn">最初から</button>
-        <a class="soft-btn practice-link" href="water-fighter.html?mixpractice=1&fighter=green">格闘操作練習</a>
+        <button id="practiceSelectBtn" class="soft-btn practice-link" type="button">戦闘練習</button>
       </div>
     </header>
 
@@ -133,6 +133,43 @@
       </div>
     </div>
 
+
+    <div id="practiceSelectModal" class="modal practice-select-modal" hidden>
+      <div class="modal-card practice-select-card">
+        <h2>戦闘練習</h2>
+        <p>確認したいキャラと戦場を選んで、そのまま練習できます。</p>
+        <div class="practice-select-layout">
+          <div class="setup-block">
+            <div class="setup-label">キャラ</div>
+            <select id="practiceFighterSelect" class="practice-select-control">
+              <optgroup label="天使側">
+                <option value="seraphiel">セラフィエルさん</option><option value="jihal">ジィハルさん</option><option value="yellow">ラファエルさん</option><option value="orange">ウリエルさん</option><option value="green" selected>ミカエルさん</option><option value="blue">ガブリエルさん</option><option value="remiel">レミエルさん</option><option value="kawazu">カワズさん</option>
+              </optgroup>
+              <optgroup label="悪魔側">
+                <option value="satanael">サタナエルさん</option><option value="flauros">フラウロスさん</option><option value="beelzebub">ベルゼブブさん</option><option value="samael">サマエルさん</option><option value="black">ルシファーさん</option><option value="purple">リリスさん</option><option value="sariel">サリエルさん</option><option value="kokabiel">コカビエルさん</option>
+              </optgroup>
+              <optgroup label="共通"><option value="mob">モブさん</option></optgroup>
+            </select>
+          </div>
+          <div class="setup-block">
+            <div class="setup-label">戦場</div>
+            <div id="practiceTerrainGrid" class="choice-grid practice-terrain-grid">
+              <button class="choice-btn selected" type="button" data-practice-page="water-fighter.html" data-practice-hazard=""><strong>水中</strong><small>通常の水中格闘</small></button>
+              <button class="choice-btn" type="button" data-practice-page="shallow-fighter.html" data-practice-hazard=""><strong>浅瀬</strong><small>少しだけ水のある地上戦</small></button>
+              <button class="choice-btn" type="button" data-practice-page="lotus-fighter.html" data-practice-hazard=""><strong>蓮の葉</strong><small>横長・ジャンプ主体</small></button>
+              <button class="choice-btn" type="button" data-practice-page="water-fighter.html" data-practice-hazard="current"><strong>急流水中</strong><small>常に右へ流される</small></button>
+              <button class="choice-btn" type="button" data-practice-page="shallow-fighter.html" data-practice-hazard="shallow-current"><strong>急流浅瀬</strong><small>水にいる時だけ流される</small></button>
+              <button class="choice-btn" type="button" data-practice-page="lotus-fighter.html" data-practice-hazard="lotus-current"><strong>流れる蓮</strong><small>蓮の葉ごと右へ流れる</small></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="practiceSelectCancel" class="soft-btn" type="button">戻る</button>
+          <button id="practiceStartBtn" class="primary-btn" type="button">この条件で練習</button>
+        </div>
+      </div>
+    </div>
+
     <div id="promotionModal" class="modal" hidden>
       <div class="modal-card">
         <h2>成りますか？</h2>
@@ -155,6 +192,29 @@
       </div>
     </div>
   </main>
-  <script src="shogi-game.js?v=0.2.1"></script>
+  <script src="shogi-game.js?v=0.2.3"></script>
+  <script>
+  (()=>{
+    const openBtn=document.getElementById('practiceSelectBtn');
+    const modal=document.getElementById('practiceSelectModal');
+    const cancel=document.getElementById('practiceSelectCancel');
+    const start=document.getElementById('practiceStartBtn');
+    const fighter=document.getElementById('practiceFighterSelect');
+    const terrainButtons=[...document.querySelectorAll('#practiceTerrainGrid [data-practice-page]')];
+    let chosen=terrainButtons[0];
+    const close=()=>{modal.hidden=true};
+    openBtn?.addEventListener('click',()=>{modal.hidden=false});
+    cancel?.addEventListener('click',close);
+    modal?.addEventListener('click',e=>{if(e.target===modal)close()});
+    terrainButtons.forEach(btn=>btn.addEventListener('click',()=>{terrainButtons.forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');chosen=btn;}));
+    start?.addEventListener('click',()=>{
+      const page=chosen?.dataset.practicePage||'water-fighter.html';
+      const hazard=chosen?.dataset.practiceHazard||'';
+      const q=new URLSearchParams({mixpractice:'1',fighter:fighter.value});
+      if(hazard)q.set('hazard',hazard);
+      location.href=page+'?'+q.toString();
+    });
+  })();
+  </script>
 </body>
 </html>

@@ -48,6 +48,7 @@
   const mixPracticeParams=new URLSearchParams(location.search);
   const mixPracticeMode=mixPracticeParams.get('mixpractice')==='1';
   const mixPracticeFighter=mixPracticeParams.get('fighter')||'green';
+  const mixPracticeHazard=mixPracticeParams.get('hazard')||null;
   let mixBattleContext=null;
   try{ if(mixBattleMode) mixBattleContext=JSON.parse(sessionStorage.getItem('mixBattle')||'null'); }catch(e){}
 
@@ -578,7 +579,7 @@
   }
 
   if(practiceExitButton){
-    if(mixPracticeMode) practiceExitButton.textContent='MIXタイトルへ戻る';
+    if(mixPracticeMode) practiceExitButton.textContent='水中蛙将棋へ戻る';
     practiceExitButton.addEventListener('pointerup',(e)=>{
       e.preventDefault();
       e.stopPropagation();
@@ -5243,7 +5244,7 @@ function drawBackground(dt){
       }
       enemyAI(dt);
       player.update(dt);enemy.update(dt);
-      if(mixBattleMode&&mixBattleContext?.battleHazard==='lotus-current'){
+      if(((mixBattleMode&&mixBattleContext?.battleHazard==='lotus-current')||(mixPracticeMode&&mixPracticeHazard==='lotus-current'))){
         // 流れる蓮: 空中では流されず、着地中だけ蓮と一緒に右へ運ばれる。
         const flow=56; const floor=landFloorY();
         for(const f of [player,enemy]){if(f && f.y>floor-28 && Math.abs(f.vy)<90){f.x+=flow*dt;}}
@@ -5857,7 +5858,7 @@ function drawBackground(dt){
       if(comboTimer>0){comboTimer-=dt;if(comboTimer<=0){comboHits=0;comboEl.textContent=''}}
     } else {
       player.update(dt);enemy.update(dt);
-      if(mixBattleMode&&mixBattleContext?.battleHazard==='lotus-current'){
+      if(((mixBattleMode&&mixBattleContext?.battleHazard==='lotus-current')||(mixPracticeMode&&mixPracticeHazard==='lotus-current'))){
         // 流れる蓮: 空中では流されず、着地中だけ蓮と一緒に右へ運ばれる。
         const flow=56; const floor=landFloorY();
         for(const f of [player,enemy]){if(f && f.y>floor-28 && Math.abs(f.vy)<90){f.x+=flow*dt;}}
@@ -6446,11 +6447,11 @@ toxicWaters.forEach(v=>{
   // MIXタイトルの「地上/水中バトル練習」から直接開始。
   if(mixPracticeMode){
     setTimeout(()=>{
-      selectedFighter=['green','blue','yellow','orange'].includes(mixPracticeFighter)?mixPracticeFighter:'green';
+      selectedFighter=mixTypeFor(mixPracticeFighter)||'green';
       show('game');resize();startPractice();
       if(practiceExitButton){
         practiceExitButton.hidden=false;
-        practiceExitButton.textContent='MIXタイトルへ戻る';
+        practiceExitButton.textContent='水中蛙将棋へ戻る';
       }
     },80);
   }
