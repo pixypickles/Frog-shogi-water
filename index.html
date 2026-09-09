@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#087d91" />
-  <title>水中蛙将棋 Prototype v2.1.8</title>
-  <link rel="stylesheet" href="shogi-style.css?v=0.1.7" />
+  <title>水中蛙将棋 Prototype v2.1.9</title>
+  <link rel="stylesheet" href="shogi-style.css?v=0.1.9" />
 </head>
 <body>
   <div id="shogiPortraitOverlay" class="shogi-portrait-overlay" aria-live="polite">
@@ -110,12 +110,21 @@
             <button class="choice-btn" data-stage="compact"><strong>小型決戦</strong><small>7×7・各キャラ1体</small></button>
             <button class="choice-btn" data-stage="current"><strong>急流回廊</strong><small>7×7・格闘中も右へ流される</small></button>
             <button class="choice-btn" data-stage="channel"><strong>狭水路</strong><small>7×7・中央の細い通路で激突</small></button>
+            <button class="choice-btn" data-stage="heroes"><strong>七英雄戦</strong><small>7×7・7人を自由配役</small></button>
+            <button class="choice-btn" data-stage="rookbishop"><strong>飛角決戦</strong><small>5×5・飛車と角だけの殲滅戦</small></button>
+            <button class="choice-btn" data-stage="pawnwar"><strong>歩兵乱戦</strong><small>7×7・全員が歩、キャラは別々</small></button>
           </div>
         </div>
         <div class="setup-block">
           <div class="setup-label">持ち駒</div>
           <div class="choice-grid hands-grid"><button class="choice-btn selected" data-hands="on"><strong>あり</strong><small>取った駒を再配置</small></button><button class="choice-btn" data-hands="off"><strong>なし</strong><small>取られた駒は退場</small></button></div>
           <small id="handsNote" class="setup-note">標準盤は「あり」固定です。</small>
+        </div>
+
+        <div id="formationBlock" class="setup-block formation-block" hidden>
+          <div class="setup-label">出陣編成</div>
+          <div id="formationHelp" class="formation-help"></div>
+          <div id="formationGrid" class="formation-grid"></div>
         </div>
         <div class="modal-actions">
           <button id="startGameBtn" class="primary-btn start-game-btn">この設定で対局開始</button>
@@ -145,6 +154,6 @@
       </div>
     </div>
   </main>
-  <script src="shogi-game.js?v=0.1.7"></script>
+  <script src="shogi-game.js?v=0.1.9"></script>
 </body>
 </html>

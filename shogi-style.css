@@ -32,3 +32,12 @@ button,a{font:inherit}
 @media(max-height:520px) and (orientation:landscape){.start-card{padding:11px 14px}.start-card h2{font-size:18px}.start-card>p{margin:2px 0 6px}.setup-block{margin-top:7px}.choice-btn{min-height:46px;padding:6px 8px}.choice-btn strong{font-size:12px}.choice-btn small{font-size:8px}.start-game-btn{font-size:12px;padding:7px 12px}.modal-actions{margin-top:9px}}
 .stage-grid{grid-template-columns:repeat(4,1fr)}.hands-grid{grid-template-columns:repeat(2,1fr)}.setup-note{display:block;margin-top:5px;color:#a9dce2;font-size:10px}.choice-btn:disabled{opacity:.55;cursor:not-allowed}.cell.blocked{background:linear-gradient(145deg,#063f50,#052e3b);box-shadow:inset 0 0 14px rgba(0,0,0,.45);cursor:default}.cell.blocked::after{content:"〰";color:rgba(111,224,239,.28);font-size:clamp(16px,4vmin,34px);font-weight:900}
 @media(max-width:900px){.stage-grid{grid-template-columns:repeat(2,1fr)}}
+/* v2.1.9 special formation stages */
+.start-card{max-height:94vh;overflow:auto}
+.formation-help{font-size:10px;color:#bfe7eb;margin:0 0 7px}
+.formation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.formation-slot{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:6px}
+.formation-slot label{font-size:11px;font-weight:1000;white-space:nowrap;color:#fff4bd}
+.formation-slot select{min-width:0;width:100%;border:1px solid rgba(255,255,255,.25);border-radius:8px;background:#086578;color:#fff;padding:6px 4px;font-size:11px;font-weight:800}
+.stage-grid{grid-template-columns:repeat(4,1fr)}
+@media(max-height:620px) and (orientation:landscape){.formation-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}.formation-slot{padding:4px}.formation-slot label,.formation-slot select{font-size:9px}.formation-slot select{padding:4px 2px}.formation-help{font-size:8px;margin-bottom:4px}}
