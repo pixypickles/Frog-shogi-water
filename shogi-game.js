@@ -5,8 +5,8 @@ const ROLE_NAME={K:'王将',R:'飛車',B:'角行',G:'金将',S:'銀将',N:'桂�
 const PROMO_LABEL={R:'龍',B:'馬',S:'全',N:'圭',L:'杏',P:'と'};
 const ROLE_VALUE={K:10000,R:900,B:800,G:600,S:500,N:350,L:300,P:120};
 const TEAMS={
-  angel:{label:'天使軍',promotionPawn:'kawazu',roles:{K:'seraphiel',R:'jihal',B:'yellow',G:'orange',S:'green',N:'blue',L:'remiel',P:'mobAngel'}},
-  devil:{label:'悪魔軍',promotionPawn:'kokabiel',roles:{K:'satanael',R:'flauros',B:'beelzebub',G:'samael',S:'black',N:'purple',L:'sariel',P:'mobDevil'}}
+  angel:{label:'天使軍',promotionPawn:'kawazu',roles:{K:'seraphiel',R:'jihal',B:'yellow',G:'orange',S:'green',N:'blue',L:'remiel',P:'mob'}},
+  devil:{label:'悪魔軍',promotionPawn:'kokabiel',roles:{K:'satanael',R:'flauros',B:'beelzebub',G:'samael',S:'black',N:'purple',L:'sariel',P:'mob'}}
 };
 const CHAR={
  seraphiel:{name:'セラフィエルさん',body:'#f5f1df',eye:'#fff9d5',iris:'#ffd85c',skills:['セラフィックアッパー','セラフィックレイ','セラフィックキック']},
@@ -25,8 +25,7 @@ const CHAR={
  purple:{name:'リリスさん',body:'#f24ca5',eye:'#ff66b8',iris:'#111',skills:['舌ラッシュ','バブルショット','バックスピンキック']},
  sariel:{name:'サリエルさん',body:'#5d6488',eye:'#d8ddf5',iris:'#991126',skills:['ルナ・スラッシュ','イーブルアイ','ブラッドムーン']},
  kokabiel:{name:'コカビエルさん',body:'#20263f',eye:'#63dbe7',iris:'#202738',skills:['成り専用ファイター','グラビティボール','メテオレイン']},
- mobAngel:{name:'天使軍モブさん',body:'#70d7c9',eye:'#a5efe6',iris:'#17443d',skills:['歩兵の基本攻撃','接近戦','成る時にカワズさんを選択可能']},
- mobDevil:{name:'悪魔軍モブさん',body:'#7b4966',eye:'#b47a99',iris:'#23151e',skills:['歩兵の基本攻撃','接近戦','成ると強化']}
+ mob:{name:'モブさん',body:'#9be348',eye:'#c9f57a',iris:'#29420f',skills:['前 ＋ パンチ：バブルショット（大きめ・ゆっくり）','上 ＋ パンチ：カエル跳びアッパー','前 ＋ キック：トリプルキック（横移動しながら3回）']}
 };
 
 const boardEl=document.getElementById('board'),turnBanner=document.getElementById('turnBanner');
@@ -53,7 +52,7 @@ function freshState(){return{board:initialBoard(),turn:'angel',hands:{angel:{R:0
 function save(){localStorage.setItem('waterFrogShogiState',JSON.stringify(state))}
 function load(){try{const s=JSON.parse(localStorage.getItem('waterFrogShogiState')||'null');return s&&s.board?s:freshState()}catch(e){return freshState()}}
 function fighterType(piece){if(piece.promoted&&piece.promotionForm==='special')return TEAMS[piece.team].promotionPawn;return TEAMS[piece.team].roles[piece.role]}
-function charOf(piece){return CHAR[fighterType(piece)]||CHAR.mobAngel}
+function charOf(piece){return CHAR[fighterType(piece)]||CHAR.mob}
 function tokenHTML(piece){const c=charOf(piece),label=piece.promoted?(PROMO_LABEL[piece.role]||ROLE_LABEL[piece.role]):ROLE_LABEL[piece.role];return `<div class="frog-token" style="--body:${c.body};--eye:${c.eye};--iris:${c.iris}"><span class="role-kanji">${label}</span>${piece.promoted?'<span class="promoted-badge">成</span>':''}</div>`}
 function updateInfo(piece){
   if(!piece){info.name.textContent='駒を選択';info.role.textContent='動けるマスと技表を表示します';info.skills.innerHTML='';info.portrait.removeAttribute('style');return}

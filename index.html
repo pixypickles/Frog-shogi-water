@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#087d91" />
-  <title>水中蛙将棋 Prototype v2.1.4</title>
-  <link rel="stylesheet" href="shogi-style.css?v=0.1.4" />
+  <title>水中蛙将棋 Prototype v2.1.5</title>
+  <link rel="stylesheet" href="shogi-style.css?v=0.1.5" />
 </head>
 <body>
   <div id="shogiPortraitOverlay" class="shogi-portrait-overlay" aria-live="polite">
@@ -28,6 +28,7 @@
 
     <section class="game-layout">
       <aside class="side-stack left-stack">
+        <div id="turnBanner" class="turn-banner">天使軍の手番</div>
         <section class="info-panel devil-panel compact-panel">
           <div class="side-title"><span class="side-dot devil"></span>悪魔軍 <small>CPU</small></div>
           <div id="devilHand" class="hand-list"></div>
@@ -46,7 +47,6 @@
       </aside>
 
       <section class="board-wrap">
-        <div id="turnBanner" class="turn-banner">天使軍の手番</div>
         <div id="battleNotice" class="battle-notice" hidden></div>
         <div id="board" class="board" aria-label="9×9の水中蛙将棋盤"></div>
         <div id="boardResultEffect" class="board-result-effect" hidden>
@@ -111,6 +111,6 @@
       </div>
     </div>
   </main>
-  <script src="shogi-game.js?v=0.1.4"></script>
+  <script src="shogi-game.js?v=0.1.5"></script>
 </body>
 </html>

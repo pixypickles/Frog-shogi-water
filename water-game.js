@@ -152,7 +152,8 @@
     satanael:{speed:166,tongue:225,damage:1.20,defense:1.10,sink:8,hue:0,scale:1.10},
     kawazu: {speed: 205, tongue: 225, damage: 0.98, defense:0.90, sink:4, hue:0, scale:0.90},
     pascal: {speed: 176, tongue: 185, damage: 0.68, defense:0.86, sink:4, hue:0, scale:0.78},
-    malphas:{speed: 174, tongue: 185, damage: 0.68, defense:0.86, sink:4, hue:0, scale:0.78}
+    malphas:{speed: 174, tongue: 185, damage: 0.68, defense:0.86, sink:4, hue:0, scale:0.78},
+    mob:    {speed: 158, tongue: 190, damage: 0.90, defense:0.92, sink:5, hue:0, scale:0.82}
   };
 
   function show(name) {
@@ -343,6 +344,11 @@
   }
 
   const selectCardCommands={
+    mob:[
+      'バブルショット：前 ＋ パンチ（大きめ・ゆっくり）',
+      'カエル跳びアッパー：上 ＋ パンチ',
+      'トリプルキック：前 ＋ キック（横移動しながら3回）'
+    ],
     green:[
       'バーニングアッパー：上 ＋ パンチ',
       'バーニングキック：前 ＋ キック',
@@ -888,6 +894,9 @@
   }
 
   function fighterPalette(type){
+    if(type==='mob'){
+      return {body:'#9be348',limb:'#88cf37',light:'#c8f57a',belly:'#eaffb8',eyeBump:'#b7ef63'};
+    }
     if(type==='flauros'){
       return {body:'#c92825',limb:'#b91f20',light:'#ff6a3d',belly:'#ef9b58',eyeBump:'#e64631'};
     }
@@ -1343,6 +1352,19 @@
               if(hitDist < other.radius + 37){
                 this.specialHitDone=true;
                 damageHit(this,other,10.0*this.damageMul,240*this.face,-35);
+              }
+            }
+          }else if(this.specialType==='mobTripleKick'){
+            const elapsed=(performance.now()-(this.mobTripleStart||performance.now()))/1000;
+            const stage=elapsed<.22?0:(elapsed<.45?1:(elapsed<.72?2:-1));
+            if(stage>=0){
+              const bit=1<<stage;
+              const fx=this.x+this.face*(50+stage*5);
+              const fy=this.y+34+(stage===1?-10:0);
+              if(!(this.mobTripleHitMask&bit) && Math.hypot(other.x-fx,other.y-fy)<other.radius+34){
+                this.mobTripleHitMask|=bit;
+                const last=stage===2;
+                damageHit(this,other,(last?4.2:3.0)*this.damageMul,(last?150:55)*this.face,last?-24:-5);
               }
             }
           }
@@ -1848,7 +1870,7 @@
 
       // ニュートラル脚：
       // リリスのドロップキック中は専用の両脚だけを描くので通常脚は完全に隠す。
-      if(this.specialType!=='lilithDropKick'){
+      if(this.specialType!=='lilithDropKick' && this.specialType!=='mobTripleKick'){
         ctx.strokeStyle=pal.limb;
         ctx.lineWidth=12;
         ctx.lineCap='round';
@@ -2258,6 +2280,22 @@
         if(this.specialT<=.475 && this.specialT>=.06){
           drawBurningAura(62,25,27,14,-.28);
         }
+      }
+
+      if(this.specialType==='mobTripleKick'){
+        const elapsed=(performance.now()-(this.mobTripleStart||performance.now()))/1000;
+        const stage=elapsed<.22?0:(elapsed<.45?1:2);
+        const kickY=stage===1?28:48;
+        ctx.save();
+        ctx.filter='none';
+        ctx.strokeStyle=pal.limb;
+        ctx.lineWidth=11;
+        ctx.lineCap='round';
+        ctx.beginPath();
+        ctx.moveTo(10,43);
+        ctx.lineTo(58,kickY);
+        ctx.stroke();
+        ctx.restore();
       }
 
       if(this.specialType==='aquaStream'){
@@ -3250,7 +3288,7 @@
   function mixTypeFor(nameOrType){
     if(!nameOrType)return null;
     const map={
-      'カワズ':'kawazu','カワズさん':'kawazu',
+      'カワズ':'kawazu','カワズさん':'kawazu','モブ':'mob','モブさん':'mob','mobAngel':'mob','mobDevil':'mob','mob':'mob',
       'ミカエル':'green','ミカエルさん':'green','ガブリエル':'blue','ガブリエルさん':'blue',
       'ルシファー':'black','ルシファーさん':'black','リリス':'purple','リリスさん':'purple',
       'ラファエル':'yellow','ラファエルさん':'yellow','ウリエル':'orange','ウリエルさん':'orange',
@@ -3290,7 +3328,7 @@
 
   function fighterDisplayName(type){
     return {
-      green:'ミカエルさん', blue:'ガブリエルさん', black:'ルシファーさん',
+      mob:'モブさん', green:'ミカエルさん', blue:'ガブリエルさん', black:'ルシファーさん',
       purple:'リリスさん', yellow:'ラファエルさん', orange:'ウリエルさん',
       piranha:'リヴァイアさん', crayfish:'アスモデウスさん',
       beelzebub:'ベルゼブブさん', flauros:'フラウロスさん', satanael:'サタナエルさん', samael:'サマエルさん', seraphiel:'セラフィエルさん', remiel:'レミエルさん', jihal:'ジィハルさん', kokabiel:'コカビエルさん', sariel:'サリエルさん', kawazu:'カワズさん'
@@ -3991,12 +4029,29 @@
       f.vy=-520;
       f.vx+=f.face*70;
 
-      comboEl.textContent='バーニングアッパー!';
+      const upperName=f.type==='mob'?'カエル跳びアッパー!':'バーニングアッパー!';
+      comboEl.textContent=upperName;
       setTimeout(()=>{
-        if(comboEl.textContent==='バーニングアッパー!') comboEl.textContent='';
+        if(comboEl.textContent===upperName) comboEl.textContent='';
       },600);
     },180);
 
+    return true;
+  }
+
+  function specialMobTripleKick(f){
+    if(gameOver || f.stun>0 || f.guard || f.specialT>0 || f.attackT>0) return false;
+    f.specialType='mobTripleKick';
+    f.specialT=.84;
+    f.attack='kick';
+    f.attackVariant='mid';
+    f.attackT=.84;
+    f.mobTripleHitMask=0;
+    f.mobTripleStart=performance.now();
+    f.vx += f.face*250;
+    f.vy*=.35;
+    comboEl.textContent='トリプルキック!';
+    setTimeout(()=>{ if(comboEl.textContent==='トリプルキック!') comboEl.textContent=''; },760);
     return true;
   }
 
@@ -5328,6 +5383,22 @@
       }
     }
 
+    // モブさん：歩の専用3技。
+    if(f.type==='mob'){
+      if(kind==='punch' && water2HeldDir(f,'forward')){
+        clearCommand();
+        return specialWater2Shot(f,{name:'バブルショット',attack:'punch',color:'bubble',style:'bubble',speed:145,damage:3.2,r:27,charge:.42,wobble:.20,maxReflect:3});
+      }
+      if(kind==='punch' && water2HeldDir(f,'up')){
+        clearCommand();
+        return specialUppercut(f);
+      }
+      if(kind==='kick' && water2HeldDir(f,'forward')){
+        clearCommand();
+        return specialMobTripleKick(f);
+      }
+    }
+
     // 水中格闘2：ミカエル。基本技は1方向＋ボタン、サイクロンだけ上位コマンド。
     if(f.type==='green'){
       if(kind==='kick' && hasCommand(['down',back],760)){ clearCommand(); return specialBurningCyclone(f); }
@@ -6251,6 +6322,12 @@
         if(dist>135 && roll<dt*.30){ specialKawazuPressureRush(enemy); return; }
         if(dist<250 && roll<dt*.46){ specialKawazuMirageKick(enemy); return; }
         if(dist>120 && roll<dt*.60){ specialKawazuSpinCutter(enemy); return; }
+      }
+      if(enemy.type==='mob' && enemy.specialT<=0){
+        const roll=Math.random();
+        if(dist>170 && roll<dt*.28){ specialWater2Shot(enemy,{name:'バブルショット',attack:'punch',color:'bubble',style:'bubble',speed:145,damage:3.2,r:27,charge:.42,wobble:.20,maxReflect:3}); return; }
+        if(dist<115 && roll<dt*.20){ specialUppercut(enemy); return; }
+        if(dist<190 && roll<dt*.34){ specialMobTripleKick(enemy); return; }
       }
       if(enemy.type==='purple' && enemy.specialT<=0 && dist<250 && Math.random()<dt*.13){
         specialLilithDropKick(enemy);return;
