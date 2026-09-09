@@ -1605,6 +1605,21 @@
         ctx.restore();
       }
 
+      // v2.2.7 ジィハル: 水中版と同じ3本の雷残光。高速移動中は進行方向の後方へ伸ばす。
+      if(this.type==='jihal'&&(this.jihalCharging||this.specialType==='jihalLightningDash'||this.specialType==='jihalThunderChargeRush')){
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        if(!this.jihalCharging){
+          ctx.globalAlpha=.34;ctx.strokeStyle='#fff08a';ctx.lineWidth=8;ctx.lineCap='round';ctx.shadowColor='#ffe75a';ctx.shadowBlur=16;
+          const rushDir=this.jihalRushDir||this.face||1;
+          const localDir=rushDir*(this.face||1);
+          for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(-28*localDir,i*23);ctx.lineTo(-145*localDir,i*23+i*5);ctx.stroke();}
+        }
+        const p=this.jihalCharging?(.35+.65*(this.jihalCharge||0)):1;
+        ctx.globalAlpha=.48*p;ctx.strokeStyle='#fff19a';ctx.lineWidth=3;ctx.shadowColor='#ffe75a';ctx.shadowBlur=13;
+        for(let i=0;i<4;i++){const yy=-45+i*30,xx=(i%2?28:-28);ctx.beginPath();ctx.moveTo(xx,yy);ctx.lineTo(xx+this.face*13,yy+8);ctx.lineTo(xx-this.face*3,yy+17);ctx.stroke();}
+        ctx.restore();
+      }
+
       // 頭
       ctx.fillStyle=pal.body;
       ctx.beginPath();
