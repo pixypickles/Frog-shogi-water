@@ -130,6 +130,15 @@
     purple: { speed: 174, tongue: 245, damage: 0.92, defense:1.00, sink:5, hue:0, scale:1.00 },
     yellow:  { speed: 190, tongue: 225, damage: 0.92, defense:0.96, sink:4, hue:0, scale:1.00 },
     orange:  { speed: 142, tongue: 215, damage: 1.05, defense:1.28, sink:9, hue:0, scale:1.10 },
+    sariel:{speed:160,tongue:190,damage:1.01,defense:1.00,sink:7,hue:0,scale:1.02},
+    kokabiel:{speed:152,tongue:190,damage:1.00,defense:1.04,sink:8,hue:0,scale:1.04},
+    jihal:{speed:184,tongue:190,damage:1.02,defense:.97,sink:5,hue:0,scale:1.00},
+    remiel:{speed:170,tongue:205,damage:.98,defense:1.00,sink:5,hue:0,scale:1.00},
+    seraphiel:{speed:178,tongue:205,damage:1.24,defense:.84,sink:5,hue:0,scale:1.02},
+    samael:{speed:158,tongue:235,damage:1.10,defense:1.06,sink:7,hue:0,scale:1.08},
+    satanael:{speed:166,tongue:225,damage:1.20,defense:1.10,sink:8,hue:0,scale:1.10},
+    flauros:{speed:172,tongue:205,damage:1.13,defense:.98,sink:6,hue:0,scale:1.04},
+    mob:{speed:158,tongue:190,damage:.90,defense:.92,sink:5,hue:0,scale:.82},
     piranha: { speed: 198, tongue: 0,   damage: 1.08, defense:0.90, sink:3, hue:0, scale:0.95 },
     crayfish:{ speed: 138, tongue: 0,   damage: 1.18, defense:1.20, sink:10,hue:0, scale:1.08 },
     beelzebub:{speed: 158, tongue: 415, damage: 1.28, defense:1.22, sink:8, hue:0, scale:1.13},
@@ -699,7 +708,7 @@
 
     if(type==='mob')return {body:'#9be348',limb:'#83c83c',light:'#c7f57a',belly:'#e9f7b5',eyeBump:'#b4ed62'};
     if(type==='seraphiel')return {body:'#f5f1df',limb:'#ddd7c5',light:'#fffbed',belly:'#fffdf4',eyeBump:'#f5f1df'};
-    if(type==='jihal')return {body:'#244f78',limb:'#1f456a',light:'#4f7ea3',belly:'#bad2e2',eyeBump:'#315f88'};
+    if(type==='jihal')return {body:'#244f78',limb:'#285b88',light:'#fff2a2',belly:'#e6cf55',eyeBump:'#f1d64e'};
     if(type==='remiel')return {body:'#87b7c9',limb:'#6fa0b3',light:'#bfe6ee',belly:'#d9f3f5',eyeBump:'#9cc8d6'};
     if(type==='satanael')return {body:'#690b1b',limb:'#540815',light:'#a32135',belly:'#b85a62',eyeBump:'#7d1024'};
     if(type==='flauros')return {body:'#e20b22',limb:'#c40a1d',light:'#ff4c42',belly:'#f39a75',eyeBump:'#ee2635'};
@@ -2667,10 +2676,20 @@
   }
 
 
-  const playableTypes=['green','blue','black','purple','yellow','orange','piranha','crayfish'].concat(isKawazuUnlocked()?['kawazu']:[]);
+  const playableTypes=['green','blue','black','purple','yellow','orange','mob','jihal','remiel','seraphiel','sariel','kokabiel','flauros','samael','satanael','piranha','crayfish'].concat(isKawazuUnlocked()?['kawazu']:[]);
 
   function practiceSpecialText(type){
     const map={
+
+      mob:['前 ＋ パンチ：バブルショット','↑ ＋ パンチ：カエル跳びアッパー','前 ＋ キック：トリプルキック'],
+      jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック：サンダーチャージ','下 ＋ パンチ：スパークバースト'],
+      remiel:['↑ ＋ ガード：ミラージュ','後ろ ＋ ガード：ミラージュカウンター','前 ＋ パンチ：フロストショット','前 ＋ キック：ミラージュキック'],
+      seraphiel:['↑ ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 前 ＋ パンチ：セラフィックレイ'],
+      sariel:['↑ ＋ パンチ：ルナ・スラッシュ','前 ＋ ガード：イーブルアイ','後ろ ＋ ガード：ブラッドムーン','↑ ＋ キック：ムーンサルトキック'],
+      kokabiel:['前 ＋ パンチ：グラビティボール','後ろ ＋ ガード：グラビティゾーン','下 ＋ パンチ：メテオレイン','下 ＋ キック：グラビティダイブ'],
+      flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードラッシュ','↑ ＋ キック：インフェルノクロー'],
+      samael:['前 ＋ パンチ：ポイズンゲート','前 ＋ キック：デッドリー・アクア','舌：ヴェノムタン'],
+      satanael:['前 ＋ パンチ：ヘルフレア','↑ ＋ パンチ：サタナエルレイ','前 ＋ キック：ダークラッシュ','下 ＋ パンチ：アビスウェーブ'],
       green:['↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','下 → 後ろ ＋ キック：バーニングサイクロン','下 → 後ろ ＋ ガード：レッドオーラ（少量回復＋次の攻撃強化）'],
       blue:['ガード → パンチ：アクアトルネード（約15°上）','ガード → キック：アクアストリーム（約8°下）','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）'],
       yellow:['ガード → パンチ：エアカッター','ガード → キック：エアカッター','ガード ×2：ヒーリングバブル','↑ ＋ ガード：エアブースト','↑ ＋ パンチ：ウィンドライズ'],
@@ -2701,6 +2720,12 @@
   function mixTypeFor(nameOrType){
     if(!nameOrType)return null;
     const map={
+
+      'モブ':'mob','モブさん':'mob','mobAngel':'mob','mobDevil':'mob','mob':'mob',
+      'セラフィエル':'seraphiel','セラフィエルさん':'seraphiel','ジィハル':'jihal','ジィハルさん':'jihal',
+      'レミエル':'remiel','レミエルさん':'remiel','サリエル':'sariel','サリエルさん':'sariel',
+      'コカビエル':'kokabiel','コカビエルさん':'kokabiel','フラウロス':'flauros','フラウロスさん':'flauros',
+      'サマエル':'samael','サマエルさん':'samael','サタナエル':'satanael','サタナエルさん':'satanael',
       'カワズ':'kawazu','カワズさん':'kawazu',
       'ミカエル':'green','ミカエルさん':'green','ガブリエル':'blue','ガブリエルさん':'blue',
       'ルシファー':'black','ルシファーさん':'black','リリス':'purple','リリスさん':'purple',
@@ -3328,6 +3353,7 @@
 
   function hasBackBackCommand(f, windowMs=820){
     const back=f.face>0?'left':'right';
+    if(tryV2CompatSpecial(f,kind,forward,back)) return true;
     const diagUp=f.face>0?'upLeft':'upRight';
     const diagDown=f.face>0?'downLeft':'downRight';
     const valid=new Set([back,diagUp,diagDown]);
@@ -3968,6 +3994,90 @@
     comboEl.textContent='ミニボルテックス!';
     setTimeout(()=>{if(comboEl.textContent==='ミニボルテックス!')comboEl.textContent='';},520);
     return true;
+  }
+
+
+  // v2.2.2: 水中格闘2で追加されたキャラを蓮の葉・浅瀬でも使用可能にする互換必殺技。
+  // 地上物理を壊さないよう、既存の地上用飛び道具・アッパー・突進を土台にしている。
+  function compatLabel(text){
+    comboEl.textContent=text;
+    setTimeout(()=>{if(comboEl.textContent===text)comboEl.textContent='';},700);
+  }
+  function compatShot(f,label,source='punch'){
+    const ok=specialPressureBlade(f,0,source); if(ok)compatLabel(label); return ok;
+  }
+  function compatUpper(f,label){
+    const ok=specialUppercut(f); if(ok)compatLabel(label); return ok;
+  }
+  function compatRush(f,label){
+    const ok=specialDropKick(f); if(ok)compatLabel(label); return ok;
+  }
+  function compatBurst(f,label){
+    if(gameOver||!f||f.stun>0||f.guard||f.specialT>0)return false;
+    f.specialType='compatBurst'; f.specialT=.38; f.attack='punch'; f.attackT=.38;
+    // 前後へ同時に圧力弾。浅瀬/蓮の葉でも地上判定に自然に乗る。
+    const oldFace=f.face;
+    specialPressureBlade(f,0,'punch');
+    f.specialT=0; f.attackT=0; f.face=-oldFace;
+    specialPressureBlade(f,0,'punch');
+    f.face=oldFace; f.specialType='compatBurst'; f.specialT=.38; f.attackT=.38;
+    compatLabel(label); return true;
+  }
+  function tryV2CompatSpecial(f,kind,forward,back){
+    if(!f)return false;
+    if(f.type==='mob'){
+      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'カエル跳びアッパー!');}
+      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'バブルショット!');}
+      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'トリプルキック!');}
+    }
+    if(f.type==='jihal'){
+      if(kind==='punch'&&hasCommand(['down'],520)){clearCommand();return compatBurst(f,'スパークバースト!');}
+      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ボルトショット!');}
+      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'ライトニングダッシュ!');}
+      if(kind==='kick'&&hasCommand([back],520)){clearCommand();return compatRush(f,'サンダーチャージ!');}
+    }
+    if(f.type==='remiel'){
+      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'フロストショット!');}
+      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'ミラージュキック!');}
+      if(kind==='guard'&&hasCommand(['up'],520)){f.hp=Math.min(100,f.hp+4);if(f.isPlayer)updateHud();compatLabel('ミラージュ!');clearCommand();return true;}
+      if(kind==='guard'&&hasCommand([back],520)){f.counterReady=true;f.counterT=.7;compatLabel('ミラージュカウンター!');clearCommand();return true;}
+    }
+    if(f.type==='seraphiel'){
+      if(kind==='punch'&&hasCommand(['down',forward],720)){clearCommand();return compatBurst(f,'セラフィックレイ!');}
+      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'セラフィックアッパー!');}
+      if(kind==='punch'&&hasCommand([back],520)){clearCommand();return compatShot(f,'セラフィックショット!');}
+      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'セラフィックキック!');}
+    }
+    if(f.type==='sariel'){
+      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatShot(f,'ルナ・スラッシュ!');}
+      if(kind==='kick'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'ムーンサルトキック!');}
+      if(kind==='guard'&&hasCommand([forward],520)){f.counterReady=true;f.counterT=.55;compatLabel('イーブルアイ!');clearCommand();return true;}
+      if(kind==='guard'&&hasCommand([back],520)){f.hp=Math.min(100,f.hp+2);if(f.isPlayer)updateHud();compatLabel('ブラッドムーン!');clearCommand();return true;}
+    }
+    if(f.type==='kokabiel'){
+      if(kind==='punch'&&hasCommand(['down'],520)){clearCommand();return compatBurst(f,'メテオレイン!');}
+      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'グラビティボール!');}
+      if(kind==='kick'&&hasCommand(['down'],520)){clearCommand();return compatRush(f,'グラビティダイブ!');}
+      if(kind==='guard'&&hasCommand([back],520)){f.counterReady=true;f.counterT=.75;compatLabel('グラビティゾーン!');clearCommand();return true;}
+    }
+    if(f.type==='flauros'){
+      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'ヘルフレイム!');}
+      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'フレイムクロー!');}
+      if(kind==='kick'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'インフェルノクロー!');}
+      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'レオパードラッシュ!');}
+    }
+    if(f.type==='samael'){
+      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ポイズンゲート!');}
+      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'デッドリー・アクア!');}
+      if(kind==='tongue'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ヴェノムタン!');}
+    }
+    if(f.type==='satanael'){
+      if(kind==='punch'&&hasCommand(['down'],520)){clearCommand();return compatBurst(f,'アビスウェーブ!');}
+      if(kind==='punch'&&hasCommand(['up'],520)){clearCommand();return compatUpper(f,'サタナエルレイ!');}
+      if(kind==='punch'&&hasCommand([forward],520)){clearCommand();return compatShot(f,'ヘルフレア!');}
+      if(kind==='kick'&&hasCommand([forward],520)){clearCommand();return compatRush(f,'ダークラッシュ!');}
+    }
+    return false;
   }
 
   function trySpecial(f,kind){
@@ -4803,6 +4913,14 @@
     if(enemy.stun>0)return;
     const dx=player.x-enemy.x,dy=player.y-enemy.y,dist=Math.hypot(dx,dy);
     if(enemy.attackT<=0){
+      if(['mob','jihal','remiel','seraphiel','sariel','kokabiel','flauros','samael','satanael'].includes(enemy.type) && enemy.specialT<=0 && Math.random()<dt*.22*diff.attack){
+        const oldFace=enemy.face; enemy.face=dx>=0?1:-1;
+        const pool={mob:['shot','upper','rush'],jihal:['shot','rush','burst'],remiel:['shot','rush'],seraphiel:['shot','upper','rush'],sariel:['shot','upper'],kokabiel:['shot','rush','burst'],flauros:['shot','upper','rush'],samael:['shot','rush'],satanael:['shot','upper','rush','burst']}[enemy.type]||['shot'];
+        const pick=pool[(Math.random()*pool.length)|0];
+        if(pick==='shot')compatShot(enemy,'SPECIAL!'); else if(pick==='upper')compatUpper(enemy,'SPECIAL!'); else if(pick==='rush')compatRush(enemy,'SPECIAL!'); else compatBurst(enemy,'SPECIAL!');
+        enemy.face=oldFace; return;
+      }
+
       if(enemy.type==='beelzebub' && enemy.specialT<=0 && enemy.bossSpecialCooldown<=0){
         const roll=Math.random();
         if(roll<dt*.16){ specialVenomWater(enemy); return; }
