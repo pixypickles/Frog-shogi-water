@@ -37,7 +37,8 @@ const promoModal=document.getElementById('promotionModal'),promoText=document.ge
 const promoteStandard=document.getElementById('promoteStandard'),promoteSpecial=document.getElementById('promoteSpecial'),promoteNo=document.getElementById('promoteNo');
 const gameOverModal=document.getElementById('gameOverModal');
 const battleLoading=document.getElementById('battleLoading'),loadingAttacker=document.getElementById('loadingAttacker'),loadingDefender=document.getElementById('loadingDefender');
-let state,selected=null,legal=[],selectedHand=null,pendingMove=null,cpuTimer=null,cpuBusy=false;
+const boardResultEffect=document.getElementById('boardResultEffect'),boardResultKicker=document.getElementById('boardResultKicker'),boardResultMain=document.getElementById('boardResultMain'),boardResultSub=document.getElementById('boardResultSub');
+let state,selected=null,legal=[],selectedHand=null,pendingMove=null,cpuTimer=null,cpuBusy=false,resultEffectTimer=null;
 
 function other(t){return t==='angel'?'devil':'angel'}
 function mk(team,role,promoted=false,promotionForm=null){return{team,role,promoted,promotionForm}}
@@ -147,16 +148,31 @@ function launchBattle(m){
   save();
   setTimeout(()=>{location.href='water-fighter.html?mix=1&battle=1&shogi=1'},700);
 }
+
+function showBoardBattleEffect(attackerWon,attacker,defender){
+  clearTimeout(resultEffectTimer);
+  const playerWon=(attackerWon&&attacker.team==='angel')||(!attackerWon&&defender.team==='angel');
+  boardResultEffect.className='board-result-effect '+(playerWon?'win':'lose');
+  boardResultKicker.textContent=attackerWon?'攻撃側の勝利':'防御側の勝利';
+  boardResultMain.textContent=playerWon?'格闘勝利！':'格闘敗北';
+  const winner=attackerWon?attacker:defender, loser=attackerWon?defender:attacker;
+  boardResultSub.textContent=`${charOf(winner).name} が ${charOf(loser).name} に勝利`;
+  boardResultEffect.hidden=false;
+  resultEffectTimer=setTimeout(()=>{boardResultEffect.hidden=true},1500);
+}
+
 function applyBattleResult(){
   let result=null,pending=null;try{result=JSON.parse(sessionStorage.getItem('mixBattleResult')||'null');pending=JSON.parse(sessionStorage.getItem('frogShogiPendingMove')||'null')}catch(e){}
   if(!result||!pending)return;
   sessionStorage.removeItem('mixBattleResult');sessionStorage.removeItem('frogShogiPendingMove');battleLoading.hidden=true;
   const liveAttacker=state.board[pending.fy]?.[pending.fx],liveDefender=state.board[pending.ty]?.[pending.tx];if(!liveAttacker||!liveDefender)return;
   if(result.winner==='attacker'){
+    showBoardBattleEffect(true,liveAttacker,liveDefender);
     const capturedRole=liveDefender.role;
     if(capturedRole==='K'){state.board[pending.ty][pending.tx]=liveAttacker;state.board[pending.fy][pending.fx]=null;state.winner=liveAttacker.team;save();showGameOver(state.winner,`${charOf(liveAttacker).name}が王を撃破！`);render();return}
     state.hands[liveAttacker.team][capturedRole]=(state.hands[liveAttacker.team][capturedRole]||0)+1;notice.hidden=false;notice.textContent=`格闘勝利！ ${charOf(liveDefender).name}を捕獲`;state.board[pending.ty][pending.tx]=null;completeBoardMove(pending.fx,pending.fy,pending.tx,pending.ty,true);
   }else{
+    showBoardBattleEffect(false,liveAttacker,liveDefender);
     notice.hidden=false;notice.textContent=`守備成功！ ${charOf(liveAttacker).name}は元のマスへ戻ります`;setTimeout(()=>{notice.hidden=true},1800);state.turn=other(state.turn);clearSelection();cpuBusy=false;render();
   }
 }
@@ -199,7 +215,7 @@ function cpuPlay(){
   attemptMove(action.fx,action.fy,action.tx,action.ty);
 }
 
-function resetAll(){clearTimeout(cpuTimer);localStorage.removeItem('waterFrogShogiState');sessionStorage.removeItem('frogShogiPendingMove');sessionStorage.removeItem('mixBattleResult');sessionStorage.removeItem('mixBattle');state=freshState();cpuBusy=false;clearSelection();notice.hidden=true;battleLoading.hidden=true;promoModal.hidden=true;gameOverModal.hidden=true;updateInfo(null);render()}
+function resetAll(){clearTimeout(cpuTimer);clearTimeout(resultEffectTimer);boardResultEffect.hidden=true;localStorage.removeItem('waterFrogShogiState');sessionStorage.removeItem('frogShogiPendingMove');sessionStorage.removeItem('mixBattleResult');sessionStorage.removeItem('mixBattle');state=freshState();cpuBusy=false;clearSelection();notice.hidden=true;battleLoading.hidden=true;promoModal.hidden=true;gameOverModal.hidden=true;updateInfo(null);render()}
 document.getElementById('resetBtn').onclick=()=>{if(confirm('盤面を最初からやり直しますか？'))resetAll()};document.getElementById('gameOverReset').onclick=resetAll;
 
 state=load();applyBattleResult();updateInfo(null);render();
