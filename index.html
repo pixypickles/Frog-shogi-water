@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#087d91" />
-  <title>水中蛙将棋 Prototype v2.1.6</title>
-  <link rel="stylesheet" href="shogi-style.css?v=0.1.6" />
+  <title>水中蛙将棋 Prototype v2.1.7</title>
+  <link rel="stylesheet" href="shogi-style.css?v=0.1.7" />
 </head>
 <body>
   <div id="shogiPortraitOverlay" class="shogi-portrait-overlay" aria-live="polite">
@@ -40,6 +40,7 @@
         </section>
         <section class="mini-rule-panel">
           <strong>格闘ルール</strong>
+          <span id="modeSummary">標準盤 / CPUふつう</span>
           <span>攻撃側 HP100</span>
           <span>防御側 HP33</span>
           <span>攻撃側が負けると元のマスへ戻る</span>
@@ -48,7 +49,7 @@
 
       <section class="board-wrap">
         <div id="battleNotice" class="battle-notice" hidden></div>
-        <div id="board" class="board" aria-label="9×9の水中蛙将棋盤"></div>
+        <div id="board" class="board" aria-label="水中蛙将棋盤"></div>
         <div id="boardResultEffect" class="board-result-effect" hidden>
           <div class="result-burst"></div>
           <div id="boardResultKicker" class="board-result-kicker">格闘結果</div>
@@ -89,6 +90,32 @@
       </div>
     </div>
 
+
+    <div id="startModal" class="modal start-modal" hidden>
+      <div class="modal-card start-card">
+        <h2>対局設定</h2>
+        <p>CPUの強さとステージを選んでください。</p>
+        <div class="setup-block">
+          <div class="setup-label">CPU難易度</div>
+          <div class="choice-grid difficulty-grid">
+            <button class="choice-btn" data-difficulty="easy"><strong>やさしい</strong><small>かなり気まぐれ</small></button>
+            <button class="choice-btn selected" data-difficulty="normal"><strong>ふつう</strong><small>攻めを優先</small></button>
+            <button class="choice-btn" data-difficulty="hard"><strong>むずかしい</strong><small>取り・成り・王狙い重視</small></button>
+          </div>
+        </div>
+        <div class="setup-block">
+          <div class="setup-label">ステージ</div>
+          <div class="choice-grid stage-grid">
+            <button class="choice-btn selected" data-stage="standard"><strong>標準盤</strong><small>9×9・通常配置</small></button>
+            <button class="choice-btn" data-stage="compact"><strong>小型決戦</strong><small>7×7・各キャラ1体</small></button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="startGameBtn" class="primary-btn start-game-btn">この設定で対局開始</button>
+        </div>
+      </div>
+    </div>
+
     <div id="promotionModal" class="modal" hidden>
       <div class="modal-card">
         <h2>成りますか？</h2>
@@ -111,6 +138,6 @@
       </div>
     </div>
   </main>
-  <script src="shogi-game.js?v=0.1.6"></script>
+  <script src="shogi-game.js?v=0.1.7"></script>
 </body>
 </html>

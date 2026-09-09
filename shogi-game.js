@@ -8,6 +8,16 @@ const TEAMS={
   angel:{label:'天使軍',promotionPawn:'kawazu',roles:{K:'seraphiel',R:'jihal',B:'yellow',G:'orange',S:'green',N:'blue',L:'remiel',P:'mob'}},
   devil:{label:'悪魔軍',promotionPawn:'kokabiel',roles:{K:'satanael',R:'flauros',B:'beelzebub',G:'samael',S:'black',N:'purple',L:'sariel',P:'mob'}}
 };
+const STAGES={
+  standard:{id:'standard',label:'標準盤',size:9,promoDepth:3},
+  compact:{id:'compact',label:'小型決戦',size:7,promoDepth:2}
+};
+const DIFFICULTIES={
+  easy:{id:'easy',label:'やさしい',think:700,pool:12,captureMul:1.55,promoBonus:30,noise:70},
+  normal:{id:'normal',label:'ふつう',think:520,pool:5,captureMul:3,promoBonus:80,noise:18},
+  hard:{id:'hard',label:'むずかしい',think:430,pool:2,captureMul:4.4,promoBonus:130,noise:5}
+};
+
 const CHAR={
  seraphiel:{name:'セラフィエルさん',body:'#f5f1df',eye:'#fff9d5',iris:'#ffd85c',skills:['セラフィックアッパー','セラフィックレイ','セラフィックキック']},
  jihal:{name:'ジィハルさん',body:'#244f78',eye:'#f1d64e',iris:'#17364f',skills:['雷','ライトニングダッシュ','ボルトショット']},
@@ -37,20 +47,50 @@ const promoteStandard=document.getElementById('promoteStandard'),promoteSpecial=
 const gameOverModal=document.getElementById('gameOverModal');
 const battleLoading=document.getElementById('battleLoading'),loadingAttacker=document.getElementById('loadingAttacker'),loadingDefender=document.getElementById('loadingDefender');
 const boardResultEffect=document.getElementById('boardResultEffect'),boardResultKicker=document.getElementById('boardResultKicker'),boardResultMain=document.getElementById('boardResultMain'),boardResultSub=document.getElementById('boardResultSub');
+const startModal=document.getElementById('startModal'),startGameBtn=document.getElementById('startGameBtn'),modeSummary=document.getElementById('modeSummary');
+let setupChoice={difficulty:'normal',stage:'standard'};
 let state,selected=null,legal=[],selectedHand=null,pendingMove=null,cpuTimer=null,cpuBusy=false,resultEffectTimer=null;
 
 function other(t){return t==='angel'?'devil':'angel'}
 function mk(team,role,promoted=false,promotionForm=null){return{team,role,promoted,promotionForm}}
-function initialBoard(){
-  const b=Array.from({length:9},()=>Array(9).fill(null));
-  const back=['L','N','S','G','K','G','S','N','L'];
-  back.forEach((r,x)=>b[0][x]=mk('devil',r)); b[1][1]=mk('devil','R'); b[1][7]=mk('devil','B'); for(let x=0;x<9;x++)b[2][x]=mk('devil','P');
-  back.forEach((r,x)=>b[8][x]=mk('angel',r)); b[7][7]=mk('angel','R'); b[7][1]=mk('angel','B'); for(let x=0;x<9;x++)b[6][x]=mk('angel','P');
+function initialBoard(stageId='standard') {
+  const stage=STAGES[stageId]||STAGES.standard, n=stage.size;
+  const b=Array.from({length:n},()=>Array(n).fill(null));
+  if(stageId==='compact'){
+    // 各役割＝各キャラ1体。歩だけ前列中央に置く7×7決戦。
+    const back=['L','N','S','K','G','B','R'];
+    back.forEach((r,x)=>b[0][x]=mk('devil',r));
+    b[1][Math.floor(n/2)]=mk('devil','P');
+    const angelBack=['R','B','G','K','S','N','L'];
+    angelBack.forEach((r,x)=>b[n-1][x]=mk('angel',r));
+    b[n-2][Math.floor(n/2)]=mk('angel','P');
+  }else{
+    const back=['L','N','S','G','K','G','S','N','L'];
+    back.forEach((r,x)=>b[0][x]=mk('devil',r)); b[1][1]=mk('devil','R'); b[1][7]=mk('devil','B'); for(let x=0;x<n;x++)b[2][x]=mk('devil','P');
+    back.forEach((r,x)=>b[n-1][x]=mk('angel',r)); b[n-2][7]=mk('angel','R'); b[n-2][1]=mk('angel','B'); for(let x=0;x<n;x++)b[n-3][x]=mk('angel','P');
+  }
   return b;
 }
-function freshState(){return{board:initialBoard(),turn:'angel',hands:{angel:{R:0,B:0,G:0,S:0,N:0,L:0,P:0},devil:{R:0,B:0,G:0,S:0,N:0,L:0,P:0}},winner:null,lastMessage:'天使軍の手番'}}
+function emptyHands(){return{angel:{R:0,B:0,G:0,S:0,N:0,L:0,P:0},devil:{R:0,B:0,G:0,S:0,N:0,L:0,P:0}}}
+function freshState(opts=setupChoice){
+  const stage=opts.stage||'standard',difficulty=opts.difficulty||'normal';
+  return{schemaVersion:217,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,turn:'angel',hands:emptyHands(),winner:null,lastMessage:'天使軍の手番'}
+}
+function normalizeState(s){
+  if(!s||!s.board||s.schemaVersion!==217)return null;
+  s.stage=s.stage||((s.board.length===7)?'compact':'standard');
+  s.difficulty=s.difficulty||'normal';
+  s.boardSize=s.board.length;
+  s.hands=s.hands||emptyHands();
+  return s;
+}
 function save(){localStorage.setItem('waterFrogShogiState',JSON.stringify(state))}
-function load(){try{const s=JSON.parse(localStorage.getItem('waterFrogShogiState')||'null');return s&&s.board?s:freshState()}catch(e){return freshState()}}
+function load(){try{return normalizeState(JSON.parse(localStorage.getItem('waterFrogShogiState')||'null'))}catch(e){return null}}
+function boardSize(){return state?.boardSize||state?.board?.length||9}
+function stageConfig(){return STAGES[state?.stage]||STAGES.standard}
+function difficultyConfig(){return DIFFICULTIES[state?.difficulty]||DIFFICULTIES.normal}
+function updateModeSummary(){if(modeSummary&&state)modeSummary.textContent=`${stageConfig().label} / CPU ${difficultyConfig().label}`}
+
 function fighterType(piece){if(piece.promoted&&piece.promotionForm==='special')return TEAMS[piece.team].promotionPawn;return TEAMS[piece.team].roles[piece.role]}
 function charOf(piece){return CHAR[fighterType(piece)]||CHAR.mob}
 function tokenHTML(piece){const c=charOf(piece),label=piece.promoted?(PROMO_LABEL[piece.role]||ROLE_LABEL[piece.role]):ROLE_LABEL[piece.role];return `<div class="frog-token" style="--body:${c.body};--eye:${c.eye};--iris:${c.iris}"><span class="role-kanji">${label}</span>${piece.promoted?'<span class="promoted-badge">成</span>':''}</div>`}
@@ -61,7 +101,7 @@ function updateInfo(piece){
   const form=piece.promoted?(piece.promotionForm==='special'?'・特殊成':'・通常成'):'';
   info.role.textContent=`${TEAMS[piece.team].label} / ${label}（${ROLE_NAME[piece.role]}${form}）`;info.skills.innerHTML=c.skills.map(s=>`<div class="skill">${s}</div>`).join('');
 }
-function inBounds(x,y){return x>=0&&x<9&&y>=0&&y<9}
+function inBounds(x,y){const n=boardSize();return x>=0&&x<n&&y>=0&&y<n}
 function pathMoves(x,y,dirs,piece){const out=[];for(const [dx,dy] of dirs){let nx=x+dx,ny=y+dy;while(inBounds(nx,ny)){const q=state.board[ny][nx];if(!q)out.push({x:nx,y:ny});else{if(q.team!==piece.team)out.push({x:nx,y:ny,capture:true});break}nx+=dx;ny+=dy}}return out}
 function stepMoves(x,y,dirs,piece){const out=[];for(const [dx0,dy0] of dirs){const dir=piece.team==='angel'?-1:1;const nx=x+dx0,ny=y+dy0*dir;if(!inBounds(nx,ny))continue;const q=state.board[ny][nx];if(!q||q.team!==piece.team)out.push({x:nx,y:ny,capture:!!q})}return out}
 function movesFor(x,y){
@@ -78,27 +118,28 @@ function movesFor(x,y){
   return[];
 }
 function dropMoves(role,team){
-  const out=[];for(let y=0;y<9;y++)for(let x=0;x<9;x++){
+  const out=[],n=boardSize();for(let y=0;y<n;y++)for(let x=0;x<n;x++){
     if(state.board[y][x])continue;
-    if((role==='P'||role==='L')&&((team==='angel'&&y===0)||(team==='devil'&&y===8)))continue;
-    if(role==='N'&&((team==='angel'&&y<=1)||(team==='devil'&&y>=7)))continue;
-    if(role==='P'){let same=false;for(let yy=0;yy<9;yy++){const p=state.board[yy][x];if(p&&p.team===team&&p.role==='P'&&!p.promoted){same=true;break}}if(same)continue}
+    if((role==='P'||role==='L')&&((team==='angel'&&y===0)||(team==='devil'&&y===n-1)))continue;
+    if(role==='N'&&((team==='angel'&&y<=1)||(team==='devil'&&y>=n-2)))continue;
+    if(role==='P'){let same=false;for(let yy=0;yy<n;yy++){const p=state.board[yy][x];if(p&&p.team===team&&p.role==='P'&&!p.promoted){same=true;break}}if(same)continue}
     out.push({x,y,drop:true});
   }return out;
 }
-function canPromote(piece,fromY,toY){if(piece.promoted||!['R','B','S','N','L','P'].includes(piece.role))return false;const inZone=y=>piece.team==='angel'?y<=2:y>=6;return inZone(fromY)||inZone(toY)}
-function mustPromote(piece,toY){if(piece.role==='P'||piece.role==='L')return piece.team==='angel'?toY===0:toY===8;if(piece.role==='N')return piece.team==='angel'?toY<=1:toY>=7;return false}
+function canPromote(piece,fromY,toY){if(piece.promoted||!['R','B','S','N','L','P'].includes(piece.role))return false;const n=boardSize(),d=stageConfig().promoDepth;const inZone=y=>piece.team==='angel'?y<d:y>=n-d;return inZone(fromY)||inZone(toY)}
+function mustPromote(piece,toY){const n=boardSize();if(piece.role==='P'||piece.role==='L')return piece.team==='angel'?toY===0:toY===n-1;if(piece.role==='N')return piece.team==='angel'?toY<=1:toY>=n-2;return false}
 function setPromoted(piece,form){piece.promoted=true;piece.promotionForm=form||'standard'}
 
 function render(){
   boardEl.innerHTML='';
-  for(let y=0;y<9;y++)for(let x=0;x<9;x++){
-    const cell=document.createElement('button');cell.className='cell';if(y<=2||y>=6)cell.classList.add('promo-zone');cell.dataset.x=x;cell.dataset.y=y;
+  const n=boardSize(),d=stageConfig().promoDepth;boardEl.style.setProperty('--board-size',n);boardEl.classList.toggle('compact-stage',state.stage==='compact');boardEl.setAttribute('aria-label',`${n}×${n}の水中蛙将棋盤`);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const cell=document.createElement('button');cell.className='cell';if(y<d||y>=n-d)cell.classList.add('promo-zone');if(x===n-1)cell.classList.add('last-col');if(y===n-1)cell.classList.add('last-row');cell.dataset.x=x;cell.dataset.y=y;
     if(selected&&selected.x===x&&selected.y===y)cell.classList.add('selected');const l=legal.find(m=>m.x===x&&m.y===y);if(l)cell.classList.add(l.drop?'drop':l.capture?'capture':'legal');
     const p=state.board[y][x];if(p){const wrap=document.createElement('div');wrap.className=`piece ${p.team}`;wrap.innerHTML=tokenHTML(p);cell.appendChild(wrap)}
     cell.addEventListener('click',()=>onCell(x,y));boardEl.appendChild(cell);
   }
-  renderHands();
+  renderHands();updateModeSummary();
   turnBanner.textContent=state.winner?`${TEAMS[state.winner].label}の勝利！`:(state.turn==='devil'?(cpuBusy?'悪魔軍 CPU 思考中…':'悪魔軍 CPU の手番'):'天使軍の手番');
   turnBanner.style.boxShadow=state.turn==='angel'?'inset 0 0 0 2px rgba(255,235,130,.45)':'inset 0 0 0 2px rgba(255,90,110,.45)';
   save();scheduleCpuIfNeeded();
@@ -179,13 +220,14 @@ function showGameOver(team,text){document.getElementById('gameOverTitle').textCo
 
 function cpuActions(){
   const actions=[];
-  for(let y=0;y<9;y++)for(let x=0;x<9;x++){
+  const n=boardSize(),cfg=difficultyConfig();
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
     const p=state.board[y][x];if(!p||p.team!=='devil')continue;
     for(const m of movesFor(x,y)){
-      const target=state.board[m.y][m.x];let score=Math.random()*18;
-      if(target)score+=ROLE_VALUE[target.role]*3 + (target.role==='K'?50000:0);
+      const target=state.board[m.y][m.x];let score=Math.random()*cfg.noise;
+      if(target)score+=ROLE_VALUE[target.role]*cfg.captureMul + (target.role==='K'?50000:0);
       score+=(m.y-y)*6;
-      if(canPromote(p,y,m.y))score+=80;
+      if(canPromote(p,y,m.y))score+=cfg.promoBonus;
       if(p.role==='K'&&target==null)score-=20;
       actions.push({type:'move',fx:x,fy:y,tx:m.x,ty:m.y,score});
     }
@@ -193,7 +235,7 @@ function cpuActions(){
   for(const role of ['R','B','G','S','N','L','P']){
     if(!state.hands.devil[role])continue;
     for(const m of dropMoves(role,'devil')){
-      let score=20+Math.random()*35;score+=(m.y-4)*3;if(role==='R'||role==='B')score+=20;
+      let score=20+Math.random()*cfg.noise;score+=(m.y-(n-1)/2)*3;if(role==='R'||role==='B')score+=20;
       actions.push({type:'drop',role,tx:m.x,ty:m.y,score});
     }
   }
@@ -202,20 +244,29 @@ function cpuActions(){
 function scheduleCpuIfNeeded(){
   clearTimeout(cpuTimer);if(state.winner||state.turn!=='devil'||cpuBusy||!promoModal.hidden||!battleLoading.hidden)return;
   cpuBusy=true;turnBanner.textContent='悪魔軍 CPU 思考中…';
-  cpuTimer=setTimeout(cpuPlay,520);
+  cpuTimer=setTimeout(cpuPlay,difficultyConfig().think);
 }
 function cpuPlay(){
   if(state.winner||state.turn!=='devil'){cpuBusy=false;return}
   const actions=cpuActions();if(!actions.length){state.winner='angel';cpuBusy=false;showGameOver('angel','悪魔軍に指せる手がありません。');render();return}
-  actions.sort((a,b)=>b.score-a.score);const pool=actions.slice(0,Math.min(5,actions.length));const action=pool[Math.floor(Math.random()*pool.length)];
+  actions.sort((a,b)=>b.score-a.score);const pool=actions.slice(0,Math.min(difficultyConfig().pool,actions.length));const action=pool[Math.floor(Math.random()*pool.length)];
   if(action.type==='drop'){
     state.board[action.ty][action.tx]=mk('devil',action.role,false);state.hands.devil[action.role]--;finishTurn(`CPUが${ROLE_LABEL[action.role]}を打ちました`);return;
   }
   attemptMove(action.fx,action.fy,action.tx,action.ty);
 }
 
-function resetAll(){clearTimeout(cpuTimer);clearTimeout(resultEffectTimer);boardResultEffect.hidden=true;localStorage.removeItem('waterFrogShogiState');sessionStorage.removeItem('frogShogiPendingMove');sessionStorage.removeItem('mixBattleResult');sessionStorage.removeItem('mixBattle');state=freshState();cpuBusy=false;clearSelection();notice.hidden=true;battleLoading.hidden=true;promoModal.hidden=true;gameOverModal.hidden=true;updateInfo(null);render()}
-document.getElementById('resetBtn').onclick=()=>{if(confirm('盤面を最初からやり直しますか？'))resetAll()};document.getElementById('gameOverReset').onclick=resetAll;
+function clearRuntime(){clearTimeout(cpuTimer);clearTimeout(resultEffectTimer);boardResultEffect.hidden=true;sessionStorage.removeItem('frogShogiPendingMove');sessionStorage.removeItem('mixBattleResult');sessionStorage.removeItem('mixBattle');cpuBusy=false;clearSelection();notice.hidden=true;battleLoading.hidden=true;promoModal.hidden=true;gameOverModal.hidden=true;updateInfo(null)}
+function startNewGame(){clearRuntime();localStorage.removeItem('waterFrogShogiState');try{localStorage.setItem('kaeru_difficulty',setupChoice.difficulty)}catch(e){}state=freshState(setupChoice);startModal.hidden=true;render()}
+function openSetup(){clearTimeout(cpuTimer);cpuBusy=false;startModal.hidden=false;syncSetupButtons()}
+function syncSetupButtons(){document.querySelectorAll('[data-difficulty]').forEach(b=>b.classList.toggle('selected',b.dataset.difficulty===setupChoice.difficulty));document.querySelectorAll('[data-stage]').forEach(b=>b.classList.toggle('selected',b.dataset.stage===setupChoice.stage))}
+document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{setupChoice.difficulty=b.dataset.difficulty;syncSetupButtons()}));
+document.querySelectorAll('[data-stage]').forEach(b=>b.addEventListener('click',()=>{setupChoice.stage=b.dataset.stage;syncSetupButtons()}));
+startGameBtn.onclick=startNewGame;
+document.getElementById('resetBtn').onclick=()=>{if(confirm('対局設定に戻って最初から始めますか？'))openSetup()};
+document.getElementById('gameOverReset').onclick=openSetup;
 
-state=load();applyBattleResult();updateInfo(null);render();
+state=load();
+if(state){setupChoice={difficulty:state.difficulty||'normal',stage:state.stage||'standard'};applyBattleResult();updateInfo(null);render();}
+else{state=freshState(setupChoice);updateInfo(null);render();localStorage.removeItem('waterFrogShogiState');openSetup()}
 })();
