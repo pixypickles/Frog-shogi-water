@@ -3276,10 +3276,15 @@
     sessionStorage.setItem('mixBattleResult',JSON.stringify(result));
     const returnUrl=mixBattleContext.returnUrl||'index.html';
     sessionStorage.removeItem('mixBattle');
-    restartButton.textContent=mixBattleContext.mode==='shogi'?'将棋盤へ戻る':'戦略マップへ戻る';
+    const isShogi=mixBattleContext.mode==='shogi';
+    restartButton.textContent=isShogi?'将棋盤へ戻る':'戦略マップへ戻る';
     restartButton.hidden=false;
-    restartButton.onclick=()=>{ location.href=new URL(returnUrl,location.href).href; };
+    const goBack=()=>{ location.replace(new URL(returnUrl,location.href).href); };
+    restartButton.onclick=goBack;
     if(titleReturnButton)titleReturnButton.hidden=true;
+    // 将棋から呼ばれた格闘は、通常の格闘ゲーム画面へ戻さず盤面へ直帰する。
+    // KO表示を少しだけ見せてから自動で戻る。ボタンでも即時帰還できる。
+    if(isShogi) setTimeout(goBack,900);
     return true;
   }
 

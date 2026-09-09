@@ -9,3 +9,19 @@
 @media(max-width:1100px){.game-layout{grid-template-columns:120px minmax(420px,1fr) 120px}.piece-info{grid-column:1/-1;position:static;display:grid;grid-template-columns:1fr 1fr;gap:10px}.piece-info-head{border-bottom:0}.skill-list{grid-column:2}.rule-note{grid-column:1/-1}.board{width:min(68vh,100%)}}
 @media(max-width:760px){.topbar{align-items:flex-start}.top-actions{flex-direction:column}.game-layout{grid-template-columns:72px 1fr 72px;gap:5px}.info-panel{padding:6px;border-radius:12px}.side-title{font-size:12px}.hand-piece{min-width:0;width:100%;padding:4px 2px}.hand-help{display:none}.board-wrap{padding:5px;border-radius:12px}.turn-banner{font-size:12px}.board-caption{font-size:9px}.piece-info{grid-template-columns:1fr;padding:9px}.skill-list{grid-column:1;grid-template-columns:1fr 1fr}.rule-note{grid-column:1}.piece-name{font-size:15px}.frog-token.preview{width:50px;height:40px}.role-kanji{font-size:clamp(12px,4.4vw,22px)}}
 @media(orientation:portrait) and (max-width:760px){.game-layout{grid-template-columns:1fr 1fr}.board-wrap{grid-column:1/-1;grid-row:1}.devil-panel{grid-column:1}.angel-panel{grid-column:2}.piece-info{grid-column:1/-1}.board{width:min(94vw,68vh)}}
+
+
+/* v2.1.2: 水中蛙将棋はスマホ横画面専用 */
+.shogi-portrait-overlay{display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(180deg,#0d9aac,#07566b);color:#effcff;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;font-weight:900}
+.shogi-portrait-overlay .rotate-frog{font-size:70px;line-height:1;margin-bottom:12px}
+.shogi-portrait-overlay strong{font-size:clamp(22px,6vw,34px)}
+.shogi-portrait-overlay span{margin-top:8px;color:#c9f2f5;font-size:14px}
+@media (orientation:portrait){.shogi-portrait-overlay{display:flex}.shogi-app{visibility:hidden;overflow:hidden;height:100vh}}
+@media (orientation:landscape) and (max-height:600px){
+  .shogi-app{padding:5px max(7px,env(safe-area-inset-right)) 5px max(7px,env(safe-area-inset-left));height:100dvh;overflow:hidden}
+  .topbar{height:42px;padding:0 2px 4px;gap:8px}.eyebrow{display:none}.topbar h1{font-size:19px}.top-actions{gap:5px}.soft-btn,.primary-btn{padding:5px 8px;border-radius:8px;font-size:11px}
+  .game-layout{height:calc(100dvh - 48px);max-width:none;grid-template-columns:82px minmax(280px,1fr) 82px minmax(175px,220px);gap:5px;align-items:stretch}
+  .info-panel,.piece-info,.board-wrap{border-radius:10px}.info-panel{padding:6px;min-height:0;overflow:auto}.side-title{font-size:12px;margin-bottom:5px}.side-dot{width:9px;height:9px}.hand-piece{min-width:0;width:100%;padding:3px 2px;font-size:11px;border-radius:6px}.hand-help{display:none}
+  .board-wrap{padding:5px;min-width:0}.turn-banner{font-size:11px;padding:4px 6px;margin-bottom:4px}.battle-notice{font-size:11px;padding:4px 6px;margin-bottom:4px}.board{width:min(calc(100dvh - 86px),100%);max-height:calc(100dvh - 86px)}.board-caption{font-size:8px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .piece-info{position:static;padding:7px;overflow:auto}.piece-info-head{gap:6px;padding-bottom:6px}.frog-token.preview{width:46px;height:37px}.piece-name{font-size:13px}.piece-role{font-size:9px}.skill-list{font-size:10px;line-height:1.25;margin:6px 0;gap:3px}.skill{padding:4px 5px;border-radius:5px}.rule-note{font-size:9px;line-height:1.25;padding-top:5px}.role-kanji{font-size:clamp(12px,3.2vmin,20px)}
+}

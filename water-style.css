@@ -3689,3 +3689,11 @@ body.portrait-play #portraitOverlay{
   --frog-cheek: #9d4d64 !important;
   --frog-eye-area: #ffffff !important;
 }
+
+
+/* SHOGI LINK v2.1.2: 全画面を横持ち前提に統一 */
+@media (orientation:portrait) and (max-width:900px){
+  #portraitOverlay{display:flex!important}
+  body.portrait-play #portraitOverlay{display:flex!important}
+  #portraitOverlay .portrait-overlay-start{display:none!important}
+}
