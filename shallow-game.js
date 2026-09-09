@@ -2731,7 +2731,7 @@
     const map={
 
       mob:['前 ＋ パンチ：バブルショット','↑ ＋ パンチ：カエル跳びアッパー','前 ＋ キック：トリプルキック'],
-      jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック：サンダーチャージ','下 ＋ パンチ：サンダースパーク'],
+      jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック長押し → 離す：サンダーチャージ','下 ＋ パンチ：サンダースパーク'],
       remiel:['↑ ＋ ガード：ミラージュ','後ろ ＋ ガード：ミラージュカウンター','前 ＋ パンチ：フロストショット','前 ＋ キック：ミラージュキック'],
       seraphiel:['↑ ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 前 ＋ パンチ：セラフィックレイ'],
       sariel:['↑ ＋ パンチ：ルナ・スラッシュ','前 ＋ ガード：イーブルアイ','後ろ ＋ ガード：ブラッドムーン','↑ ＋ キック：ムーンサルトキック'],
@@ -2977,43 +2977,6 @@
 
   function cancelSoftProjectilesAtZone(z){
     if(!z || !z.owner) return;
-
-    // ジィハルの雷弾／雷撃リング。水圧カッターとは別描画・別判定。
-    jihalGroundBolts.forEach(q=>{
-      q.t-=dt; q.x+=q.vx*dt; q.y+=(q.vy||0)*dt; q.phase+=dt*24;
-      const target=q.owner&&q.owner.isPlayer?enemy:player;
-      if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+8){
-        q.hit=true; q.owner._projectileHit=true;
-        damageHit(q.owner,target,5.0*q.owner.damageMul,115*Math.sign(q.vx),-22);
-        q.owner._projectileHit=false; spawnImpact(q.x,q.y,'hit');
-      }
-    });
-    jihalGroundBolts=jihalGroundBolts.filter(q=>q.t>0&&!q.hit&&q.x>-90&&q.x<innerWidth+90&&q.y>-90&&q.y<innerHeight+90);
-    jihalGroundSparks.forEach(b=>{
-      b.t-=dt; b.r=b.maxR*(1-Math.max(0,b.t)/b.life);
-      const target=b.owner&&b.owner.isPlayer?enemy:player;
-      if(!b.hit&&target){
-        const d=Math.hypot(target.x-b.x,target.y-b.y);
-        if(d<b.r+target.radius && d>Math.max(0,b.r-42)){
-          b.hit=true; b.owner._projectileHit=true;
-          damageHit(b.owner,target,5.8*b.owner.damageMul,135*(target.x>=b.x?1:-1),-42);
-          b.owner._projectileHit=false; spawnImpact(target.x,target.y,'hit');
-        }
-      }
-    });
-    jihalGroundSparks=jihalGroundSparks.filter(b=>b.t>0);
-    [player,enemy].forEach(f=>{
-      if(!f||f.type!=='jihal')return;
-      if((f.specialType==='jihalLightningDash'||f.specialType==='jihalThunderCharge')&&f.specialT>0){
-        const dir=f.face||1; f.vx=dir*(f.specialType==='jihalThunderCharge'?1040:820);
-        const o=f.isPlayer?enemy:player;
-        if(o&&!f.jihalGroundRushHit&&Math.abs(o.x-f.x)<82&&Math.abs(o.y-f.y)<78){
-          f.jihalGroundRushHit=true;
-          damageHit(f,o,(f.specialType==='jihalThunderCharge'?7.2:5.6)*f.damageMul,(f.specialType==='jihalThunderCharge'?225:170)*dir,-36);
-          spawnImpact(o.x,o.y,'hit');
-        }
-      }
-    });
     pressureBlades.forEach(p=>{
       if(p.hit || !p.owner || p.owner===z.owner) return;
       if(Math.hypot(p.x-z.x,p.y-z.y)<z.r+30){
@@ -4122,19 +4085,36 @@
   function compatDir(f,dir,commandDir,windowMs=520){
     return compatHeldDir(f,dir) || hasCommand([commandDir],windowMs);
   }
-  // v2.2.5: ジィハル専用。既存キャラの技を流用せず、雷エフェクトと挙動を独立実装。
+  // v2.2.6: ジィハル専用。雷弾・放電・長押しチャージを地上/浅瀬で独立実装。
   function specialJihalGroundBolt(f){
     if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='jihalGroundBolt'; f.specialT=.34; f.attack='punch'; f.attackT=.34;
     jihalGroundBolts.push({owner:f,x:f.x+f.face*46,y:f.y-8,vx:f.face*430,vy:0,r:15,t:1.45,life:1.45,hit:false,phase:Math.random()*6.28});
     compatLabel('ボルトショット!'); return true;
   }
-  function specialJihalGroundDash(f,label='ライトニングダッシュ!',charged=false){
-    if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    f.specialType=charged?'jihalThunderCharge':'jihalLightningDash'; f.specialT=charged?.44:.31;
-    f.attack='kick'; f.attackT=f.specialT; f.vx=f.face*(charged?1040:820); f.vy=Math.min(f.vy||0,-35);
-    f.jihalGroundRushHit=false; f.jihalGroundRushPower=charged?1.35:1;
-    compatLabel(label); return true;
+  function specialJihalGroundDash(f){
+    if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.specialT>0||f.attackT>0||f.jihalCharging)return false;
+    f.jihalRushDir=f.face||1;
+    f.specialType='jihalLightningDash'; f.specialT=.31;
+    f.attack='kick'; f.attackT=.31; f.vx=f.jihalRushDir*820; f.vy=Math.min(f.vy||0,-35);
+    f.jihalGroundRushHit=false;
+    compatLabel('ライトニングダッシュ!'); return true;
+  }
+  function startJihalThunderCharge(f){
+    if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.attackT>0||f.jihalCharging)return false;
+    f.jihalCharging=true; f.jihalCharge=0; f.jihalRushDir=f.face||1;
+    f.specialType='jihalThunderChargeHold'; f.specialT=999; f.attack=null; f.attackT=0;
+    f.vx*=.15;
+    compatLabel('サンダーチャージ…'); return true;
+  }
+  function releaseJihalThunderCharge(f){
+    if(!f||!f.jihalCharging)return false;
+    const c=Math.max(0,Math.min(1,f.jihalCharge||0));
+    f.jihalCharging=false; f.jihalRushDir=f.face||f.jihalRushDir||1;
+    f.specialType='jihalThunderChargeRush'; f.specialT=.34; f.attack='kick'; f.attackT=.34;
+    f.jihalChargePower=c; f.jihalThunderHit=false;
+    f.vx=f.jihalRushDir*(980+520*c); f.vy=Math.min(f.vy||0,-20);
+    compatLabel(c>.75?'フル・サンダーチャージ!':'サンダーチャージ!'); return true;
   }
   function specialJihalGroundSpark(f){
     if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
@@ -4152,8 +4132,7 @@
     if(f.type==='jihal'){
       if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return specialJihalGroundSpark(f);}
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return specialJihalGroundBolt(f);}
-      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return specialJihalGroundDash(f,'ライトニングダッシュ!',false);}
-      if(kind==='kick'&&compatDir(f,'back',back,520)){clearCommand();return specialJihalGroundDash(f,'サンダーチャージ!',true);}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return specialJihalGroundDash(f);}
     }
     if(f.type==='remiel'){
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'フロストショット!');}
@@ -4964,12 +4943,23 @@
         }
         attack(player,action);
       }
+      else if(action==='kick' && player && player.type==='jihal'){
+        const backHeld=(player.face>0 && input.x<-.35) || (player.face<0 && input.x>.35);
+        if(backHeld && !player.throwState){
+          player.attackT=0; player.attack=null;
+          if(startJihalThunderCharge(player)){btn.dataset.jihalCharge='1';return;}
+        }
+        attack(player,action);
+      }
       else if(player) attack(player,action);
     };
     const up=e=>{
       e.preventDefault(); btn.classList.remove('pressed');
       if(action==='punch' && player && btn.dataset.charging==='1'){
         btn.dataset.charging=''; releaseAbyssCharge(player);
+      }
+      if(action==='kick' && player && btn.dataset.jihalCharge==='1'){
+        btn.dataset.jihalCharge=''; releaseJihalThunderCharge(player);
       }
       if(action==='guard'&&player){
         player.guard=false;
@@ -5008,7 +4998,10 @@
       }
     }
     if(e.key==='j')attack(player,'punch');
-    if(e.key==='k')attack(player,'kick');
+    if(e.key==='k'&&player){
+      const back=player.type==='jihal'&&((player.face>0&&keys['a'])||(player.face<0&&keys['d']));
+      if(back)startJihalThunderCharge(player);else attack(player,'kick');
+    }
     if(e.key==='l')attack(player,'tongue');
     if(e.key==='i'&&player){
       if(player.type==='orange'&&!player.urielGuardHoldStart)player.urielGuardHoldStart=performance.now();
@@ -5017,7 +5010,7 @@
       if(guardMiniActive) guardMiniGuardTapTime=performance.now();
     }
   });
-  addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key==='i'&&player)player.guard=false});
+  addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key==='i'&&player)player.guard=false;if(e.key==='k'&&player&&player.type==='jihal'&&player.jihalCharging)releaseJihalThunderCharge(player);});
 
   function enemyAI(dt){
     const diff=difficultyProfile();
@@ -5394,6 +5387,65 @@ function drawBackground(dt){
       }
       updateNewSpecialMoves(player,dt);
       updateNewSpecialMoves(enemy,dt);
+
+      // v2.2.6 ジィハル: 毎フレーム更新。以前はカウンター用関数内に入り、弾/放電が静止していた。
+      [player,enemy].forEach(f=>{
+        if(!f||f.type!=='jihal')return;
+        if(f.jihalCharging){
+          f.jihalCharge=Math.min(1,(f.jihalCharge||0)+dt/.95);
+          f.specialT=999; f.vx*=.75;
+        }
+        const dir=f.jihalRushDir||f.face||1;
+        if(f.specialType==='jihalLightningDash'&&f.specialT>0) f.vx=dir*820;
+        if(f.specialType==='jihalThunderChargeRush'&&f.specialT>0){
+          const c=Math.max(0,Math.min(1,f.jihalChargePower||0));
+          f.vx=dir*(980+520*c);
+        }
+      });
+
+      jihalGroundBolts.forEach(q=>{
+        q.t-=dt; q.x+=q.vx*dt; q.y+=(q.vy||0)*dt; q.phase+=dt*24;
+        const target=q.owner&&q.owner.isPlayer?enemy:player;
+        if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+8){
+          q.hit=true; q.owner._projectileHit=true;
+          damageHit(q.owner,target,5.0*q.owner.damageMul,115*Math.sign(q.vx),-22);
+          q.owner._projectileHit=false; spawnImpact(q.x,q.y,'hit');
+        }
+      });
+      jihalGroundBolts=jihalGroundBolts.filter(q=>q.t>0&&!q.hit&&q.x>-90&&q.x<innerWidth+90&&q.y>-90&&q.y<innerHeight+90);
+
+      jihalGroundSparks.forEach(b=>{
+        b.t-=dt; b.r=b.maxR*(1-Math.max(0,b.t)/b.life);
+        const target=b.owner&&b.owner.isPlayer?enemy:player;
+        if(!b.hit&&target){
+          const d=Math.hypot(target.x-b.x,target.y-b.y);
+          if(d<b.r+target.radius && d>Math.max(0,b.r-42)){
+            b.hit=true; b.owner._projectileHit=true;
+            damageHit(b.owner,target,5.8*b.owner.damageMul,135*(target.x>=b.x?1:-1),-42);
+            b.owner._projectileHit=false; spawnImpact(target.x,target.y,'hit');
+          }
+        }
+      });
+      jihalGroundSparks=jihalGroundSparks.filter(b=>b.t>0);
+
+      [player,enemy].forEach(f=>{
+        if(!f||f.type!=='jihal')return;
+        const o=f.isPlayer?enemy:player; if(!o)return;
+        const dir=f.jihalRushDir||f.face||1;
+        if(f.specialType==='jihalLightningDash'&&f.specialT>0&&!f.jihalGroundRushHit&&Math.abs(o.x-f.x)<82&&Math.abs(o.y-f.y)<78){
+          f.jihalGroundRushHit=true;
+          damageHit(f,o,5.6*f.damageMul,170*dir,-36); spawnImpact(o.x,o.y,'hit');
+        }
+        if(f.specialType==='jihalThunderChargeRush'&&f.specialT>0&&!f.jihalThunderHit&&Math.abs(o.x-f.x)<86&&Math.abs(o.y-f.y)<84){
+          f.jihalThunderHit=true;
+          const c=Math.max(0,Math.min(1,f.jihalChargePower||0));
+          const keepVx=dir*(980+520*c);
+          damageHit(f,o,(7.2+4.8*c)*f.damageMul,(225+145*c)*dir,-46);
+          // 貫通：ヒット後も減速せず、相手の向こう側へ抜ける。
+          f.vx=keepVx; f.x=o.x+dir*(o.radius+f.radius+16); o.x-=dir*8;
+          spawnImpact(o.x,o.y,'hit');
+        }
+      });
 
       // v6.5: フリー対戦／ストーリーだけ、上下位置が近い時に横へ押し分ける。
       if(gameMode==='battle' || gameMode==='story'){
