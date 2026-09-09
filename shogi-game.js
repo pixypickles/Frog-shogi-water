@@ -10,7 +10,9 @@ const TEAMS={
 };
 const STAGES={
   standard:{id:'standard',label:'標準盤',size:9,promoDepth:3},
-  compact:{id:'compact',label:'小型決戦',size:7,promoDepth:2}
+  compact:{id:'compact',label:'小型決戦',size:7,promoDepth:2},
+  current:{id:'current',label:'急流回廊',size:7,promoDepth:2,battleHazard:'current'},
+  channel:{id:'channel',label:'狭水路',size:7,promoDepth:2,shape:'channel'}
 };
 const DIFFICULTIES={
   easy:{id:'easy',label:'やさしい',think:700,pool:12,captureMul:1.55,promoBonus:30,noise:70},
@@ -48,7 +50,7 @@ const gameOverModal=document.getElementById('gameOverModal');
 const battleLoading=document.getElementById('battleLoading'),loadingAttacker=document.getElementById('loadingAttacker'),loadingDefender=document.getElementById('loadingDefender');
 const boardResultEffect=document.getElementById('boardResultEffect'),boardResultKicker=document.getElementById('boardResultKicker'),boardResultMain=document.getElementById('boardResultMain'),boardResultSub=document.getElementById('boardResultSub');
 const startModal=document.getElementById('startModal'),startGameBtn=document.getElementById('startGameBtn'),modeSummary=document.getElementById('modeSummary');
-let setupChoice={difficulty:'normal',stage:'standard'};
+let setupChoice={difficulty:'normal',stage:'standard',hands:'auto'};
 let state,selected=null,legal=[],selectedHand=null,pendingMove=null,cpuTimer=null,cpuBusy=false,resultEffectTimer=null;
 
 function other(t){return t==='angel'?'devil':'angel'}
@@ -56,7 +58,7 @@ function mk(team,role,promoted=false,promotionForm=null){return{team,role,promot
 function initialBoard(stageId='standard') {
   const stage=STAGES[stageId]||STAGES.standard, n=stage.size;
   const b=Array.from({length:n},()=>Array(n).fill(null));
-  if(stageId==='compact'){
+  if(stageId==='compact'||stageId==='current'||stageId==='channel'){
     // 各役割＝各キャラ1体。歩だけ前列中央に置く7×7決戦。
     const back=['L','N','S','K','G','B','R'];
     back.forEach((r,x)=>b[0][x]=mk('devil',r));
@@ -74,10 +76,11 @@ function initialBoard(stageId='standard') {
 function emptyHands(){return{angel:{R:0,B:0,G:0,S:0,N:0,L:0,P:0},devil:{R:0,B:0,G:0,S:0,N:0,L:0,P:0}}}
 function freshState(opts=setupChoice){
   const stage=opts.stage||'standard',difficulty=opts.difficulty||'normal';
-  return{schemaVersion:217,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,turn:'angel',hands:emptyHands(),winner:null,lastMessage:'天使軍の手番'}
+  const handsMode=stage==='standard'?'on':(opts.hands||'off');
+  return{schemaVersion:218,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,handsMode,turn:'angel',hands:emptyHands(),winner:null,lastMessage:'天使軍の手番'}
 }
 function normalizeState(s){
-  if(!s||!s.board||s.schemaVersion!==217)return null;
+  if(!s||!s.board||s.schemaVersion!==218)return null;
   s.stage=s.stage||((s.board.length===7)?'compact':'standard');
   s.difficulty=s.difficulty||'normal';
   s.boardSize=s.board.length;
@@ -89,7 +92,7 @@ function load(){try{return normalizeState(JSON.parse(localStorage.getItem('water
 function boardSize(){return state?.boardSize||state?.board?.length||9}
 function stageConfig(){return STAGES[state?.stage]||STAGES.standard}
 function difficultyConfig(){return DIFFICULTIES[state?.difficulty]||DIFFICULTIES.normal}
-function updateModeSummary(){if(modeSummary&&state)modeSummary.textContent=`${stageConfig().label} / CPU ${difficultyConfig().label}`}
+function updateModeSummary(){if(modeSummary&&state)modeSummary.textContent=`${stageConfig().label} / CPU ${difficultyConfig().label} / 持ち駒${state.handsMode==='on'?'あり':'なし'}`}
 
 function fighterType(piece){if(piece.promoted&&piece.promotionForm==='special')return TEAMS[piece.team].promotionPawn;return TEAMS[piece.team].roles[piece.role]}
 function charOf(piece){return CHAR[fighterType(piece)]||CHAR.mob}
@@ -101,7 +104,8 @@ function updateInfo(piece){
   const form=piece.promoted?(piece.promotionForm==='special'?'・特殊成':'・通常成'):'';
   info.role.textContent=`${TEAMS[piece.team].label} / ${label}（${ROLE_NAME[piece.role]}${form}）`;info.skills.innerHTML=c.skills.map(s=>`<div class="skill">${s}</div>`).join('');
 }
-function inBounds(x,y){const n=boardSize();return x>=0&&x<n&&y>=0&&y<n}
+function isBlocked(x,y){if(state?.stage!=='channel')return false;const n=boardSize();return (y===2||y===4)&&(x<2||x>n-3)}
+function inBounds(x,y){const n=boardSize();return x>=0&&x<n&&y>=0&&y<n&&!isBlocked(x,y)}
 function pathMoves(x,y,dirs,piece){const out=[];for(const [dx,dy] of dirs){let nx=x+dx,ny=y+dy;while(inBounds(nx,ny)){const q=state.board[ny][nx];if(!q)out.push({x:nx,y:ny});else{if(q.team!==piece.team)out.push({x:nx,y:ny,capture:true});break}nx+=dx;ny+=dy}}return out}
 function stepMoves(x,y,dirs,piece){const out=[];for(const [dx0,dy0] of dirs){const dir=piece.team==='angel'?-1:1;const nx=x+dx0,ny=y+dy0*dir;if(!inBounds(nx,ny))continue;const q=state.board[ny][nx];if(!q||q.team!==piece.team)out.push({x:nx,y:ny,capture:!!q})}return out}
 function movesFor(x,y){
@@ -134,7 +138,7 @@ function render(){
   boardEl.innerHTML='';
   const n=boardSize(),d=stageConfig().promoDepth;boardEl.style.setProperty('--board-size',n);boardEl.classList.toggle('compact-stage',state.stage==='compact');boardEl.setAttribute('aria-label',`${n}×${n}の水中蛙将棋盤`);
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-    const cell=document.createElement('button');cell.className='cell';if(y<d||y>=n-d)cell.classList.add('promo-zone');if(x===n-1)cell.classList.add('last-col');if(y===n-1)cell.classList.add('last-row');cell.dataset.x=x;cell.dataset.y=y;
+    const cell=document.createElement('button');cell.className='cell';if(isBlocked(x,y)){cell.classList.add('blocked');cell.disabled=true;boardEl.appendChild(cell);continue;}if(y<d||y>=n-d)cell.classList.add('promo-zone');if(x===n-1)cell.classList.add('last-col');if(y===n-1)cell.classList.add('last-row');cell.dataset.x=x;cell.dataset.y=y;
     if(selected&&selected.x===x&&selected.y===y)cell.classList.add('selected');const l=legal.find(m=>m.x===x&&m.y===y);if(l)cell.classList.add(l.drop?'drop':l.capture?'capture':'legal');
     const p=state.board[y][x];if(p){const wrap=document.createElement('div');wrap.className=`piece ${p.team}`;wrap.innerHTML=tokenHTML(p);cell.appendChild(wrap)}
     cell.addEventListener('click',()=>onCell(x,y));boardEl.appendChild(cell);
@@ -145,6 +149,7 @@ function render(){
   save();scheduleCpuIfNeeded();
 }
 function renderHands(){
+  if(state.handsMode!=='on'){angelHandEl.innerHTML='<span class="hand-count">このステージは持ち駒なし</span>';devilHandEl.innerHTML='<span class="hand-count">このステージは持ち駒なし</span>';return}
   for(const team of ['angel','devil']){const el=team==='angel'?angelHandEl:devilHandEl;el.innerHTML='';for(const role of ['R','B','G','S','N','L','P']){const n=state.hands[team][role]||0;if(!n)continue;const b=document.createElement('button');b.className='hand-piece'+(selectedHand&&selectedHand.team===team&&selectedHand.role===role?' selected':'');b.innerHTML=`<span>${ROLE_LABEL[role]}</span><span class="hand-count">×${n}</span>`;b.disabled=team==='devil';b.addEventListener('click',()=>selectHand(team,role));el.appendChild(b)}if(!el.children.length)el.innerHTML='<span class="hand-count">持ち駒なし</span>'}
 }
 function clearSelection(){selected=null;selectedHand=null;legal=[]}
@@ -184,7 +189,7 @@ function launchBattle(m){
   const attacker=m.attacker,defender=m.defender;
   loadingAttacker.textContent=charOf(attacker).name;loadingDefender.textContent=charOf(defender).name;battleLoading.hidden=false;
   sessionStorage.removeItem('mixBattleResult');sessionStorage.setItem('frogShogiPendingMove',JSON.stringify(m));
-  sessionStorage.setItem('mixBattle',JSON.stringify({mode:'shogi',source:'water-frog-shogi',playerRole:attacker.team==='angel'?'attacker':'defender',attackerTeam:attacker.team,defenderTeam:defender.team,attacker:'shogi-attacker',defender:'shogi-defender',attackerType:fighterType(attacker),defenderType:fighterType(defender),attackerHp:100,defenderHp:33,returnUrl:'index.html'}));
+  sessionStorage.setItem('mixBattle',JSON.stringify({mode:'shogi',source:'water-frog-shogi',playerRole:attacker.team==='angel'?'attacker':'defender',attackerTeam:attacker.team,defenderTeam:defender.team,attacker:'shogi-attacker',defender:'shogi-defender',attackerType:fighterType(attacker),defenderType:fighterType(defender),attackerHp:100,defenderHp:33,battleHazard:stageConfig().battleHazard||null,returnUrl:'index.html'}));
   save();
   setTimeout(()=>{location.href='water-fighter.html?mix=1&battle=1&shogi=1'},700);
 }
@@ -210,7 +215,7 @@ function applyBattleResult(){
     showBoardBattleEffect(true,liveAttacker,liveDefender);
     const capturedRole=liveDefender.role;
     if(capturedRole==='K'){state.board[pending.ty][pending.tx]=liveAttacker;state.board[pending.fy][pending.fx]=null;state.winner=liveAttacker.team;save();showGameOver(state.winner,`${charOf(liveAttacker).name}が王を撃破！`);render();return}
-    state.hands[liveAttacker.team][capturedRole]=(state.hands[liveAttacker.team][capturedRole]||0)+1;notice.hidden=false;notice.textContent=`格闘勝利！ ${charOf(liveDefender).name}を捕獲`;state.board[pending.ty][pending.tx]=null;completeBoardMove(pending.fx,pending.fy,pending.tx,pending.ty,true);
+    if(state.handsMode==='on')state.hands[liveAttacker.team][capturedRole]=(state.hands[liveAttacker.team][capturedRole]||0)+1;notice.hidden=false;notice.textContent=`格闘勝利！ ${charOf(liveDefender).name}を捕獲`;state.board[pending.ty][pending.tx]=null;completeBoardMove(pending.fx,pending.fy,pending.tx,pending.ty,true);
   }else{
     showBoardBattleEffect(false,liveAttacker,liveDefender);
     notice.hidden=false;notice.textContent=`守備成功！ ${charOf(liveAttacker).name}は元のマスへ戻ります`;setTimeout(()=>{notice.hidden=true},1800);state.turn=other(state.turn);clearSelection();cpuBusy=false;render();
@@ -259,14 +264,15 @@ function cpuPlay(){
 function clearRuntime(){clearTimeout(cpuTimer);clearTimeout(resultEffectTimer);boardResultEffect.hidden=true;sessionStorage.removeItem('frogShogiPendingMove');sessionStorage.removeItem('mixBattleResult');sessionStorage.removeItem('mixBattle');cpuBusy=false;clearSelection();notice.hidden=true;battleLoading.hidden=true;promoModal.hidden=true;gameOverModal.hidden=true;updateInfo(null)}
 function startNewGame(){clearRuntime();localStorage.removeItem('waterFrogShogiState');try{localStorage.setItem('kaeru_difficulty',setupChoice.difficulty)}catch(e){}state=freshState(setupChoice);startModal.hidden=true;render()}
 function openSetup(){clearTimeout(cpuTimer);cpuBusy=false;startModal.hidden=false;syncSetupButtons()}
-function syncSetupButtons(){document.querySelectorAll('[data-difficulty]').forEach(b=>b.classList.toggle('selected',b.dataset.difficulty===setupChoice.difficulty));document.querySelectorAll('[data-stage]').forEach(b=>b.classList.toggle('selected',b.dataset.stage===setupChoice.stage))}
+function syncSetupButtons(){document.querySelectorAll('[data-difficulty]').forEach(b=>b.classList.toggle('selected',b.dataset.difficulty===setupChoice.difficulty));document.querySelectorAll('[data-stage]').forEach(b=>b.classList.toggle('selected',b.dataset.stage===setupChoice.stage));document.querySelectorAll('[data-hands]').forEach(b=>b.classList.toggle('selected',b.dataset.hands===(setupChoice.stage==='standard'?'on':setupChoice.hands)));const locked=setupChoice.stage==='standard';document.querySelectorAll('[data-hands]').forEach(b=>b.disabled=locked);const note=document.getElementById('handsNote');if(note)note.textContent=locked?'標準盤は「あり」固定です。':'変則ステージは「なし」推奨。ありにもできます。'}
 document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{setupChoice.difficulty=b.dataset.difficulty;syncSetupButtons()}));
-document.querySelectorAll('[data-stage]').forEach(b=>b.addEventListener('click',()=>{setupChoice.stage=b.dataset.stage;syncSetupButtons()}));
+document.querySelectorAll('[data-stage]').forEach(b=>b.addEventListener('click',()=>{setupChoice.stage=b.dataset.stage;if(setupChoice.stage!=='standard'&&setupChoice.hands==='auto')setupChoice.hands='off';syncSetupButtons()}));
+document.querySelectorAll('[data-hands]').forEach(b=>b.addEventListener('click',()=>{if(setupChoice.stage==='standard')return;setupChoice.hands=b.dataset.hands;syncSetupButtons()}));
 startGameBtn.onclick=startNewGame;
 document.getElementById('resetBtn').onclick=()=>{if(confirm('対局設定に戻って最初から始めますか？'))openSetup()};
 document.getElementById('gameOverReset').onclick=openSetup;
 
 state=load();
-if(state){setupChoice={difficulty:state.difficulty||'normal',stage:state.stage||'standard'};applyBattleResult();updateInfo(null);render();}
+if(state){setupChoice={difficulty:state.difficulty||'normal',stage:state.stage||'standard',hands:state.handsMode||'off'};applyBattleResult();updateInfo(null);render();}
 else{state=freshState(setupChoice);updateInfo(null);render();localStorage.removeItem('waterFrogShogiState');openSetup()}
 })();

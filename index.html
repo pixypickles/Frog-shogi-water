@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#087d91" />
-  <title>水中蛙将棋 Prototype v2.1.7</title>
+  <title>水中蛙将棋 Prototype v2.1.8</title>
   <link rel="stylesheet" href="shogi-style.css?v=0.1.7" />
 </head>
 <body>
@@ -108,7 +108,14 @@
           <div class="choice-grid stage-grid">
             <button class="choice-btn selected" data-stage="standard"><strong>標準盤</strong><small>9×9・通常配置</small></button>
             <button class="choice-btn" data-stage="compact"><strong>小型決戦</strong><small>7×7・各キャラ1体</small></button>
+            <button class="choice-btn" data-stage="current"><strong>急流回廊</strong><small>7×7・格闘中も右へ流される</small></button>
+            <button class="choice-btn" data-stage="channel"><strong>狭水路</strong><small>7×7・中央の細い通路で激突</small></button>
           </div>
+        </div>
+        <div class="setup-block">
+          <div class="setup-label">持ち駒</div>
+          <div class="choice-grid hands-grid"><button class="choice-btn selected" data-hands="on"><strong>あり</strong><small>取った駒を再配置</small></button><button class="choice-btn" data-hands="off"><strong>なし</strong><small>取られた駒は退場</small></button></div>
+          <small id="handsNote" class="setup-note">標準盤は「あり」固定です。</small>
         </div>
         <div class="modal-actions">
           <button id="startGameBtn" class="primary-btn start-game-btn">この設定で対局開始</button>
