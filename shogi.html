@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#087d91" />
+  <title>水中蛙将棋 Prototype</title>
+  <link rel="stylesheet" href="shogi-style.css?v=0.1.0" />
+</head>
+<body>
+  <main class="shogi-app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">FROG FIGHTER Ⅱ SIDE GAME</div>
+        <h1>水中蛙将棋</h1>
+      </div>
+      <div class="top-actions">
+        <button id="resetBtn" class="soft-btn">最初から</button>
+        <a class="soft-btn" href="index.html">格闘ゲームへ</a>
+      </div>
+    </header>
+
+    <section class="game-layout">
+      <aside class="info-panel devil-panel">
+        <div class="side-title"><span class="side-dot devil"></span>悪魔軍</div>
+        <div id="devilHand" class="hand-list"></div>
+        <div class="hand-help">持ち駒をタップ → 置けるマスを表示</div>
+      </aside>
+
+      <section class="board-wrap">
+        <div id="turnBanner" class="turn-banner">天使軍の手番</div>
+        <div id="battleNotice" class="battle-notice" hidden></div>
+        <div id="board" class="board" aria-label="9×9の水中蛙将棋盤"></div>
+        <div class="board-caption">攻撃で相手の駒に入ると水中格闘へ。攻撃側HP100 / 守備側HP33。</div>
+      </section>
+
+      <aside class="info-panel angel-panel">
+        <div class="side-title"><span class="side-dot angel"></span>天使軍</div>
+        <div id="angelHand" class="hand-list"></div>
+        <div class="hand-help">歩が成るとカワズさん。悪魔軍はコカビエルさん。</div>
+      </aside>
+
+      <section id="pieceInfo" class="piece-info">
+        <div class="piece-info-head">
+          <div id="piecePortrait" class="frog-token preview"></div>
+          <div>
+            <div id="pieceName" class="piece-name">駒を選択</div>
+            <div id="pieceRole" class="piece-role">動けるマスと技表をここに表示します</div>
+          </div>
+        </div>
+        <div id="skillList" class="skill-list"></div>
+        <div class="rule-note">※盤面は1台交代制。格闘は「攻めた側」を操作します。勝てば捕獲して進み、負ければ元のマスへ戻ります。</div>
+      </section>
+    </section>
+
+    <div id="promotionModal" class="modal" hidden>
+      <div class="modal-card">
+        <h2>成りますか？</h2>
+        <p id="promotionText"></p>
+        <div class="modal-actions">
+          <button id="promoteYes" class="primary-btn">成る</button>
+          <button id="promoteNo" class="soft-btn">成らない</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gameOverModal" class="modal" hidden>
+      <div class="modal-card">
+        <h2 id="gameOverTitle">勝負あり！</h2>
+        <p id="gameOverText"></p>
+        <div class="modal-actions">
+          <button id="gameOverReset" class="primary-btn">もう一局</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="shogi-game.js?v=0.1.0"></script>
+</body>
+</html>
