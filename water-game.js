@@ -751,7 +751,7 @@
   }
 
   if(practiceExitButton){
-    if(mixPracticeMode) practiceExitButton.textContent='MIXタイトルへ戻る';
+    if(mixPracticeMode) practiceExitButton.textContent='水中蛙将棋へ戻る';
     practiceExitButton.addEventListener('pointerup',(e)=>{
       e.preventDefault();
       e.stopPropagation();
@@ -8908,7 +8908,7 @@ function drawBackground(dt){
       show('game');resize();startPractice();
       if(practiceExitButton){
         practiceExitButton.hidden=false;
-        practiceExitButton.textContent='MIXタイトルへ戻る';
+        practiceExitButton.textContent='水中蛙将棋へ戻る';
       }
     },80);
   }
@@ -8918,8 +8918,9 @@ function drawBackground(dt){
     setTimeout(()=>{
       let playerIsAttacker;
       if(mixBattleContext.mode==='shogi'){
-        playerIsAttacker=true;
-        mixBattleContext.playerRole='attacker';
+        // 水中蛙将棋では天使軍がプレイヤー。CPU悪魔軍が攻めた時は、
+        // プレイヤーは防御側としてHP33で戦う。
+        playerIsAttacker=mixBattleContext.playerRole!=='defender';
       }else{
         playerIsAttacker=String(mixBattleContext.attacker||'').startsWith('k');
         mixBattleContext.playerRole=playerIsAttacker?'attacker':'defender';

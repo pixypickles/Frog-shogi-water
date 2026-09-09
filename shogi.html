@@ -4,61 +4,92 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#087d91" />
-  <title>水中蛙将棋 Prototype v2.1.1</title>
-  <link rel="stylesheet" href="shogi-style.css?v=0.1.1" />
+  <title>水中蛙将棋 Prototype v2.1.3</title>
+  <link rel="stylesheet" href="shogi-style.css?v=0.1.3" />
 </head>
 <body>
+  <div id="shogiPortraitOverlay" class="shogi-portrait-overlay" aria-live="polite">
+    <div class="rotate-frog">🐸</div>
+    <strong>スマホを横向きにしてください</strong>
+    <span>水中蛙将棋は横画面専用です</span>
+  </div>
+
   <main class="shogi-app">
     <header class="topbar">
-      <div>
-        <div class="eyebrow">FROG FIGHTER Ⅱ SIDE GAME</div>
+      <div class="title-block">
         <h1>水中蛙将棋</h1>
+        <span class="cpu-chip">あなた：天使軍　／　CPU：悪魔軍</span>
       </div>
       <div class="top-actions">
         <button id="resetBtn" class="soft-btn">最初から</button>
-        <a class="soft-btn" href="water-fighter.html">格闘ゲームへ</a>
+        <a class="soft-btn practice-link" href="water-fighter.html?mixpractice=1&fighter=green">格闘操作練習</a>
       </div>
     </header>
 
     <section class="game-layout">
-      <aside class="info-panel devil-panel">
-        <div class="side-title"><span class="side-dot devil"></span>悪魔軍</div>
-        <div id="devilHand" class="hand-list"></div>
-        <div class="hand-help">持ち駒をタップ → 置けるマスを表示</div>
+      <aside class="side-stack left-stack">
+        <section class="info-panel devil-panel compact-panel">
+          <div class="side-title"><span class="side-dot devil"></span>悪魔軍 <small>CPU</small></div>
+          <div id="devilHand" class="hand-list"></div>
+        </section>
+        <section class="info-panel angel-panel compact-panel">
+          <div class="side-title"><span class="side-dot angel"></span>天使軍 <small>PLAYER</small></div>
+          <div id="angelHand" class="hand-list"></div>
+          <div class="hand-help">持ち駒をタップすると、置けるマスを表示します。</div>
+        </section>
+        <section class="mini-rule-panel">
+          <strong>格闘ルール</strong>
+          <span>攻撃側 HP100</span>
+          <span>防御側 HP33</span>
+          <span>攻撃側が負けると元のマスへ戻る</span>
+        </section>
       </aside>
 
       <section class="board-wrap">
         <div id="turnBanner" class="turn-banner">天使軍の手番</div>
         <div id="battleNotice" class="battle-notice" hidden></div>
         <div id="board" class="board" aria-label="9×9の水中蛙将棋盤"></div>
-        <div class="board-caption">攻撃で相手の駒に入ると水中格闘へ。攻撃側HP100 / 守備側HP33。</div>
       </section>
 
-      <aside class="info-panel angel-panel">
-        <div class="side-title"><span class="side-dot angel"></span>天使軍</div>
-        <div id="angelHand" class="hand-list"></div>
-        <div class="hand-help">歩が成るとカワズさん。悪魔軍はコカビエルさん。</div>
-      </aside>
-
-      <section id="pieceInfo" class="piece-info">
-        <div class="piece-info-head">
-          <div id="piecePortrait" class="frog-token preview"></div>
-          <div>
-            <div id="pieceName" class="piece-name">駒を選択</div>
-            <div id="pieceRole" class="piece-role">動けるマスと技表をここに表示します</div>
+      <aside class="side-stack right-stack">
+        <section id="pieceInfo" class="piece-info">
+          <div class="piece-info-head">
+            <div id="piecePortrait" class="frog-token preview"></div>
+            <div>
+              <div id="pieceName" class="piece-name">駒を選択</div>
+              <div id="pieceRole" class="piece-role">動けるマスと技表を表示します</div>
+            </div>
           </div>
-        </div>
-        <div id="skillList" class="skill-list"></div>
-        <div class="rule-note">※盤面は1台交代制。格闘は「攻めた側」を操作します。勝てば捕獲して進み、負ければ元のマスへ戻ります。</div>
-      </section>
+          <div id="skillList" class="skill-list"></div>
+        </section>
+        <section class="status-panel">
+          <strong>遊び方</strong>
+          <span>自分の駒をタップ → 移動先をタップ</span>
+          <span>敵駒へ進むと、その2人で水中格闘</span>
+          <span>赤枠：格闘が発生するマス</span>
+          <span>緑点：移動できるマス</span>
+        </section>
+      </aside>
     </section>
+
+    <div id="battleLoading" class="battle-loading" hidden>
+      <div class="battle-loading-card">
+        <div class="battle-loading-title">水中格闘</div>
+        <div class="versus-line"><span>攻撃側</span><strong id="loadingAttacker">---</strong></div>
+        <div class="versus-vs">VS</div>
+        <div class="versus-line defender"><span>防御側</span><strong id="loadingDefender">---</strong></div>
+        <div class="loading-dots"><i></i><i></i><i></i></div>
+        <div class="loading-text">格闘ステージを読み込み中…</div>
+      </div>
+    </div>
 
     <div id="promotionModal" class="modal" hidden>
       <div class="modal-card">
         <h2>成りますか？</h2>
         <p id="promotionText"></p>
-        <div class="modal-actions">
-          <button id="promoteYes" class="primary-btn">成る</button>
+        <div class="modal-actions promotion-actions">
+          <button id="promoteStandard" class="primary-btn">このまま成る</button>
+          <button id="promoteSpecial" class="primary-btn special-promote">カワズさんで成る</button>
           <button id="promoteNo" class="soft-btn">成らない</button>
         </div>
       </div>
@@ -74,6 +105,6 @@
       </div>
     </div>
   </main>
-  <script src="shogi-game.js?v=0.1.1"></script>
+  <script src="shogi-game.js?v=0.1.3"></script>
 </body>
 </html>
