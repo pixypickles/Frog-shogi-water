@@ -84,6 +84,8 @@
   let belialPoisonShots = [];
   let catfishCharges = [];
   let pressureBlades = [];
+  let jihalGroundBolts = [];
+  let jihalGroundSparks = [];
   let burstWaves = [];
   let leafTargets=[];
   let leafMiniActive=false;
@@ -2428,7 +2430,7 @@
     }));
 
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[];
-    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; pressureBlades=[]; burstWaves=[];
+    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; burstWaves=[];
 
     for(let i=0;i<12;i++){
       spawnLeafTarget(i,true);
@@ -2512,7 +2514,7 @@
     if(practiceExitButton){practiceExitButton.hidden=false;practiceExitButton.textContent='ミニゲーム終了';}
     if(practiceLabel) practiceLabel.style.display='none';
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[]; siltClouds=[];
-    catfishCharges=[]; pressureBlades=[]; burstWaves=[];
+    catfishCharges=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; burstWaves=[];
 
     // 最初は1体だけ。いきなり複数が同時に来ないようにする。
     spawnGuardTarget();
@@ -2700,7 +2702,7 @@
     aquaTornadoes=[]; aquaVortices=[];
     siltClouds=[];
     catfishCharges=[];
-    pressureBlades=[];
+    pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[];
     burstWaves=[];
     aquaTornadoes=[]; aquaVortices=[];
     siltClouds=[];
@@ -2729,7 +2731,7 @@
     const map={
 
       mob:['前 ＋ パンチ：バブルショット','↑ ＋ パンチ：カエル跳びアッパー','前 ＋ キック：トリプルキック'],
-      jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック：サンダーチャージ','下 ＋ パンチ：スパークバースト'],
+      jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック：サンダーチャージ','下 ＋ パンチ：サンダースパーク'],
       remiel:['↑ ＋ ガード：ミラージュ','後ろ ＋ ガード：ミラージュカウンター','前 ＋ パンチ：フロストショット','前 ＋ キック：ミラージュキック'],
       seraphiel:['↑ ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 前 ＋ パンチ：セラフィックレイ'],
       sariel:['↑ ＋ パンチ：ルナ・スラッシュ','前 ＋ ガード：イーブルアイ','後ろ ＋ ガード：ブラッドムーン','↑ ＋ キック：ムーンサルトキック'],
@@ -2821,7 +2823,7 @@
 
   function resetBattleEffects(){
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[];
-    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; pressureBlades=[]; burstWaves=[];
+    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; burstWaves=[];
     leafTargets=[]; guardTargets=[]; toxicWaters=[]; bossFish=[]; abyssShocks=[]; kawazuShots=[]; kawazuGhosts=[];
   }
 
@@ -2976,6 +2978,42 @@
   function cancelSoftProjectilesAtZone(z){
     if(!z || !z.owner) return;
 
+    // ジィハルの雷弾／雷撃リング。水圧カッターとは別描画・別判定。
+    jihalGroundBolts.forEach(q=>{
+      q.t-=dt; q.x+=q.vx*dt; q.y+=(q.vy||0)*dt; q.phase+=dt*24;
+      const target=q.owner&&q.owner.isPlayer?enemy:player;
+      if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+8){
+        q.hit=true; q.owner._projectileHit=true;
+        damageHit(q.owner,target,5.0*q.owner.damageMul,115*Math.sign(q.vx),-22);
+        q.owner._projectileHit=false; spawnImpact(q.x,q.y,'hit');
+      }
+    });
+    jihalGroundBolts=jihalGroundBolts.filter(q=>q.t>0&&!q.hit&&q.x>-90&&q.x<innerWidth+90&&q.y>-90&&q.y<innerHeight+90);
+    jihalGroundSparks.forEach(b=>{
+      b.t-=dt; b.r=b.maxR*(1-Math.max(0,b.t)/b.life);
+      const target=b.owner&&b.owner.isPlayer?enemy:player;
+      if(!b.hit&&target){
+        const d=Math.hypot(target.x-b.x,target.y-b.y);
+        if(d<b.r+target.radius && d>Math.max(0,b.r-42)){
+          b.hit=true; b.owner._projectileHit=true;
+          damageHit(b.owner,target,5.8*b.owner.damageMul,135*(target.x>=b.x?1:-1),-42);
+          b.owner._projectileHit=false; spawnImpact(target.x,target.y,'hit');
+        }
+      }
+    });
+    jihalGroundSparks=jihalGroundSparks.filter(b=>b.t>0);
+    [player,enemy].forEach(f=>{
+      if(!f||f.type!=='jihal')return;
+      if((f.specialType==='jihalLightningDash'||f.specialType==='jihalThunderCharge')&&f.specialT>0){
+        const dir=f.face||1; f.vx=dir*(f.specialType==='jihalThunderCharge'?1040:820);
+        const o=f.isPlayer?enemy:player;
+        if(o&&!f.jihalGroundRushHit&&Math.abs(o.x-f.x)<82&&Math.abs(o.y-f.y)<78){
+          f.jihalGroundRushHit=true;
+          damageHit(f,o,(f.specialType==='jihalThunderCharge'?7.2:5.6)*f.damageMul,(f.specialType==='jihalThunderCharge'?225:170)*dir,-36);
+          spawnImpact(o.x,o.y,'hit');
+        }
+      }
+    });
     pressureBlades.forEach(p=>{
       if(p.hit || !p.owner || p.owner===z.owner) return;
       if(Math.hypot(p.x-z.x,p.y-z.y)<z.r+30){
@@ -4084,6 +4122,26 @@
   function compatDir(f,dir,commandDir,windowMs=520){
     return compatHeldDir(f,dir) || hasCommand([commandDir],windowMs);
   }
+  // v2.2.5: ジィハル専用。既存キャラの技を流用せず、雷エフェクトと挙動を独立実装。
+  function specialJihalGroundBolt(f){
+    if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='jihalGroundBolt'; f.specialT=.34; f.attack='punch'; f.attackT=.34;
+    jihalGroundBolts.push({owner:f,x:f.x+f.face*46,y:f.y-8,vx:f.face*430,vy:0,r:15,t:1.45,life:1.45,hit:false,phase:Math.random()*6.28});
+    compatLabel('ボルトショット!'); return true;
+  }
+  function specialJihalGroundDash(f,label='ライトニングダッシュ!',charged=false){
+    if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType=charged?'jihalThunderCharge':'jihalLightningDash'; f.specialT=charged?.44:.31;
+    f.attack='kick'; f.attackT=f.specialT; f.vx=f.face*(charged?1040:820); f.vy=Math.min(f.vy||0,-35);
+    f.jihalGroundRushHit=false; f.jihalGroundRushPower=charged?1.35:1;
+    compatLabel(label); return true;
+  }
+  function specialJihalGroundSpark(f){
+    if(gameOver||!f||f.type!=='jihal'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='jihalThunderSpark'; f.specialT=.48; f.attack='punch'; f.attackT=.38;
+    jihalGroundSparks.push({owner:f,x:f.x,y:f.y,r:12,maxR:118,t:.46,life:.46,hit:false});
+    compatLabel('サンダースパーク!'); return true;
+  }
   function tryV2CompatSpecial(f,kind,forward,back){
     if(!f)return false;
     if(f.type==='mob'){
@@ -4092,10 +4150,10 @@
       if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'トリプルキック!');}
     }
     if(f.type==='jihal'){
-      if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return compatBurst(f,'スパークバースト!');}
-      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ボルトショット!');}
-      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'ライトニングダッシュ!');}
-      if(kind==='kick'&&compatDir(f,'back',back,520)){clearCommand();return compatRush(f,'サンダーチャージ!');}
+      if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return specialJihalGroundSpark(f);}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return specialJihalGroundBolt(f);}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return specialJihalGroundDash(f,'ライトニングダッシュ!',false);}
+      if(kind==='kick'&&compatDir(f,'back',back,520)){clearCommand();return specialJihalGroundDash(f,'サンダーチャージ!',true);}
     }
     if(f.type==='remiel'){
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'フロストショット!');}
@@ -6275,6 +6333,33 @@ toxicWaters.forEach(v=>{
       ctx.restore();
     });
 
+    jihalGroundBolts.forEach(q=>{
+      const a=Math.max(0,q.t/q.life);
+      ctx.save(); ctx.translate(q.x,q.y); ctx.globalCompositeOperation='lighter';
+      ctx.globalAlpha=.95*a; ctx.strokeStyle='#fff7a8'; ctx.shadowColor='#ffe84f'; ctx.shadowBlur=18; ctx.lineWidth=4;
+      ctx.beginPath();
+      const dir=q.vx>=0?1:-1;
+      ctx.moveTo(-dir*24,0);
+      for(let i=1;i<=6;i++){
+        const x=-dir*24+dir*i*8, y=(i%2?1:-1)*(5+3*Math.sin(q.phase+i)); ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.globalAlpha=.35*a; ctx.fillStyle='#fff36b'; ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
+    jihalGroundSparks.forEach(b=>{
+      const a=Math.max(0,b.t/b.life);
+      ctx.save(); ctx.translate(b.x,b.y); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=.9*a;
+      ctx.strokeStyle='#fff28a'; ctx.shadowColor='#ffe348'; ctx.shadowBlur=20; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.stroke();
+      for(let i=0;i<10;i++){
+        const ang=i*Math.PI/5; const r1=Math.max(4,b.r-20), r2=b.r+10;
+        ctx.beginPath(); ctx.moveTo(Math.cos(ang)*r1,Math.sin(ang)*r1);
+        ctx.lineTo(Math.cos(ang+.05)*((r1+r2)/2),Math.sin(ang+.05)*((r1+r2)/2));
+        ctx.lineTo(Math.cos(ang)*r2,Math.sin(ang)*r2); ctx.stroke();
+      }
+      ctx.restore();
+    });
     pressureBlades.forEach(p=>{
       const a=Math.max(0,p.t/p.life);
 
