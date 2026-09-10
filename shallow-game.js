@@ -79,6 +79,7 @@
   let kawazuShots=[];
   let kawazuGhosts=[];
   let luciferIceShots=[];
+  let michaelBurningShots=[];
   let luciferIceWalls=[];
   let siltClouds = [];
   let webTraps = [];
@@ -3192,6 +3193,14 @@
     return true;
   }
 
+  function specialMichaelBurningShot(f){
+    if(gameOver||!f||f.type!=='green'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='michaelBurningShot';f.specialT=.40;f.attack='punch';f.attackT=.40;
+    const dir=f.face;
+    setTimeout(()=>{if(gameOver||!f)return;michaelBurningShots.push({owner:f,x:f.x+dir*58,y:f.y-5,vx:dir*315,r:15,t:4,hit:false});},400);
+    comboEl.textContent='バーニングショット!';return true;
+  }
+
   function specialLuciferIceShot(f){
     if(gameOver||!f||f.type!=='black'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='luciferIceShot';f.specialT=.44;f.attack='punch';f.attackT=.44;
@@ -4373,20 +4382,12 @@
       }
     }
 
-    // ミカエル：上＋パンチ / 前＋キック / 下→後ろ＋キック。
+    // 水中格闘2準拠：ミカエル。基本技は方向＋ボタン、サイクロンだけ下→後ろ＋キック。
     if(f.type==='green'){
-      if(kind==='kick' && hasCommand(['down',back],720)){
-        clearCommand();
-        return specialBurningCyclone(f);
-      }
-      if(kind==='punch' && hasCommand(['up'],520)){
-        clearCommand();
-        return specialUppercut(f);
-      }
-      if(kind==='kick' && hasCommand([forward],520)){
-        clearCommand();
-        return specialDropKick(f);
-      }
+      if(kind==='kick' && hasCommand(['down',back],760)){ clearCommand(); return specialBurningCyclone(f); }
+      if(kind==='punch' && ((f.face>0&&input.y<-.35)||(f.face<0&&input.y<-.35))){ clearCommand(); return specialUppercut(f); }
+      if(kind==='kick' && ((f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35))){ clearCommand(); return specialDropKick(f); }
+      if(kind==='punch' && ((f.face>0&&input.x<-.35)||(f.face<0&&input.x>.35))){ clearCommand(); return specialMichaelBurningShot(f); }
     }
 
     // ガブリエル：ガード→パンチ＝上水流、ガード→キック＝下水流、後ろ＋パンチ＝ボルテックス。
