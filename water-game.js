@@ -2349,9 +2349,9 @@
       }
 
       if(this.type==='green' && this.specialType==='burningCyclone'){
-        // 高速回転中は両足それぞれに赤いオーラ
-        drawRedAura(-18,58,8,7,0.85);
-        drawRedAura(18,58,8,7,0.85);
+        // バーニングサイクロン：回転の軸側ではなく、伸ばした蹴り足の先端だけに小さな赤い炎。
+        // 身体全体の回転変換がこの座標にも掛かるので、常に足先へ追従する。
+        drawRedAura(66,48,7,5,0.9);
       }
 
       if(this.type==='yellow' && this.specialType==='raphaelBubbleMove'){
@@ -7570,7 +7570,7 @@ function drawBackground(dt){
       });
       water2Shots=water2Shots.filter(q=>!q.hit&&(q.age||0)<(q.maxAge||18)&&q.x>-100&&q.x<innerWidth+100&&q.y>-100&&q.y<innerHeight+100);
 
-      // v2.4.7: レッドオーラパンチ本体。拳前方の近接判定を更新する。
+      // v2.4.8: レッドオーラパンチ本体。拳前方の近接判定を更新する。
       michaelRedAuraPunches.forEach(a=>{
         a.t-=dt; const f=a.owner; if(!f)return;
         const target=f.isPlayer?enemy:player;
@@ -8026,15 +8026,17 @@ function drawBackground(dt){
     ctx.restore();
 
 
-    // v2.4.7: レッドオーラパンチは背景・本体の後に描いて確実に見せる。
+    // v2.4.8: レッドオーラパンチは背景・本体の後に描いて確実に見せる。
     michaelRedAuraPunches.forEach(a=>{
       const f=a.owner;if(!f||a.t<=0)return;const k=Math.max(0,a.t/a.life);
       ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.72+.24*k;
-      ctx.translate(f.x+f.face*74,f.y-10);ctx.scale(f.face,1);ctx.shadowColor='#ff2b18';ctx.shadowBlur=34;
-      const g=ctx.createRadialGradient(-34,0,3,4,0,104);
-      g.addColorStop(0,'rgba(255,255,220,1)');g.addColorStop(.18,'rgba(255,185,55,.98)');
-      g.addColorStop(.48,'rgba(255,45,20,.96)');g.addColorStop(.82,'rgba(220,0,0,.66)');g.addColorStop(1,'rgba(255,0,0,0)');
-      ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(25,0,106,38,0,0,Math.PI*2);ctx.fill();ctx.restore();
+      // 拳先からだけ伸びる赤いオーラ。顔側へ食い込ませず、拳の前方だけに出す。
+      ctx.translate(f.x+f.face*62,f.y+8);ctx.scale(f.face,1);ctx.shadowColor='#ff2418';ctx.shadowBlur=24;
+      const g=ctx.createRadialGradient(3,0,2,32,0,56);
+      g.addColorStop(0,'rgba(255,235,120,.96)');g.addColorStop(.22,'rgba(255,105,35,.98)');
+      g.addColorStop(.58,'rgba(245,25,18,.94)');g.addColorStop(.86,'rgba(180,0,0,.54)');g.addColorStop(1,'rgba(255,0,0,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(34,0,42,18,0,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha*=.9;ctx.fillStyle='rgba(255,70,25,.85)';ctx.beginPath();ctx.ellipse(8,0,14,10,0,0,Math.PI*2);ctx.fill();ctx.restore();
     });
 
     // WATER HOCKEYのマリモは背景・キャラクターの後に描画。
