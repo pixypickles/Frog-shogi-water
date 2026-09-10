@@ -1888,8 +1888,8 @@
 
       if(this.type==='green' && this.specialType==='burningCyclone'){
         // 高速回転中は両足それぞれに赤いオーラ
-        drawBurningAura(-17,52,18,13,-.15);
-        drawBurningAura(17,52,18,13,.15);
+        drawRedAura(-18,58,8,7,0.85);
+        drawRedAura(18,58,8,7,0.85);
       }
 
       if(this.type==='yellow' && this.specialType==='raphaelBubbleMove'){
@@ -3144,9 +3144,10 @@
 
   function specialMichaelBurningShot(f){
     if(gameOver||!f||f.type!=='green'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    f.specialType='michaelBurningShot';f.specialT=.40;f.attack='punch';f.attackT=.40;
+    f.specialType='michaelBurningShot';f.specialT=.30;f.attack='punch';f.attackT=.30;
     const dir=f.face;
-    setTimeout(()=>{if(gameOver||!f)return;michaelBurningShots.push({owner:f,x:f.x+dir*58,y:f.y-5,vx:dir*315,r:15,t:4,hit:false});},400);
+    // 水中2と同様に、入力直後に拳の先から見える炎弾を出す。
+    michaelBurningShots.push({owner:f,x:f.x+dir*66,y:f.y-8,vx:dir*360,r:20,t:4,hit:false,trail:[]});
     comboEl.textContent='バーニングショット!';return true;
   }
 
@@ -5347,7 +5348,7 @@
     if(!f || f.specialType!=='burningCyclone') return 0;
     const elapsed=(performance.now()-(f.cycloneStartTime||performance.now()))/1000;
     // 右向きは時計回り、左向きは鏡映し
-    return elapsed*11*(f.face>0?1:-1);
+    return elapsed*22*(f.face>0?1:-1);
   }
 
   function updateNewSpecialMoves(f,dt){
@@ -5925,12 +5926,12 @@ function drawBackground(dt){
       });
       michaelRedAuraPunches=michaelRedAuraPunches.filter(a=>a.t>0);
       michaelBurningShots.forEach(q=>{
-        q.t-=dt; q.x+=q.vx*dt; const target=q.owner&&q.owner.isPlayer?enemy:player;
+        q.t-=dt; q.x+=q.vx*dt; if(q.trail){q.trail.push({x:q.x,y:q.y,t:.22}); q.trail.forEach(v=>v.t-=dt); q.trail=q.trail.filter(v=>v.t>0);} const target=q.owner&&q.owner.isPlayer?enemy:player;
         if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+7){q.hit=true;q.t=0;damageHit(q.owner,target,4.4*q.owner.damageMul,115*Math.sign(q.vx),-12);spawnImpact(q.x,q.y,'hit');}
       });
       michaelBurningShots=michaelBurningShots.filter(q=>q.t>0&&q.x>-70&&q.x<innerWidth+70);
       michaelRedAuraPunches.forEach(a=>{const f=a.owner;if(!f)return;const k=Math.max(0,a.t/a.life);ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.55+.35*k;ctx.translate(f.x+f.face*76,f.y-4);ctx.scale(f.face,1);ctx.shadowColor='#ff2418';ctx.shadowBlur=28;const g=ctx.createRadialGradient(-30,0,4,0,0,92);g.addColorStop(0,'rgba(255,245,210,.98)');g.addColorStop(.25,'rgba(255,90,45,.95)');g.addColorStop(.7,'rgba(245,20,10,.72)');g.addColorStop(1,'rgba(255,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(18,0,92,34,0,0,Math.PI*2);ctx.fill();ctx.restore();});
-    michaelBurningShots.forEach(q=>{ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff3b16';ctx.shadowBlur=22;const g=ctx.createRadialGradient(q.x-q.r*.25,q.y-q.r*.2,2,q.x,q.y,q.r*1.25);g.addColorStop(0,'#fff6b0');g.addColorStop(.3,'#ffb21c');g.addColorStop(.7,'#ff4218');g.addColorStop(1,'rgba(220,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.3,0,Math.PI*2);ctx.fill();ctx.restore();});
+    michaelBurningShots.forEach(q=>{if(q.trail){q.trail.forEach(v=>{ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.max(0,v.t/.22)*.42;ctx.fillStyle='#ff6a22';ctx.beginPath();ctx.ellipse(v.x-Math.sign(q.vx)*16,v.y,20,8,0,0,Math.PI*2);ctx.fill();ctx.restore();});}ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff3b16';ctx.shadowBlur=28;const g=ctx.createRadialGradient(q.x-q.r*.25,q.y-q.r*.2,2,q.x,q.y,q.r*1.25);g.addColorStop(0,'#fffbd0');g.addColorStop(.28,'#ffc52f');g.addColorStop(.68,'#ff4218');g.addColorStop(1,'rgba(220,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.35,0,Math.PI*2);ctx.fill();ctx.restore();});
     luciferIceShots.forEach(q=>{
         q.x+=q.vx*dt;q.t-=dt;const target=q.owner===player?enemy:player;
         if(!q.hit&&target&&Math.abs(target.x-q.x)<48&&Math.abs(target.y-q.y)<60){q.hit=true;q.t=0;damageHit(q.owner,target,5.2,150*Math.sign(q.vx),-25);spawnImpact(q.x,q.y,'hit');}

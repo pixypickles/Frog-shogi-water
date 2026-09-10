@@ -2350,8 +2350,8 @@
 
       if(this.type==='green' && this.specialType==='burningCyclone'){
         // 高速回転中は両足それぞれに赤いオーラ
-        drawBurningAura(-17,52,18,13,-.15);
-        drawBurningAura(17,52,18,13,.15);
+        drawRedAura(-18,58,8,7,0.85);
+        drawRedAura(18,58,8,7,0.85);
       }
 
       if(this.type==='yellow' && this.specialType==='raphaelBubbleMove'){
@@ -6481,7 +6481,7 @@
     if(!f || f.specialType!=='burningCyclone') return 0;
     const elapsed=(performance.now()-(f.cycloneStartTime||performance.now()))/1000;
     // 右向きは時計回り、左向きは鏡映し
-    return elapsed*11*(f.face>0?1:-1);
+    return elapsed*22*(f.face>0?1:-1);
   }
 
   function updateNewSpecialMoves(f,dt){
