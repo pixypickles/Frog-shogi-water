@@ -1204,7 +1204,7 @@
 
       // セラフィックサイクロン：1秒弱で約10回転。フレーム更新で描画と完全同期。
       if(this.specialType==='seraphicCyclone'){
-        this.spinAngle += dt*68*(this.face>0?1:-1);
+        this.spinAngle += dt*34*(this.face>0?1:-1);
       }
 
       // ルシファーさん：斜め下降キック連打。

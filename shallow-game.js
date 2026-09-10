@@ -3208,7 +3208,7 @@
     const dir=f.face;
     f.specialType='hellCrash';
     f.specialT=.95;
-    f.attack='punch';
+    f.attack='kick';
     f.attackT=.95;
     f.specialHitDone=false;
 
@@ -3239,11 +3239,11 @@
         other.vy*=.12;
         other.stun=Math.max(other.stun,.38);
 
-        // 接触後、赤オーラのアッパーへ
+        // 接触後、氷をまとった蹴りで大きく吹き飛ばす
         f.specialType='hellCrashFinish';
         f.specialT=.5;
-        f.attack='punch';
-        f.attackVariant='up';
+        f.attack='kick';
+        f.attackVariant='mid';
         f.attackT=.5;
 
         setTimeout(()=>{
@@ -3253,17 +3253,7 @@
           other.hurtFaceT=.72;
 
           // 斜め上へ強く飛ばし、やられ顔で回転させる
-          damageHit(f,other,12.0*f.damageMul,245*dir,-315);
-
-          // Fighterの既存回転処理を使う。文字列ではなく安全なthrowStateオブジェクト。
-          other.throwState=null;
-          other.spinAngle=0;
-          other.throwState={
-            owner:f,
-            spinSpeed:dir*13.5,
-            endT:.82,
-            noWallDamage:true
-          };
+          damageHit(f,other,12.0*f.damageMul,465*dir,-45);
 
           burstWaves.push({
             x:other.x,
@@ -5717,7 +5707,7 @@ function drawBackground(dt){
           f.seraphielHit=true;damageHit(f,o,13.2*f.damageMul,175*f.face,-315);spawnImpact(o.x,o.y,'hit');
         }
         if(f.specialType==='seraphielGroundCyclone'&&f.specialT>0){
-          f.spinAngle=(f.spinAngle||0)+dt*72*(f.face>0?1:-1); f.vx+=f.face*95*dt;
+          f.spinAngle=(f.spinAngle||0)+dt*36*(f.face>0?1:-1); f.vx+=f.face*95*dt;
           f.seraphielCycloneHitT=Math.max(0,(f.seraphielCycloneHitT||0)-dt);
           if(f.seraphielCycloneHitT<=0&&Math.abs(o.x-f.x)<108&&Math.abs(o.y-f.y)<92){
             f.seraphielCycloneHitT=.12; f.seraphielCycloneHits=(f.seraphielCycloneHits||0)+1;
