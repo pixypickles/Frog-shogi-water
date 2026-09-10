@@ -4249,7 +4249,7 @@
   function specialSeraphielGroundShot(f){
     if(gameOver||!f||f.type!=='seraphiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='seraphielGroundShot';f.specialT=.34;f.attack='punch';f.attackT=.34;
-    for(let i=0;i<3;i++)seraphielGroundShots.push({owner:f,x:f.x+f.face*(48-i*23),y:f.y-8,vx:f.face*350,vy:0,r:17,t:1.55,life:1.55,hit:false,phase:i*.7,delay:i*.085});
+    for(const deg of [-11,0,11]){const a=deg*Math.PI/180;seraphielGroundShots.push({owner:f,x:f.x+f.face*48,y:f.y-8,vx:f.face*Math.cos(a)*350,vy:Math.sin(a)*350,r:17,t:1.55,life:1.55,hit:false,phase:(deg+11)*.05,delay:0});}
     compatLabel('セラフィックショット!');return true;
   }
   function specialSeraphielGroundCyclone(f){
@@ -5700,7 +5700,7 @@ function drawBackground(dt){
           f.seraphielHit=true;damageHit(f,o,13.2*f.damageMul,175*f.face,-315);spawnImpact(o.x,o.y,'hit');
         }
         if(f.specialType==='seraphielGroundCyclone'&&f.specialT>0){
-          f.spinAngle=(f.spinAngle||0)+dt*18*(f.face>0?1:-1); f.vx+=f.face*95*dt;
+          f.spinAngle=(f.spinAngle||0)+dt*22*(f.face>0?1:-1); f.vx+=f.face*95*dt;
           f.seraphielCycloneHitT=Math.max(0,(f.seraphielCycloneHitT||0)-dt);
           if(f.seraphielCycloneHitT<=0&&Math.abs(o.x-f.x)<108&&Math.abs(o.y-f.y)<92){
             f.seraphielCycloneHitT=.12; f.seraphielCycloneHits=(f.seraphielCycloneHits||0)+1;

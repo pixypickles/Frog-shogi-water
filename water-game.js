@@ -5037,12 +5037,13 @@
     let hits=0;
     const timer=setInterval(()=>{
       if(gameOver||!other||f.specialType!=='seraphicCyclone'){clearInterval(timer);return;}
-      f.spinAngle=(f.spinAngle||0)+1.5;
+      // 約0.95秒で3回転。見た目でもしっかり回転が分かる速度にする。
+      f.spinAngle=(f.spinAngle||0)+0.90*(f.face>0?1:-1);
       if(Math.abs(other.x-f.x)<105&&Math.abs(other.y-f.y)<90&&hits<3){
         hits++; damageHit(f,other,4.2*f.damageMul,105*f.face,(hits===3?-155:-35));spawnImpact(other.x,other.y,'hit');
       }
-    },105);
-    setTimeout(()=>{clearInterval(timer);f.spinAngle=0;},720);
+    },45);
+    setTimeout(()=>{clearInterval(timer);f.spinAngle=0;},950);
     comboEl.textContent='セラフィックサイクロン!';
     return true;
   }
@@ -5187,9 +5188,10 @@
         maxReflect:opts.maxReflect||5
       };
       if(opts.style==='seraphicShot'){
-        water2Shots.push(shot);
-        for(let i=1;i<3;i++){
-          const q={...shot,x:shot.x-dir*(i*24),age:-i*.085,spin:i*.7,hit:false};
+        // 3発を時間差ではなく、少し扇状に広げて同時発射する。
+        for(const deg of [-11,0,11]){
+          const a=deg*Math.PI/180;
+          const q={...shot,x:shot.x,y:shot.y,vx:dir*Math.cos(a)*speed,vy:Math.sin(a)*speed,baseVy:Math.sin(a)*speed,age:0,spin:deg*.04,hit:false};
           water2Shots.push(q);
         }
       }else water2Shots.push(shot);
