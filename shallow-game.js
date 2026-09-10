@@ -3199,7 +3199,7 @@
     f.specialType='michaelBurningShot';f.specialT=.30;f.attack='punch';f.attackT=.30;
     const dir=f.face;
     // 水中2と同様に、入力直後に拳の先から見える炎弾を出す。
-    michaelBurningShots.push({owner:f,x:f.x+dir*66,y:f.y-8,vx:dir*360,r:20,t:4,hit:false,trail:[]});
+    michaelBurningShots.push({owner:f,x:f.x+dir*70,y:f.y-10,vx:dir*330,r:23,t:4,hit:false,trail:[]});
     comboEl.textContent='バーニングショット!';return true;
   }
 
@@ -4072,7 +4072,7 @@
   function specialMichaelRedAuraPunch(f){
     if(gameOver || !f || f.type!=='green' || f.stun>0 || f.guard || f.specialT>0 || f.attackT>0) return false;
     f.guard=false; f.specialType='michaelRedAuraPunch'; f.specialT=.34; f.attack='punch'; f.attackT=.34;
-    michaelRedAuraPunches.push({owner:f,t:.30,life:.30,hit:false});
+    michaelRedAuraPunches.push({owner:f,t:.46,life:.46,hit:false});
     comboEl.textContent='レッドオーラパンチ!';
     setTimeout(()=>{if(comboEl.textContent==='レッドオーラパンチ!')comboEl.textContent='';},650);
     clearCommand(); return true;
@@ -5981,8 +5981,6 @@ function drawBackground(dt){
         if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+7){q.hit=true;q.t=0;damageHit(q.owner,target,4.4*q.owner.damageMul,115*Math.sign(q.vx),-12);spawnImpact(q.x,q.y,'hit');}
       });
       michaelBurningShots=michaelBurningShots.filter(q=>q.t>0&&q.x>-70&&q.x<innerWidth+70);
-      michaelRedAuraPunches.forEach(a=>{const f=a.owner;if(!f)return;const k=Math.max(0,a.t/a.life);ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.55+.35*k;ctx.translate(f.x+f.face*76,f.y-4);ctx.scale(f.face,1);ctx.shadowColor='#ff2418';ctx.shadowBlur=28;const g=ctx.createRadialGradient(-30,0,4,0,0,92);g.addColorStop(0,'rgba(255,245,210,.98)');g.addColorStop(.25,'rgba(255,90,45,.95)');g.addColorStop(.7,'rgba(245,20,10,.72)');g.addColorStop(1,'rgba(255,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(18,0,92,34,0,0,Math.PI*2);ctx.fill();ctx.restore();});
-    michaelBurningShots.forEach(q=>{if(q.trail){q.trail.forEach(v=>{ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.max(0,v.t/.22)*.42;ctx.fillStyle='#ff6a22';ctx.beginPath();ctx.ellipse(v.x-Math.sign(q.vx)*16,v.y,20,8,0,0,Math.PI*2);ctx.fill();ctx.restore();});}ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff3b16';ctx.shadowBlur=28;const g=ctx.createRadialGradient(q.x-q.r*.25,q.y-q.r*.2,2,q.x,q.y,q.r*1.25);g.addColorStop(0,'#fffbd0');g.addColorStop(.28,'#ffc52f');g.addColorStop(.68,'#ff4218');g.addColorStop(1,'rgba(220,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.35,0,Math.PI*2);ctx.fill();ctx.restore();});
     luciferIceShots.forEach(q=>{
         q.x+=q.vx*dt;q.t-=dt;const target=q.owner===player?enemy:player;
         if(!q.hit&&target&&Math.abs(target.x-q.x)<48&&Math.abs(target.y-q.y)<60){q.hit=true;q.t=0;damageHit(q.owner,target,5.2,150*Math.sign(q.vx),-25);spawnImpact(q.x,q.y,'hit');}
@@ -6453,6 +6451,36 @@ function drawBackground(dt){
     ctx.save();
     enemy.draw();
     ctx.restore();
+
+
+    // v2.4.7: ミカエルの新技エフェクトは背景描画後に表示する。
+    // 以前は update 中に描いていたため、直後の drawBackground() で消されていた。
+    michaelRedAuraPunches.forEach(a=>{
+      const f=a.owner;if(!f||a.t<=0)return;
+      const k=Math.max(0,a.t/a.life);
+      ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.72+.24*k;
+      // 拳先に密着した横長の赤い火柱。飛び道具ではない。
+      ctx.translate(f.x+f.face*74,f.y-10);ctx.scale(f.face,1);
+      ctx.shadowColor='#ff2b18';ctx.shadowBlur=34;
+      const g=ctx.createRadialGradient(-34,0,3,4,0,104);
+      g.addColorStop(0,'rgba(255,255,220,1)');g.addColorStop(.18,'rgba(255,185,55,.98)');
+      g.addColorStop(.48,'rgba(255,45,20,.96)');g.addColorStop(.82,'rgba(220,0,0,.66)');g.addColorStop(1,'rgba(255,0,0,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(25,0,106,38,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    });
+    michaelBurningShots.forEach(q=>{
+      if(q.trail){q.trail.forEach(v=>{
+        ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.max(0,v.t/.22)*.62;
+        ctx.fillStyle='#ff5a16';ctx.shadowColor='#ff3a12';ctx.shadowBlur=16;
+        ctx.beginPath();ctx.ellipse(v.x-Math.sign(q.vx)*15,v.y,23,9,0,0,Math.PI*2);ctx.fill();ctx.restore();
+      });}
+      ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=1;
+      ctx.shadowColor='#ff3b16';ctx.shadowBlur=34;
+      const g=ctx.createRadialGradient(q.x-q.r*.28,q.y-q.r*.22,2,q.x,q.y,q.r*1.5);
+      g.addColorStop(0,'#ffffff');g.addColorStop(.16,'#fff879');g.addColorStop(.42,'#ffb21c');
+      g.addColorStop(.72,'#ff3215');g.addColorStop(1,'rgba(220,0,0,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.65,0,Math.PI*2);ctx.fill();ctx.restore();
+    });
 
     // レミエルの幻影。薄い水色の同型シルエット＋攻撃時の残像。
     remielGroundMirages.forEach(m=>{

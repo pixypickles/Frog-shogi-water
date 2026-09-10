@@ -4767,7 +4767,7 @@
   function specialMichaelRedAuraPunch(f){
     if(gameOver || !f || f.type!=='green' || f.stun>0 || f.guard || f.specialT>0 || f.attackT>0) return false;
     f.guard=false; f.specialType='michaelRedAuraPunch'; f.specialT=.34; f.attack='punch'; f.attackT=.34;
-    michaelRedAuraPunches.push({owner:f,t:.30,life:.30,hit:false});
+    michaelRedAuraPunches.push({owner:f,t:.46,life:.46,hit:false});
     comboEl.textContent='レッドオーラパンチ!';
     setTimeout(()=>{if(comboEl.textContent==='レッドオーラパンチ!')comboEl.textContent='';},650);
     clearCommand(); return true;
@@ -7570,6 +7570,17 @@ function drawBackground(dt){
       });
       water2Shots=water2Shots.filter(q=>!q.hit&&(q.age||0)<(q.maxAge||18)&&q.x>-100&&q.x<innerWidth+100&&q.y>-100&&q.y<innerHeight+100);
 
+      // v2.4.7: レッドオーラパンチ本体。拳前方の近接判定を更新する。
+      michaelRedAuraPunches.forEach(a=>{
+        a.t-=dt; const f=a.owner; if(!f)return;
+        const target=f.isPlayer?enemy:player;
+        const px=f.x+f.face*74, py=f.y-10;
+        if(!a.hit&&target&&Math.abs(target.x-px)<100+target.radius*.42&&Math.abs(target.y-py)<46+target.radius*.34){
+          a.hit=true; damageHit(f,target,6.2*f.damageMul,150*f.face,-18); spawnImpact(target.x,target.y,'hit');
+        }
+      });
+      michaelRedAuraPunches=michaelRedAuraPunches.filter(a=>a.t>0);
+
       toxicWaters.forEach(v=>{
         v.t-=dt;
         v.tick-=dt;
@@ -8013,6 +8024,18 @@ function drawBackground(dt){
     ctx.save();
     enemy.draw();
     ctx.restore();
+
+
+    // v2.4.7: レッドオーラパンチは背景・本体の後に描いて確実に見せる。
+    michaelRedAuraPunches.forEach(a=>{
+      const f=a.owner;if(!f||a.t<=0)return;const k=Math.max(0,a.t/a.life);
+      ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.72+.24*k;
+      ctx.translate(f.x+f.face*74,f.y-10);ctx.scale(f.face,1);ctx.shadowColor='#ff2b18';ctx.shadowBlur=34;
+      const g=ctx.createRadialGradient(-34,0,3,4,0,104);
+      g.addColorStop(0,'rgba(255,255,220,1)');g.addColorStop(.18,'rgba(255,185,55,.98)');
+      g.addColorStop(.48,'rgba(255,45,20,.96)');g.addColorStop(.82,'rgba(220,0,0,.66)');g.addColorStop(1,'rgba(255,0,0,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(25,0,106,38,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    });
 
     // WATER HOCKEYのマリモは背景・キャラクターの後に描画。
     // update側で描くと次のdrawBackgroundで消えるため、必ずここで表示する。
