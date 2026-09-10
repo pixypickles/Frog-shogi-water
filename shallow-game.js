@@ -6328,8 +6328,34 @@ function drawBackground(dt){
       ctx.fillStyle=p.eyeBump||p.light;ctx.beginPath();ctx.arc(-18,-31,18,0,Math.PI*2);ctx.arc(18,-31,18,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-18,-31,11,0,Math.PI*2);ctx.arc(18,-31,11,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#5d8fa8';ctx.beginPath();ctx.arc(-18,-31,4.5,0,Math.PI*2);ctx.arc(18,-31,4.5,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle=p.limb;ctx.lineWidth=10;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-22,22);ctx.lineTo(-32,35);ctx.moveTo(22,22);ctx.lineTo(32,35);ctx.moveTo(-15,48);ctx.lineTo(-27,65);ctx.moveTo(15,48);ctx.lineTo(27,65);ctx.stroke();
-      if(m.ghostAttackT>0){ctx.globalAlpha=.28;ctx.strokeStyle='#d7fbff';ctx.lineWidth=6;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-18,i*14-12);ctx.lineTo(-92,i*14-12);ctx.stroke();}}
+      // v2.3.4: 分身も本体と同じように手足を動かす。
+      // 通常攻撃は拳/蹴り足を実際に伸ばし、ミラージュキック中は高速で蹴り姿勢を切り替える。
+      const ghostMirageKick=(f.specialType==='remielGroundMirageKick'&&f.specialT>0);
+      const ghostAtk=(m.ghostAttackT>0);
+      const ghostKind=ghostMirageKick?'kick':(ghostAtk?(m.ghostAttackKind||'punch'):null);
+      const kickPhase=ghostMirageKick?Math.floor(performance.now()/58)%2:0;
+      ctx.strokeStyle=p.limb;ctx.lineWidth=10;ctx.lineCap='round';ctx.lineJoin='round';
+      ctx.beginPath();
+      // 左腕は常に軸側。右腕はパンチ時に前へ伸ばす。
+      ctx.moveTo(-22,22);ctx.lineTo(-32,35);
+      if(ghostKind==='punch'){
+        ctx.moveTo(22,22);ctx.lineTo(58,8);
+      }else{
+        ctx.moveTo(22,22);ctx.lineTo(32,35);
+      }
+      // 左脚は軸足。ミラージュキック時は交互に踏み込み姿勢へ。
+      if(ghostMirageKick&&kickPhase===1){ctx.moveTo(-15,48);ctx.lineTo(-8,60);ctx.lineTo(-18,67);}
+      else{ctx.moveTo(-15,48);ctx.lineTo(-27,65);}
+      // 右脚はキック時に大きく前へ。ミラージュキックでは伸び縮みしてコマ送りでも蹴って見える。
+      if(ghostKind==='kick'){
+        const kx=ghostMirageKick?(kickPhase===0?72:54):62;
+        const ky=ghostMirageKick?(kickPhase===0?42:56):48;
+        ctx.moveTo(15,48);ctx.lineTo(kx,ky);
+      }else{
+        ctx.moveTo(15,48);ctx.lineTo(27,65);
+      }
+      ctx.stroke();
+      if(ghostAtk||ghostMirageKick){ctx.globalAlpha=.28;ctx.strokeStyle='#d7fbff';ctx.lineWidth=6;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-18,i*14-12);ctx.lineTo(-92,i*14-12);ctx.stroke();}}
       ctx.restore();
     });
     remielGroundShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#bcefff';ctx.shadowBlur=18;ctx.fillStyle='#e9fbff';ctx.strokeStyle='#9edcec';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.stroke();for(let i=0;i<5;i++){const a=(q.phase||0)+i*Math.PI*2/5;ctx.strokeStyle='rgba(210,250,255,.72)';ctx.beginPath();ctx.moveTo(Math.cos(a)*q.r*.5,Math.sin(a)*q.r*.5);ctx.lineTo(Math.cos(a)*(q.r+7),Math.sin(a)*(q.r+7));ctx.stroke();}ctx.restore();});
