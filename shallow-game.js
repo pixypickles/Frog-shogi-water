@@ -4146,14 +4146,14 @@
   function remielActiveGroundMirage(f){ return remielGroundMirages.find(m=>m.owner===f&&m.t>0); }
   function remielGroundGhostPos(m){
     if(!m||!m.owner)return null;
-    // 水中2と同様、分裂中は本体と幻影が別々の目標位置へ滑らかに分かれる。
-    // 分裂後は本体を基準に相対位置を維持する。
-    if((m.age||0)<(m.splitTime||.28) && m.originY!=null){
-      const p=Math.max(0,Math.min(1,(m.age||0)/(m.splitTime||.28)));
-      const e=p*p*(3-2*p);
-      return {x:m.owner.x,y:m.originY+(m.ghostTargetY-m.originY)*e};
-    }
-    return {x:m.owner.x,y:m.owner.y+(m.offsetY||0)};
+    // 地上/浅瀬では上下クランプで本体と幻影が重なって見えなくならないよう、
+    // 縦＋横に明確に分離する。上ミラージュは頭上、下ミラージュは斜め後方へ。
+    const split=m.splitTime||.34;
+    const p=Math.max(0,Math.min(1,(m.age||0)/split));
+    const e=p*p*(3-2*p);
+    const ox=(m.ghostOffsetX||0)*e;
+    const oy=(m.ghostOffsetY||0)*e;
+    return {x:m.owner.x+ox,y:m.owner.y+oy};
   }
   function remielConsumeGroundMirage(m,x,y,kind='guard'){
     if(!m||m.t<=0)return; m.t=0; spawnImpact(x,y,kind);
@@ -4162,18 +4162,14 @@
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.specialT>0)return false;
     remielGroundMirages=remielGroundMirages.filter(m=>m.owner!==f);
     const originY=f.y;
-    const floor=(typeof landFloorY==='function'?landFloorY():innerHeight-70);
-    // 水中2準拠：幻影を大きく、本体を反対側へ小さく分離。
-    // 地上/浅瀬では床下へ消えないようにだけクランプする。
-    const ghostDelta=where==='up'?-108:108;
-    const bodyDelta =where==='up'? 48:-48;
-    const minY=68, maxY=Math.max(minY+40,floor-8);
-    const bodyTargetY=Math.max(minY,Math.min(maxY,originY+bodyDelta));
-    const ghostTargetY=Math.max(minY,Math.min(maxY,originY+ghostDelta));
-    const splitTime=.28;
+    // 地上では「下」に十分な空間がないため、水中版そのままの上下分離だと
+    // 2体が同じ座標へクランプされる。常に目で追える位置へ分身を出す。
+    const splitTime=.34;
+    const ghostOffsetX=where==='up' ? -f.face*34 : -f.face*92;
+    const ghostOffsetY=where==='up' ? -112 : -34;
     remielGroundMirages.push({
       owner:f,side:where,t:4.2,life:4.2,alpha:.82,age:0,splitTime,
-      originY,bodyTargetY,ghostTargetY,offsetY:ghostTargetY-bodyTargetY,
+      originY,ghostOffsetX,ghostOffsetY,
       counterT:0,ghostAttackT:0
     });
     f.vy=0;
@@ -4201,9 +4197,10 @@
   }
   function specialRemielGroundMirageKick(f){
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    // 水中2の「コマ送りワープ」を実際の座標移動として再現する。
-    f.specialType='remielGroundMirageKick'; f.specialT=.72; f.attack='kick'; f.attackT=.72;
+    // コマ送りが目で追えるよう、各停止フレームを長めに見せる。
+    f.specialType='remielGroundMirageKick'; f.specialT=1.22; f.attack='kick'; f.attackT=1.22;
     f.remielKickStartX=f.x; f.remielKickStep=-1; f.remielKickHit=false; f.vx=0;
+    f.remielKickEchoes=[];
     const m=remielActiveGroundMirage(f); if(m)m.ghostAttackT=.48;
     compatLabel('ミラージュキック!'); return true;
   }
@@ -5516,12 +5513,8 @@ function drawBackground(dt){
       // v2.2.9 レミエル：幻影・フロスト弾・ミラージュキックを毎フレーム更新。
       remielGroundMirages.forEach(m=>{
         m.t-=dt; m.age=(m.age||0)+dt; m.counterT=Math.max(0,(m.counterT||0)-dt); m.ghostAttackT=Math.max(0,(m.ghostAttackT||0)-dt);
-        if(m.owner && m.age<=(m.splitTime||.28) && m.originY!=null){
-          const p=Math.max(0,Math.min(1,m.age/(m.splitTime||.28)));
-          const e=p*p*(3-2*p);
-          m.owner.y=m.originY+(m.bodyTargetY-m.originY)*e;
-          m.owner.vy=0;
-        }
+        // 地上/浅瀬版では実体は通常位置を保ち、幻影だけを分離して見せる。
+        // これで重力や床判定により分身が本体へ重なることを防ぐ。
         const g=remielGroundGhostPos(m), foe=m.owner&&m.owner.isPlayer?enemy:player;
         if(g&&foe&&foe.attackT>0&&Math.abs(foe.x-g.x)<92&&Math.abs(foe.y-g.y)<72){
           if(m.counterT>0){m.counterT=0;damageHit(m.owner,foe,3.6*m.owner.damageMul,-Math.sign(g.x-foe.x||1)*115,-38,true);compatLabel('幻影ミラージュカウンター!');}
@@ -5549,16 +5542,21 @@ function drawBackground(dt){
       [player,enemy].forEach(f=>{
         if(!f||f.type!=='remiel')return; const o=f.isPlayer?enemy:player;if(!o)return;
         if(f.specialType==='remielGroundMirageKick'&&f.specialT>0){
-          // 0.14秒ごとに 0→58→122→190→255px と瞬間移動。
-          const elapsed=Math.max(0,.72-f.specialT);
+          // 0.24秒ごとに 0→58→122→190→255px。各位置でしっかり姿が見える速度。
+          const elapsed=Math.max(0,1.22-f.specialT);
           const jumps=[0,58,122,190,255];
-          const step=Math.min(4,Math.floor(elapsed/.14));
+          const step=Math.min(4,Math.floor(elapsed/.24));
           if(step!==f.remielKickStep){
+            if(f.remielKickStep>=0){
+              const oldX=Math.max(36,Math.min(innerWidth-36,f.remielKickStartX+f.face*jumps[f.remielKickStep]));
+              (f.remielKickEchoes||(f.remielKickEchoes=[])).push({x:oldX,y:f.y,t:.42,life:.42});
+            }
             f.remielKickStep=step;
             f.x=Math.max(36,Math.min(innerWidth-36,f.remielKickStartX+f.face*jumps[step]));
             f.vx=0;
-            spawnImpact(f.x-f.face*18,f.y,'guard');
           } else f.vx=0;
+          if(f.remielKickEchoes)f.remielKickEchoes.forEach(e=>e.t-=dt);
+          if(f.remielKickEchoes)f.remielKickEchoes=f.remielKickEchoes.filter(e=>e.t>0);
           if(!f.remielKickHit&&Math.abs(o.x-f.x)<104&&Math.abs(o.y-f.y)<82){f.remielKickHit=true;damageHit(f,o,9.8*f.damageMul,315*f.face,-50);spawnImpact(o.x,o.y,'hit');}
           const m=remielActiveGroundMirage(f),g=m&&remielGroundGhostPos(m);
           if(m&&g&&m.ghostAttackT>0&&Math.abs(o.x-g.x)<150&&Math.abs(o.y-g.y)<82){damageHit(f,o,4.9*f.damageMul,158*f.face,-25);remielConsumeGroundMirage(m,g.x,g.y,'guard');m.ghostAttackT=0;}
@@ -6278,11 +6276,12 @@ function drawBackground(dt){
     // ミラージュキックのコマ送り残像（本体描画より先に表示）。
     [player,enemy].forEach(f=>{
       if(!f||f.type!=='remiel'||f.specialType!=='remielGroundMirageKick'||f.specialT<=0||f.remielKickStartX==null)return;
-      const elapsed=Math.max(0,.72-f.specialT),jumps=[0,58,122,190,255],step=Math.min(4,Math.floor(elapsed/.14));
+      const elapsed=Math.max(0,1.22-f.specialT),jumps=[0,58,122,190,255],step=Math.min(4,Math.floor(elapsed/.24));
       const p=paletteFor(f.type);
-      for(let i=Math.max(0,step-2);i<step;i++){
-        const gx=Math.max(36,Math.min(innerWidth-36,f.remielKickStartX+f.face*jumps[i]));
-        ctx.save();ctx.translate(gx,f.y);ctx.scale(f.face||1,1);ctx.globalAlpha=.16+(i===step-1?.13:0);ctx.shadowColor='#d8fbff';ctx.shadowBlur=12;
+      const echoes=(f.remielKickEchoes||[]);
+      for(const e of echoes){
+        const gx=e.x;
+        ctx.save();ctx.translate(gx,e.y);ctx.scale(f.face||1,1);ctx.globalAlpha=.30*Math.max(0,e.t/e.life);ctx.shadowColor='#d8fbff';ctx.shadowBlur=14;
         ctx.fillStyle=p.body;ctx.beginPath();ctx.ellipse(0,-7,35,30,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=p.eyeBump||p.light;ctx.beginPath();ctx.arc(-18,-31,18,0,Math.PI*2);ctx.arc(18,-31,18,0,Math.PI*2);ctx.fill();
         ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-18,-31,11,0,Math.PI*2);ctx.arc(18,-31,11,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -6301,7 +6300,8 @@ function drawBackground(dt){
     remielGroundMirages.forEach(m=>{
       const g=remielGroundGhostPos(m);if(!g||m.t<=0)return;
       const f=m.owner,p=paletteFor(f.type);ctx.save();ctx.translate(g.x,g.y);ctx.scale(f.face||1,1);
-      ctx.globalAlpha=.48*Math.min(1,m.t/.35);ctx.shadowColor='#c9f6ff';ctx.shadowBlur=14;
+      // 分身だと一目で分かる濃さ。半透明だが背景に埋もれない。
+      ctx.globalAlpha=.78*Math.min(1,Math.min((m.age||0)/.18,m.t/.28));ctx.shadowColor='#c9f6ff';ctx.shadowBlur=20;
       ctx.fillStyle=p.limb;ctx.beginPath();ctx.ellipse(0,30,29,33,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=p.belly;ctx.beginPath();ctx.ellipse(2,35,18,22,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=p.body;ctx.beginPath();ctx.ellipse(0,-7,35,30,0,0,Math.PI*2);ctx.fill();
