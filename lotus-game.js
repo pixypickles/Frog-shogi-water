@@ -4341,8 +4341,8 @@
   }
   function specialSatanaelGroundPressure(f){
     if(gameOver||!f||f.type!=='satanael'||f.stun>0||f.specialT>0||f.attackT>0)return false;
-    f.guard=false;f.specialType='satanaelGroundPressure';f.specialT=.82;
-    satanaelGroundPressures.push({owner:f,t:.78,life:.78});compatLabel('ダークプレッシャー…');return true;
+    f.guard=false;f.specialType='satanaelGroundPressure';f.specialT=1.55;
+    satanaelGroundPressures.push({owner:f,t:1.50,life:1.50});compatLabel('ダークプレッシャー…');return true;
   }
   function specialSatanaelGroundWave(f){
     if(gameOver||!f||f.type!=='satanael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
@@ -4401,7 +4401,7 @@
       if(kind==='tongue'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ヴェノムタン!');}
     }
     if(f.type==='satanael'){
-      if(kind==='guard'&&compatDir(f,'down','down',520)){clearCommand();return specialSatanaelGroundPressure(f);}
+      if(kind==='guard'&&((f.isPlayer&&input.down)||( !f.isPlayer&&f.aiDown)||compatDir(f,'down','down',620))){clearCommand();return specialSatanaelGroundPressure(f);}
       if(kind==='punch'&&compatDir(f,'back',back,520)){clearCommand();return specialSatanaelGroundFlare(f);}
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return specialSatanaelGroundRay(f);}
       if(kind==='kick'&&compatDir(f,'down','down',520)){clearCommand();return specialSatanaelGroundWave(f);}
@@ -5790,7 +5790,7 @@ function drawBackground(dt){
         const target=r.owner&&r.owner.isPlayer?enemy:player;if(r.active&&target&&!r.hit){const ahead=(target.x-r.x)*r.dir;if(ahead>0&&ahead<innerWidth&&Math.abs(target.y-r.y)<34+target.radius*.45){
           if(target.guard){damageHit(r.owner,target,3.2*r.owner.damageMul,80*r.dir,-15);spawnImpact(target.x,target.y,'guard');}else{damageHit(r.owner,target,16.2*r.owner.damageMul,275*r.dir,-55);spawnImpact(target.x,target.y,'hit');}r.hit=true;}}
       });satanaelGroundRays=satanaelGroundRays.filter(r=>r.t>0);
-      satanaelGroundPressures.forEach(p=>{p.t-=dt;const elapsed=p.life-p.t;const target=p.owner&&p.owner.isPlayer?enemy:player;if(target&&elapsed>.18&&elapsed<.68){const floor=landFloorY();target.y+=(floor-target.y)*Math.min(1,dt*7.5);target.vy=Math.max(target.vy,240);}});
+      satanaelGroundPressures.forEach(p=>{p.t-=dt;const elapsed=p.life-p.t;const target=p.owner&&p.owner.isPlayer?enemy:player;if(target&&elapsed>.12&&elapsed<1.38){const floor=landFloorY();target.y+=(floor-target.y)*Math.min(1,dt*5.8);target.vy=Math.max(target.vy,310);}});
       satanaelGroundPressures=satanaelGroundPressures.filter(p=>p.t>0);
       satanaelGroundWaves.forEach(w=>{w.t-=dt;if(w.t<=0&&!w.fired){w.fired=true;w.t=w.life;}if(w.fired){const target=w.owner&&w.owner.isPlayer?enemy:player;const floor=landFloorY();if(target&&!w.hit&&Math.abs(target.x-w.x)<38&&target.y>floor-105){w.hit=true;if(target.guard){damageHit(w.owner,target,1.6*w.owner.damageMul,45*w.owner.face,-25);spawnImpact(target.x,target.y,'guard');}else{damageHit(w.owner,target,5*w.owner.damageMul,115*w.owner.face,-95);spawnImpact(target.x,target.y,'hit');}}}});
       satanaelGroundWaves=satanaelGroundWaves.filter(w=>w.t>0);
@@ -7194,7 +7194,7 @@ toxicWaters.forEach(v=>{
 
     // サタナエル固有エフェクト（水中2準拠）
     satanaelGroundFlares.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff1826';ctx.shadowBlur=30;const g=ctx.createRadialGradient(-5,-5,2,0,0,q.r*1.45);g.addColorStop(0,'#ff6b45');g.addColorStop(.22,'#c0192b');g.addColorStop(.52,'#3b030c');g.addColorStop(.78,'#080106');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,q.r*1.45,0,Math.PI*2);ctx.fill();ctx.restore();});
-    satanaelGroundRays.forEach(r=>{const elapsed=r.life-r.t;ctx.save();ctx.globalCompositeOperation='lighter';if(elapsed<.32){const p=Math.max(0,Math.min(1,elapsed/.32));ctx.globalAlpha=.35+.45*p;ctx.strokeStyle='#731124';ctx.lineWidth=2+5*p;ctx.shadowColor='#e11c34';ctx.shadowBlur=16;}else{ctx.globalAlpha=.9;ctx.strokeStyle='#120108';ctx.lineWidth=34;ctx.shadowColor='#c3132d';ctx.shadowBlur=30;}ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();if(elapsed>=.32){ctx.strokeStyle='#9a1730';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();}ctx.restore();});
+    satanaelGroundRays.forEach(r=>{const elapsed=r.life-r.t;ctx.save();ctx.globalCompositeOperation='lighter';if(elapsed<.32){const p=Math.max(0,Math.min(1,elapsed/.32));ctx.globalAlpha=.35+.45*p;ctx.strokeStyle='#120008';ctx.lineWidth=2+5*p;ctx.shadowColor='#5b0018';ctx.shadowBlur=14;}else{ctx.globalAlpha=.96;ctx.strokeStyle='#020104';ctx.lineWidth=36;ctx.shadowColor='#42000f';ctx.shadowBlur=22;}ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();if(elapsed>=.32){ctx.strokeStyle='#1b0209';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();}ctx.restore();});
     satanaelGroundPressures.forEach(p=>{const elapsed=p.life-p.t,progress=Math.max(0,Math.min(1,(elapsed-.08)/.60)),frontY=-120+progress*(innerHeight+170);ctx.save();const g=ctx.createLinearGradient(0,frontY-280,0,frontY+90);g.addColorStop(0,'rgba(3,0,8,.72)');g.addColorStop(.54,'rgba(10,0,18,.60)');g.addColorStop(.84,'rgba(103,0,31,.28)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,-10,innerWidth,Math.max(0,frontY+100));ctx.restore();});
     satanaelGroundWaves.forEach(w=>{if(!w.fired)return;ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createLinearGradient(w.x,w.y,w.x,w.y-105);g.addColorStop(0,'#160006');g.addColorStop(.2,'#8d0a20');g.addColorStop(.48,'#250008');g.addColorStop(.72,'#ae0c27');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.shadowColor='#c2112c';ctx.shadowBlur=26;ctx.beginPath();ctx.moveTo(w.x-32,w.y);ctx.quadraticCurveTo(w.x-18,w.y-68,w.x,w.y-105);ctx.quadraticCurveTo(w.x+20,w.y-64,w.x+32,w.y);ctx.fill();ctx.restore();});
 
