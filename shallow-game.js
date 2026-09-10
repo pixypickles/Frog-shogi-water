@@ -2752,7 +2752,7 @@
 
       mob:['前 ＋ パンチ：バブルショット','↑ ＋ パンチ：カエル跳びアッパー','前 ＋ キック：トリプルキック'],
       jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック長押し → 離す：サンダーチャージ','下 ＋ パンチ：サンダースパーク'],
-      remiel:['↑ ＋ ガード：ミラージュ（上）','↓ ＋ ガード：ミラージュ（下）','後ろ ＋ ガード：ミラージュカウンター','前 ＋ ガード：アクアパリィ','前 ＋ パンチ：フロストショット','前 ＋ キック：ミラージュキック'],
+      remiel:['↑ ＋ ガード：ミラージュ（前）','↓ ＋ ガード：ミラージュ（後）','後ろ ＋ ガード：ミラージュカウンター','前 ＋ ガード：アクアパリィ','前 ＋ パンチ：フロストショット','前 ＋ キック：ミラージュキック'],
       seraphiel:['↑ ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 前 ＋ パンチ：セラフィックレイ'],
       sariel:['↑ ＋ パンチ：ルナ・スラッシュ','前 ＋ ガード：イーブルアイ','後ろ ＋ ガード：ブラッドムーン','↑ ＋ キック：ムーンサルトキック'],
       kokabiel:['前 ＋ パンチ：グラビティボール','後ろ ＋ ガード：グラビティゾーン','下 ＋ パンチ：メテオレイン','下 ＋ キック：グラビティダイブ'],
@@ -4143,12 +4143,13 @@
     compatLabel('サンダースパーク!'); return true;
   }
   // v2.2.9: レミエル専用。水中2のミラージュ系を蓮/浅瀬へ移植。
-  function remielActiveGroundMirage(f){ return remielGroundMirages.find(m=>m.owner===f&&m.t>0); }
+  function remielActiveGroundMirages(f){ return remielGroundMirages.filter(m=>m.owner===f&&m.t>0); }
+  function remielActiveGroundMirage(f){ return remielActiveGroundMirages(f)[0]||null; }
   function remielGroundGhostPos(m){
     if(!m||!m.owner)return null;
-    // 地上/浅瀬では上下クランプで本体と幻影が重なって見えなくならないよう、
-    // 縦＋横に明確に分離する。上ミラージュは頭上、下ミラージュは斜め後方へ。
-    const split=m.splitTime||.34;
+    // 地上/浅瀬では上下ではなく前後に分身を置く。
+    // front/back は同時に存在でき、火力補助として働く。
+    const split=m.splitTime||.20;
     const p=Math.max(0,Math.min(1,(m.age||0)/split));
     const e=p*p*(3-2*p);
     const ox=(m.ghostOffsetX||0)*e;
@@ -4160,21 +4161,21 @@
   }
   function remielMakeGroundMirage(f,where){
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.specialT>0)return false;
-    remielGroundMirages=remielGroundMirages.filter(m=>m.owner!==f);
+    // 同じ側の分身だけ更新し、反対側は残す。↑=前、↓=後ろ。
+    const side=where==='up'?'front':'back';
+    remielGroundMirages=remielGroundMirages.filter(m=>!(m.owner===f&&m.side===side));
     const originY=f.y;
-    // 地上では「下」に十分な空間がないため、水中版そのままの上下分離だと
-    // 2体が同じ座標へクランプされる。常に目で追える位置へ分身を出す。
-    const splitTime=.34;
-    const ghostOffsetX=where==='up' ? -f.face*34 : -f.face*92;
-    const ghostOffsetY=where==='up' ? -112 : -34;
+    const splitTime=.20;
+    const ghostOffsetX=(side==='front'?f.face*92:-f.face*92);
+    const ghostOffsetY=-6;
     remielGroundMirages.push({
-      owner:f,side:where,t:4.2,life:4.2,alpha:.82,age:0,splitTime,
+      owner:f,side,t:5.0,life:5.0,alpha:.86,age:0,splitTime,
       originY,ghostOffsetX,ghostOffsetY,
       counterT:0,ghostAttackT:0
     });
     f.vy=0;
     f.specialType='remielGroundMirage'; f.specialT=.34;
-    compatLabel(where==='up'?'ミラージュ（上）!':'ミラージュ（下）!'); return true;
+    compatLabel(where==='up'?'ミラージュ（前）!':'ミラージュ（後）!'); return true;
   }
   function specialRemielGroundCounter(f){
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.specialT>0)return false;
@@ -4191,17 +4192,18 @@
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='remielGroundFrostShot'; f.specialT=.38; f.attack='punch'; f.attackT=.38;
     remielGroundShots.push({owner:f,x:f.x+f.face*44,y:f.y-10,vx:f.face*310,vy:0,r:16,t:1.65,life:1.65,damage:4.8*f.damageMul,reflects:0,phase:0});
-    const m=remielActiveGroundMirage(f),target=f.isPlayer?enemy:player;
-    if(m&&target){const g=remielGroundGhostPos(m);if(g){const dx=target.x-g.x,dy=target.y-g.y,d=Math.hypot(dx,dy)||1,sp=300;remielGhostShots.push({owner:f,mirage:m,x:g.x+f.face*38,y:g.y-8,vx:dx/d*sp,vy:dy/d*sp,r:13,t:1.3,damage:2.4*f.damageMul});}}
+    const target=f.isPlayer?enemy:player;
+    // 前後の分身も本体と同サイズ・同威力のフロストショットを撃つ。
+    remielActiveGroundMirages(f).forEach(m=>{if(!target)return;const g=remielGroundGhostPos(m);if(g){const dx=target.x-g.x,dy=target.y-g.y,d=Math.hypot(dx,dy)||1,sp=310;remielGhostShots.push({owner:f,mirage:m,x:g.x+f.face*44,y:g.y-10,vx:dx/d*sp,vy:dy/d*sp,r:16,t:1.55,damage:4.8*f.damageMul});}});
     compatLabel('フロストショット!'); return true;
   }
   function specialRemielGroundMirageKick(f){
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     // コマ送りが目で追えるよう、各停止フレームを長めに見せる。
-    f.specialType='remielGroundMirageKick'; f.specialT=1.22; f.attack='kick'; f.attackT=1.22;
+    f.specialType='remielGroundMirageKick'; f.specialT=.68; f.attack='kick'; f.attackT=.68;
     f.remielKickStartX=f.x; f.remielKickStep=-1; f.remielKickHit=false; f.vx=0;
     f.remielKickEchoes=[];
-    const m=remielActiveGroundMirage(f); if(m)m.ghostAttackT=.48;
+    remielActiveGroundMirages(f).forEach(m=>m.ghostAttackT=.50);
     compatLabel('ミラージュキック!'); return true;
   }
   function remielGroundGhostNormal(f,kind){
@@ -5542,14 +5544,14 @@ function drawBackground(dt){
       [player,enemy].forEach(f=>{
         if(!f||f.type!=='remiel')return; const o=f.isPlayer?enemy:player;if(!o)return;
         if(f.specialType==='remielGroundMirageKick'&&f.specialT>0){
-          // 0.24秒ごとに 0→58→122→190→255px。各位置でしっかり姿が見える速度。
-          const elapsed=Math.max(0,1.22-f.specialT);
-          const jumps=[0,58,122,190,255];
-          const step=Math.min(4,Math.floor(elapsed/.24));
+          // 高速コマ送りワープ。約0.11秒ごとに位置が飛び、残像だけ少し残す。
+          const elapsed=Math.max(0,.68-f.specialT);
+          const jumps=[0,72,150,235,325];
+          const step=Math.min(4,Math.floor(elapsed/.11));
           if(step!==f.remielKickStep){
             if(f.remielKickStep>=0){
               const oldX=Math.max(36,Math.min(innerWidth-36,f.remielKickStartX+f.face*jumps[f.remielKickStep]));
-              (f.remielKickEchoes||(f.remielKickEchoes=[])).push({x:oldX,y:f.y,t:.42,life:.42});
+              (f.remielKickEchoes||(f.remielKickEchoes=[])).push({x:oldX,y:f.y,t:.20,life:.20});
             }
             f.remielKickStep=step;
             f.x=Math.max(36,Math.min(innerWidth-36,f.remielKickStartX+f.face*jumps[step]));
@@ -5558,8 +5560,7 @@ function drawBackground(dt){
           if(f.remielKickEchoes)f.remielKickEchoes.forEach(e=>e.t-=dt);
           if(f.remielKickEchoes)f.remielKickEchoes=f.remielKickEchoes.filter(e=>e.t>0);
           if(!f.remielKickHit&&Math.abs(o.x-f.x)<104&&Math.abs(o.y-f.y)<82){f.remielKickHit=true;damageHit(f,o,9.8*f.damageMul,315*f.face,-50);spawnImpact(o.x,o.y,'hit');}
-          const m=remielActiveGroundMirage(f),g=m&&remielGroundGhostPos(m);
-          if(m&&g&&m.ghostAttackT>0&&Math.abs(o.x-g.x)<150&&Math.abs(o.y-g.y)<82){damageHit(f,o,4.9*f.damageMul,158*f.face,-25);remielConsumeGroundMirage(m,g.x,g.y,'guard');m.ghostAttackT=0;}
+          remielActiveGroundMirages(f).forEach(m=>{const g=remielGroundGhostPos(m);if(m&&g&&m.ghostAttackT>0&&Math.abs(o.x-g.x)<150&&Math.abs(o.y-g.y)<82){damageHit(f,o,4.9*f.damageMul,158*f.face,-25);m.ghostAttackT=0;}});
         }
       });
 
@@ -6313,7 +6314,7 @@ function drawBackground(dt){
       ctx.restore();
     });
     remielGroundShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#bcefff';ctx.shadowBlur=18;ctx.fillStyle='#e9fbff';ctx.strokeStyle='#9edcec';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.stroke();for(let i=0;i<5;i++){const a=(q.phase||0)+i*Math.PI*2/5;ctx.strokeStyle='rgba(210,250,255,.72)';ctx.beginPath();ctx.moveTo(Math.cos(a)*q.r*.5,Math.sin(a)*q.r*.5);ctx.lineTo(Math.cos(a)*(q.r+7),Math.sin(a)*(q.r+7));ctx.stroke();}ctx.restore();});
-    remielGhostShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalAlpha=.45;ctx.shadowColor='#d8fbff';ctx.shadowBlur=12;ctx.fillStyle='#e9fbff';ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.restore();});
+    remielGhostShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalAlpha=.82;ctx.shadowColor='#d8fbff';ctx.shadowBlur=18;ctx.fillStyle='#e9fbff';ctx.strokeStyle='#9edcec';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();});
 
     // カワズ隠し投げ：舌で相手をぐるぐる巻きにしていることを前面に表示。
     const pileOwner=(player&&player.specialType==='kawazuTonguePiledriver')?player:
