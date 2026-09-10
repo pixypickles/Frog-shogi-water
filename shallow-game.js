@@ -6277,7 +6277,7 @@ function drawBackground(dt){
     [player,enemy].forEach(f=>{
       if(!f||f.type!=='remiel'||f.specialType!=='remielGroundMirageKick'||f.specialT<=0||f.remielKickStartX==null)return;
       const elapsed=Math.max(0,1.22-f.specialT),jumps=[0,58,122,190,255],step=Math.min(4,Math.floor(elapsed/.24));
-      const p=paletteFor(f.type);
+      const p=fighterPalette(f.type);
       const echoes=(f.remielKickEchoes||[]);
       for(const e of echoes){
         const gx=e.x;
@@ -6299,7 +6299,7 @@ function drawBackground(dt){
     // レミエルの幻影。薄い水色の同型シルエット＋攻撃時の残像。
     remielGroundMirages.forEach(m=>{
       const g=remielGroundGhostPos(m);if(!g||m.t<=0)return;
-      const f=m.owner,p=paletteFor(f.type);ctx.save();ctx.translate(g.x,g.y);ctx.scale(f.face||1,1);
+      const f=m.owner,p=fighterPalette(f.type);ctx.save();ctx.translate(g.x,g.y);ctx.scale(f.face||1,1);
       // 分身だと一目で分かる濃さ。半透明だが背景に埋もれない。
       ctx.globalAlpha=.78*Math.min(1,Math.min((m.age||0)/.18,m.t/.28));ctx.shadowColor='#c9f6ff';ctx.shadowBlur=20;
       ctx.fillStyle=p.limb;ctx.beginPath();ctx.ellipse(0,30,29,33,0,0,Math.PI*2);ctx.fill();
