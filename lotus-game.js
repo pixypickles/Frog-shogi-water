@@ -681,6 +681,16 @@
     ctx.restore();
   }
 
+  function drawIceAura(x,y,rx,ry,intensity=1){
+    ctx.save();ctx.translate(x,y);ctx.globalCompositeOperation='lighter';
+    ctx.shadowColor='#bff7ff';ctx.shadowBlur=20*intensity;
+    ctx.fillStyle='rgba(170,238,255,'+(0.24+0.22*intensity)+')';
+    ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(235,255,255,'+(0.55+0.3*intensity)+')';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(-rx*.8,0);ctx.lineTo(-rx*.2,-ry*.8);ctx.lineTo(rx*.15,-ry*.25);ctx.lineTo(rx*.75,-ry*.65);ctx.stroke();
+    ctx.restore();
+  }
+
   function drawBurningAura(x,y,rx,ry,rotation=0){
     ctx.save();
     ctx.translate(x,y);
@@ -1864,7 +1874,7 @@
           intensity=.4+.6*Math.min(1,held/1150);
         }
         if(this.specialType==='hellCrashFinish'){
-          drawRedAura(48,-38,22,19,intensity);
+          drawIceAura(70,48,26,14,intensity);
         }else if(this.specialType==='abyssCharge'){
           // 曲げた腕の拳に赤い力を溜める。
           drawRedAura(26,8,16,14,intensity);
@@ -4908,6 +4918,14 @@
         if(player){
           const remForward=player.face>0?'right':'left', remBack=player.face>0?'left':'right';
           if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
+          // ルシファー：後ろ＋ガードは通常ガードより優先してアイスウォール。
+          const luciferBackHeld = player.type==='black' &&
+            ((player.face>0 && input.x<-.35) || (player.face<0 && input.x>.35));
+          if(luciferBackHeld && !player.throwState){
+            player.guard=false; player.attackT=0; player.attack=null;
+            if(specialLuciferIceWall(player)){btn.classList.remove('pressed');return;}
+          }
+
           // MIX簡易コマンド：ガード入力を共通タイマーで記録。
           const simpleNow=performance.now();
           input.simpleGuardTapTimes=(input.simpleGuardTapTimes||[]).filter(t=>simpleNow-t<=650);
@@ -5127,6 +5145,11 @@
     if(e.key==='i'&&player){
       const forward=player.face>0?'right':'left', back=player.face>0?'left':'right';
       if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
+      if(player.type==='black'){
+        const backHeld=(player.face>0&&keys['a'])||(player.face<0&&keys['d']);
+        if(backHeld){player.guard=false;player.attackT=0;player.attack=null;if(specialLuciferIceWall(player))return;}
+      }
+
       if(player.type==='orange'&&!player.urielGuardHoldStart)player.urielGuardHoldStart=performance.now();
       player.guard=true;
       player.guardStartT=.28;
