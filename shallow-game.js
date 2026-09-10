@@ -3717,20 +3717,28 @@
     const speed=curved?285:355;
     const yOffset=source==='kick' ? 24 : -10;
     const rad=angleDeg*Math.PI/180;
-    pressureBlades.push({
+    const bladeLife=curved ? 2.65 : 1.45;
+    const spawnBlade=()=>pressureBlades.push({
       owner:f,
       x:f.x+f.face*68,
       y:f.y+yOffset,
       vx:f.face*Math.cos(rad)*speed,
       vy:Math.sin(rad)*speed,
       curve:curve,
-      t:1.45,
-      life:1.45,
+      t:bladeLife,
+      life:bladeLife,
       hit:false,
       size:1.0,
       angle:rad,
       reflected:0
     });
+    spawnBlade();
+    // 直線のエアカッターは短い間隔で2連射。カーブ版は1発を長く残す。
+    if(!curved){
+      setTimeout(()=>{
+        if(!gameOver && f && f.hp>0) spawnBlade();
+      },105);
+    }
 
     comboEl.textContent=label+'!';
     setTimeout(()=>{if(comboEl.textContent===label+'!')comboEl.textContent='';},900);
