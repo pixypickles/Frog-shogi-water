@@ -952,11 +952,11 @@
     }
     if(type==='seraphiel'){
       return {
-        body:'#f1ead7',
-        limb:'#f5efd9',
-        light:'#fff5ae',
-        belly:'#fff9df',
-        eyeBump:'#ffe88a'
+        body:'#fff8c9',
+        limb:'#f7eaa0',
+        light:'#fffbdc',
+        belly:'#fffef0',
+        eyeBump:'#ffe978'
       };
     }
     if(type==='satanael'){
@@ -2391,7 +2391,7 @@
         ctx.save();ctx.globalCompositeOperation='lighter';
         ctx.shadowColor='#fff3a6';ctx.shadowBlur=28;
         const hand=this.specialType==='seraphicUpper';
-        const ax=hand?54:72, ay=hand?-40:50, rr=hand?31:36;
+        const ax=hand?68:72, ay=hand?-54:50, rr=hand?27:36;
         const g=ctx.createRadialGradient(ax,ay,2,ax,ay,rr);
         g.addColorStop(0,'rgba(255,255,255,.98)');
         g.addColorStop(.38,'rgba(255,247,170,.92)');
@@ -5186,7 +5186,13 @@
         baseVy:Math.sin(angle)*speed,
         maxReflect:opts.maxReflect||5
       };
-      water2Shots.push(shot);
+      if(opts.style==='seraphicShot'){
+        water2Shots.push(shot);
+        for(let i=1;i<3;i++){
+          const q={...shot,x:shot.x-dir*(i*24),age:-i*.085,spin:i*.7,hit:false};
+          water2Shots.push(q);
+        }
+      }else water2Shots.push(shot);
       comboEl.textContent=name+'!';
       setTimeout(()=>{if(comboEl.textContent===name+'!')comboEl.textContent='';},520);
     },charge*1000);
@@ -7404,6 +7410,7 @@ function drawBackground(dt){
       // セラフィエル：セラフィックレイ。予告0.32秒後に短時間だけ攻撃判定。
       seraphielRays.forEach(r=>{
         r.t-=dt;
+        if(r.owner){r.x=r.owner.x+r.owner.face*55;r.y=r.owner.y-8;r.dir=r.owner.face;}
         const elapsed=r.life-r.t;
         r.active=elapsed>.32 && elapsed<.50;
         const target=r.owner.isPlayer?enemy:player;
@@ -8356,6 +8363,7 @@ function drawBackground(dt){
     remielFakeShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.32*Math.min(1,q.t/.18);ctx.shadowColor='#bdefff';ctx.shadowBlur=16;ctx.fillStyle='#d9f8ff';ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#9ddbea';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,q.r+2,0,Math.PI*2);ctx.stroke();ctx.restore();});
 
     seraphielRays.forEach(r=>{
+      if(r.owner){r.x=r.owner.x+r.owner.face*55;r.y=r.owner.y-8;r.dir=r.owner.face;}
       const elapsed=r.life-r.t;
       ctx.save();ctx.globalCompositeOperation='lighter';
       if(elapsed<.32){

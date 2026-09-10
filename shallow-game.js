@@ -736,7 +736,7 @@
   function fighterPalette(type){
 
     if(type==='mob')return {body:'#9be348',limb:'#83c83c',light:'#c7f57a',belly:'#e9f7b5',eyeBump:'#b4ed62'};
-    if(type==='seraphiel')return {body:'#f5f1df',limb:'#ddd7c5',light:'#fffbed',belly:'#fffdf4',eyeBump:'#f5f1df'};
+    if(type==='seraphiel')return {body:'#fff8c9',limb:'#f7eaa0',light:'#fffbdc',belly:'#fffef0',eyeBump:'#ffe978'};
     if(type==='jihal')return {body:'#244f78',limb:'#285b88',light:'#fff2a2',belly:'#e6cf55',eyeBump:'#f1d64e'};
     if(type==='remiel')return {body:'#87b7c9',limb:'#6fa0b3',light:'#bfe6ee',belly:'#d9f3f5',eyeBump:'#bfe6ee'};
     if(type==='satanael')return {body:'#690b1b',limb:'#540815',light:'#a32135',belly:'#b85a62',eyeBump:'#7d1024'};
@@ -1676,7 +1676,7 @@
       // セラフィエル: 手/足に白金の光をまとわせる（アッパー・キック）。
       if(this.type==='seraphiel'&&this.seraphicAuraT>0){
         ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.62;ctx.fillStyle='#fff6aa';ctx.shadowColor='#fff0a0';ctx.shadowBlur=22;
-        const ax=this.seraphicAura==='foot'?52:46, ay=this.seraphicAura==='foot'?47:10;
+        const ax=this.seraphicAura==='foot'?52:62, ay=this.seraphicAura==='foot'?47:-34;
         ctx.beginPath();ctx.arc(ax,ay,this.seraphicAura==='foot'?18:15,0,Math.PI*2);ctx.fill();ctx.restore();
       }
 
@@ -4249,7 +4249,7 @@
   function specialSeraphielGroundShot(f){
     if(gameOver||!f||f.type!=='seraphiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='seraphielGroundShot';f.specialT=.34;f.attack='punch';f.attackT=.34;
-    seraphielGroundShots.push({owner:f,x:f.x+f.face*48,y:f.y-8,vx:f.face*350,vy:0,r:17,t:1.55,life:1.55,hit:false,phase:0});
+    for(let i=0;i<3;i++)seraphielGroundShots.push({owner:f,x:f.x+f.face*(48-i*23),y:f.y-8,vx:f.face*350,vy:0,r:17,t:1.55,life:1.55,hit:false,phase:i*.7,delay:i*.085});
     compatLabel('セラフィックショット!');return true;
   }
   function specialSeraphielGroundCyclone(f){
@@ -5717,7 +5717,7 @@ function drawBackground(dt){
       });
       seraphielGroundShots=seraphielGroundShots.filter(q=>q.t>0&&!q.hit&&q.x>-80&&q.x<innerWidth+80&&q.y>-80&&q.y<innerHeight+80);
       seraphielGroundRays.forEach(r=>{
-        r.t-=dt;const elapsed=r.life-r.t;r.active=elapsed>.32&&elapsed<.50;const target=r.owner&&r.owner.isPlayer?enemy:player;
+        r.t-=dt;if(r.owner){r.x=r.owner.x+r.owner.face*52;r.y=r.owner.y-8;r.dir=r.owner.face;}const elapsed=r.life-r.t;r.active=elapsed>.32&&elapsed<.50;const target=r.owner&&r.owner.isPlayer?enemy:player;
         if(r.active&&target&&!r.hit){const ahead=(target.x-r.x)*r.dir;if(ahead>0&&ahead<innerWidth&&Math.abs(target.y-r.y)<34+target.radius*.45){
           if(target.guard){damageHit(r.owner,target,3.0*r.owner.damageMul,80*r.dir,-15);spawnImpact(target.x,target.y,'guard');}
           else{damageHit(r.owner,target,15.5*r.owner.damageMul,265*r.dir,-55);spawnImpact(target.x,target.y,'hit');}r.hit=true;
@@ -6757,7 +6757,7 @@ toxicWaters.forEach(v=>{
       ctx.strokeStyle='#ffe16a';ctx.lineWidth=3;for(let i=0;i<4;i++){const ang=q.phase+i*Math.PI/2;ctx.beginPath();ctx.moveTo(Math.cos(ang)*8,Math.sin(ang)*8);ctx.lineTo(Math.cos(ang)*(q.r+12),Math.sin(ang)*(q.r+12));ctx.stroke();}ctx.restore();
     });
     seraphielGroundRays.forEach(r=>{
-      const elapsed=r.life-r.t;ctx.save();ctx.globalCompositeOperation='lighter';
+      if(r.owner){r.x=r.owner.x+r.owner.face*52;r.y=r.owner.y-8;r.dir=r.owner.face;}const elapsed=r.life-r.t;ctx.save();ctx.globalCompositeOperation='lighter';
       if(elapsed<.32){const p=elapsed/.32;ctx.globalAlpha=.28+.32*p;ctx.strokeStyle='#fff2a6';ctx.lineWidth=2+5*p;ctx.shadowColor='#fff7c4';ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();}
       else{const fade=Math.max(0,Math.min(1,r.t/.12));ctx.globalAlpha=.72*fade;ctx.strokeStyle='#fff9d7';ctx.lineWidth=28;ctx.shadowColor='#fff0a0';ctx.shadowBlur=30;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();ctx.globalAlpha=.95*fade;ctx.strokeStyle='#fff';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();}ctx.restore();
     });
