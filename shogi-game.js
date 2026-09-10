@@ -30,7 +30,7 @@ const HERO_ROLES=['K','R','B','G','S','N','L'];
 const RB_ROLES=['R','B','B','R'];
 
 const CHAR={
- seraphiel:{name:'セラフィエルさん',body:'#f5f1df',eye:'#fff9d5',iris:'#ffd85c',skills:['セラフィックアッパー','セラフィックレイ','セラフィックキック']},
+ seraphiel:{name:'セラフィエルさん',body:'#f5f1df',eye:'#fff9d5',iris:'#ffd85c',skills:['セラフィックアッパー','セラフィックキック','セラフィックショット','セラフィックサイクロン','セラフィックレイ']},
  jihal:{name:'ジィハルさん',body:'#244f78',eye:'#f1d64e',iris:'#17364f',skills:['雷','ライトニングダッシュ','ボルトショット']},
  yellow:{name:'ラファエルさん',body:'#e3cf42',eye:'#f2df66',iris:'#26351c',skills:['水圧カッター','ヒーリングバブル','高速バブル移動']},
  orange:{name:'ウリエルさん',body:'#ef8c36',eye:'#f6a24e',iris:'#26321d',skills:['ホワイトカウンター','ガーディアンタックル','ホワイトリーチ']},
