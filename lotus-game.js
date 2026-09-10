@@ -4142,29 +4142,40 @@
   function specialRemielGroundFrostShot(f){
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='remielGroundFrostShot'; f.specialT=.38; f.attack='punch'; f.attackT=.38;
-    remielGroundShots.push({owner:f,x:f.x+f.face*44,y:f.y-10,vx:f.face*310,vy:0,r:16,t:1.65,life:1.65,damage:4.8*f.damageMul,reflects:0,phase:0});
-    const target=f.isPlayer?enemy:player;
-    // 前後の分身も本体と同サイズ・同威力のフロストショットを撃つ。
-    remielActiveGroundMirages(f).forEach(m=>{if(!target)return;const g=remielGroundGhostPos(m);if(g){const dx=target.x-g.x,dy=target.y-g.y,d=Math.hypot(dx,dy)||1,sp=310;remielGhostShots.push({owner:f,mirage:m,x:g.x+f.face*44,y:g.y-10,vx:dx/d*sp,vy:dy/d*sp,r:16,t:1.55,damage:4.8*f.damageMul});}});
+    const frostR=19, frostSpeed=310, frostLife=1.65, frostDamage=4.8*f.damageMul;
+    remielGroundShots.push({owner:f,x:f.x+f.face*44,y:f.y-10,vx:f.face*frostSpeed,vy:0,r:frostR,t:frostLife,life:frostLife,damage:frostDamage,reflects:0,phase:0});
+    // 分身も本体と完全に同じフロストショットを、同じ向き・大きさ・速度・威力で撃つ。
+    // フロストショットが当たっても分身は消えない。
+    remielActiveGroundMirages(f).forEach(m=>{const g=remielGroundGhostPos(m);if(g){remielGhostShots.push({owner:f,mirage:m,x:g.x+f.face*44,y:g.y-10,vx:f.face*frostSpeed,vy:0,r:frostR,t:frostLife,life:frostLife,damage:frostDamage,phase:0});}});
     compatLabel('フロストショット!'); return true;
   }
   function specialRemielGroundMirageKick(f){
     if(gameOver||!f||f.type!=='remiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     // コマ送りが目で追えるよう、各停止フレームを長めに見せる。
-    f.specialType='remielGroundMirageKick'; f.specialT=.68; f.attack='kick'; f.attackT=.68;
+    f.specialType='remielGroundMirageKick'; f.specialT=.46; f.attack='kick'; f.attackT=.46;
     f.remielKickStartX=f.x; f.remielKickStep=-1; f.remielKickHit=false; f.vx=0;
     f.remielKickEchoes=[];
-    remielActiveGroundMirages(f).forEach(m=>m.ghostAttackT=.50);
+    remielActiveGroundMirages(f).forEach(m=>m.ghostAttackT=.46);
     compatLabel('ミラージュキック!'); return true;
   }
   function remielGroundGhostNormal(f,kind){
-    const m=remielActiveGroundMirage(f),target=f.isPlayer?enemy:player; if(!m||!target)return;
-    const g=remielGroundGhostPos(m);if(!g)return;
-    m.ghostAttackT=.28;
-    const dir=f.face,dx=(target.x-g.x)*dir,dy=target.y-g.y;
-    const hit=kind==='punch'?(dx>0&&dx<92&&Math.abs(dy)<62):(kind==='kick'?(dx>0&&dx<112&&Math.abs(dy)<76):false);
-    if(!hit)return;
-    setTimeout(()=>{if(!m||m.t<=0||gameOver)return;const gg=remielGroundGhostPos(m);if(!gg)return;if(target.guard)spawnImpact(target.x,target.y,'guard');else damageHit(f,target,(kind==='punch'?1.3:2.6)*f.damageMul,(kind==='punch'?30:72)*dir,kind==='punch'?-8:-18);remielConsumeGroundMirage(m,gg.x,gg.y,'guard');},kind==='punch'?120:170);
+    const target=f.isPlayer?enemy:player; if(!target)return;
+    const dir=f.face;
+    // 前後すべての分身が本体と同じ通常攻撃を行う。分身の攻撃が当たった時だけ、その分身は消える。
+    remielActiveGroundMirages(f).forEach(m=>{
+      const g=remielGroundGhostPos(m);if(!g)return;
+      m.ghostAttackT=kind==='punch'?.34:.50; m.ghostAttackKind=kind;
+      const dx=(target.x-g.x)*dir,dy=target.y-g.y;
+      const hit=kind==='punch'?(dx>0&&dx<88&&Math.abs(dy)<58):(kind==='kick'?(dx>0&&dx<106&&Math.abs(dy)<72):false);
+      if(!hit)return;
+      setTimeout(()=>{
+        if(!m||m.t<=0||gameOver)return; const gg=remielGroundGhostPos(m);if(!gg)return;
+        if(target.guard){ spawnImpact(target.x,target.y,'guard'); }
+        else if(kind==='punch'){ damageHit(f,target,2.6*f.damageMul,52*dir,-5); }
+        else { damageHit(f,target,5.2*f.damageMul,142*dir,-21); }
+        remielConsumeGroundMirage(m,gg.x,gg.y,'guard');
+      },kind==='punch'?125:175);
+    });
   }
   function tryV2CompatSpecial(f,kind,forward,back){
     if(!f)return false;
@@ -5437,8 +5448,13 @@ function drawBackground(dt){
       player.update(dt);enemy.update(dt);
       if(((mixBattleMode&&mixBattleContext?.battleHazard==='lotus-current')||(mixPracticeMode&&mixPracticeHazard==='lotus-current'))){
         // 流れる蓮: 空中では流されず、着地中だけ蓮と一緒に右へ運ばれる。
-        const flow=56; const floor=landFloorY();
-        for(const f of [player,enemy]){if(f && f.y>floor-28 && Math.abs(f.vy)<90){f.x+=flow*dt;}}
+        const flow=145; const floor=landFloorY();
+        for(const f of [player,enemy]){
+          if(!f)continue;
+          // 自動ジャンプで着地直後に上向き速度になるため、床ぴったりだけを見ると流れが効かない。
+          // 蓮に近い低い軌道全体を「葉に乗っている時間」とみなし、葉の速度を受け継がせる。
+          if(f.y>floor-105 && f.vy>-235){ f.x+=flow*dt; f.vx+=52*dt; }
+        }
       }
       updateNewSpecialMoves(player,dt);
       updateNewSpecialMoves(enemy,dt);
@@ -5465,20 +5481,21 @@ function drawBackground(dt){
       });
       remielGroundShots=remielGroundShots.filter(q=>q.t>0&&q.x>-70&&q.x<innerWidth+70&&q.y>-80&&q.y<innerHeight+80);
       remielGhostShots.forEach(q=>{
-        q.t-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;const target=q.owner&&q.owner.isPlayer?enemy:player;
+        q.t-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.phase=(q.phase||0)+dt*8;const target=q.owner&&q.owner.isPlayer?enemy:player;
         if(target&&q.t>0&&Math.abs(q.x-target.x)<42&&Math.abs(q.y-target.y)<55){
-          if(target.guard)spawnImpact(target.x,target.y,'guard');else damageHit(q.owner,target,q.damage,70*Math.sign(q.vx),-15);
-          if(q.mirage&&q.mirage.t>0)remielConsumeGroundMirage(q.mirage,q.x,q.y,'guard');q.t=0;
+          if(target.guard)spawnImpact(target.x,target.y,'guard');else damageHit(q.owner,target,q.damage,155*Math.sign(q.vx),-28);
+          // フロストショット命中では分身は消えない。
+          q.t=0;
         }
       });
       remielGhostShots=remielGhostShots.filter(q=>q.t>0&&q.x>-60&&q.x<innerWidth+60&&q.y>-80&&q.y<innerHeight+80);
       [player,enemy].forEach(f=>{
         if(!f||f.type!=='remiel')return; const o=f.isPlayer?enemy:player;if(!o)return;
         if(f.specialType==='remielGroundMirageKick'&&f.specialT>0){
-          // 高速コマ送りワープ。約0.11秒ごとに位置が飛び、残像だけ少し残す。
-          const elapsed=Math.max(0,.68-f.specialT);
-          const jumps=[0,72,150,235,325];
-          const step=Math.min(4,Math.floor(elapsed/.11));
+          // 高速コマ送りワープ。脅威を戻すため約0.075秒ごとに大きく飛ぶ。
+          const elapsed=Math.max(0,.46-f.specialT);
+          const jumps=[0,88,182,282,388];
+          const step=Math.min(4,Math.floor(elapsed/.075));
           if(step!==f.remielKickStep){
             if(f.remielKickStep>=0){
               const oldX=Math.max(36,Math.min(innerWidth-36,f.remielKickStartX+f.face*jumps[f.remielKickStep]));
@@ -5491,7 +5508,14 @@ function drawBackground(dt){
           if(f.remielKickEchoes)f.remielKickEchoes.forEach(e=>e.t-=dt);
           if(f.remielKickEchoes)f.remielKickEchoes=f.remielKickEchoes.filter(e=>e.t>0);
           if(!f.remielKickHit&&Math.abs(o.x-f.x)<104&&Math.abs(o.y-f.y)<82){f.remielKickHit=true;damageHit(f,o,9.8*f.damageMul,315*f.face,-50);spawnImpact(o.x,o.y,'hit');}
-          remielActiveGroundMirages(f).forEach(m=>{const g=remielGroundGhostPos(m);if(m&&g&&m.ghostAttackT>0&&Math.abs(o.x-g.x)<150&&Math.abs(o.y-g.y)<82){damageHit(f,o,4.9*f.damageMul,158*f.face,-25);m.ghostAttackT=0;}});
+          remielActiveGroundMirages(f).forEach(m=>{
+            const g=remielGroundGhostPos(m);
+            if(m&&g&&m.ghostAttackT>0&&Math.abs(o.x-g.x)<104&&Math.abs(o.y-g.y)<82){
+              // 分身も本体と同じミラージュキック。同じ威力で、ヒットした分身は消える。
+              damageHit(f,o,9.8*f.damageMul,315*f.face,-50);
+              m.ghostAttackT=0; remielConsumeGroundMirage(m,g.x,g.y,'guard');
+            }
+          });
         }
       });
 
@@ -6162,8 +6186,13 @@ function drawBackground(dt){
       player.update(dt);enemy.update(dt);
       if(((mixBattleMode&&mixBattleContext?.battleHazard==='lotus-current')||(mixPracticeMode&&mixPracticeHazard==='lotus-current'))){
         // 流れる蓮: 空中では流されず、着地中だけ蓮と一緒に右へ運ばれる。
-        const flow=56; const floor=landFloorY();
-        for(const f of [player,enemy]){if(f && f.y>floor-28 && Math.abs(f.vy)<90){f.x+=flow*dt;}}
+        const flow=145; const floor=landFloorY();
+        for(const f of [player,enemy]){
+          if(!f)continue;
+          // 自動ジャンプで着地直後に上向き速度になるため、床ぴったりだけを見ると流れが効かない。
+          // 蓮に近い低い軌道全体を「葉に乗っている時間」とみなし、葉の速度を受け継がせる。
+          if(f.y>floor-105 && f.vy>-235){ f.x+=flow*dt; f.vx+=52*dt; }
+        }
       }
     }
 
@@ -6258,7 +6287,7 @@ function drawBackground(dt){
       ctx.restore();
     });
     remielGroundShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#bcefff';ctx.shadowBlur=18;ctx.fillStyle='#e9fbff';ctx.strokeStyle='#9edcec';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.stroke();for(let i=0;i<5;i++){const a=(q.phase||0)+i*Math.PI*2/5;ctx.strokeStyle='rgba(210,250,255,.72)';ctx.beginPath();ctx.moveTo(Math.cos(a)*q.r*.5,Math.sin(a)*q.r*.5);ctx.lineTo(Math.cos(a)*(q.r+7),Math.sin(a)*(q.r+7));ctx.stroke();}ctx.restore();});
-    remielGhostShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalAlpha=.82;ctx.shadowColor='#d8fbff';ctx.shadowBlur=18;ctx.fillStyle='#e9fbff';ctx.strokeStyle='#9edcec';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();});
+    remielGhostShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalAlpha=1;ctx.globalCompositeOperation='lighter';ctx.shadowColor='#bcefff';ctx.shadowBlur=18;ctx.fillStyle='#e9fbff';ctx.strokeStyle='#9edcec';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,q.r,0,Math.PI*2);ctx.fill();ctx.stroke();for(let i=0;i<5;i++){const a=(q.phase||0)+i*Math.PI*2/5;ctx.strokeStyle='rgba(210,250,255,.72)';ctx.beginPath();ctx.moveTo(Math.cos(a)*q.r*.5,Math.sin(a)*q.r*.5);ctx.lineTo(Math.cos(a)*(q.r+7),Math.sin(a)*(q.r+7));ctx.stroke();}ctx.restore();});
 
     // カワズ隠し投げ：舌で相手をぐるぐる巻きにしていることを前面に表示。
     const pileOwner=(player&&player.specialType==='kawazuTonguePiledriver')?player:
