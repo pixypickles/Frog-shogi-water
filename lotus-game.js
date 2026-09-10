@@ -96,6 +96,10 @@
   let remielGhostShots = [];
   let seraphielGroundShots = [];
   let seraphielGroundRays = [];
+  let satanaelGroundFlares=[];
+  let satanaelGroundRays=[];
+  let satanaelGroundPressures=[];
+  let satanaelGroundWaves=[];
   let burstWaves = [];
   let leafTargets=[];
   let leafMiniActive=false;
@@ -2742,7 +2746,7 @@
       kokabiel:['前 ＋ パンチ：グラビティボール','後ろ ＋ ガード：グラビティゾーン','下 ＋ パンチ：メテオレイン','下 ＋ キック：グラビティダイブ'],
       flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードラッシュ','↑ ＋ キック：インフェルノクロー'],
       samael:['前 ＋ パンチ：ポイズンゲート','前 ＋ キック：デッドリー・アクア','舌：ヴェノムタン'],
-      satanael:['前 ＋ パンチ：ヘルフレア','↑ ＋ パンチ：サタナエルレイ','前 ＋ キック：ダークラッシュ','下 ＋ パンチ：アビスウェーブ'],
+      satanael:['ディザスターフレア：後ろ ＋ パンチ','ダークレイ：前 ＋ パンチ','ダークプレッシャー：下 ＋ ガード','インフェルノウェーブ：下 ＋ キック'],
       green:['↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','後ろ ＋ パンチ：バーニングショット','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
       black:['前 → 前 ＋ パンチ：ヘルクラッシュ','後ろ ＋ パンチ長押し → 離す：アビスチャージ'],
       blue:['↑ ＋ パンチ：アクアトルネード','↓ ＋ キック：アクアストリーム','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）','前 ＋ パンチ：アクアショット'],
@@ -4323,6 +4327,29 @@
     seraphielGroundRays.push({owner:f,x:f.x+f.face*52,y:f.y-8,dir:f.face,t:.62,life:.62,active:false,hit:false});
     compatLabel('セラフィックレイ…');return true;
   }
+  function specialSatanaelGroundFlare(f){
+    if(gameOver||!f||f.type!=='satanael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='satanaelGroundFlare';f.specialT=.62;f.attack='punch';f.attackT=.62;
+    satanaelGroundFlares.push({owner:f,x:f.x+f.face*58,y:f.y-8,vx:f.face*118,r:31,t:6,hit:false});
+    compatLabel('ディザスターフレア…');return true;
+  }
+  function specialSatanaelGroundRay(f){
+    if(gameOver||!f||f.type!=='satanael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='satanaelGroundRay';f.specialT=.92;f.attack='punch';f.attackT=.92;
+    satanaelGroundRays.push({owner:f,x:f.x+f.face*55,y:f.y-8,dir:f.face,t:.62,life:.62,active:false,hit:false});
+    compatLabel('ダークレイ…');return true;
+  }
+  function specialSatanaelGroundPressure(f){
+    if(gameOver||!f||f.type!=='satanael'||f.stun>0||f.specialT>0||f.attackT>0)return false;
+    f.guard=false;f.specialType='satanaelGroundPressure';f.specialT=.82;
+    satanaelGroundPressures.push({owner:f,t:.78,life:.78});compatLabel('ダークプレッシャー…');return true;
+  }
+  function specialSatanaelGroundWave(f){
+    if(gameOver||!f||f.type!=='satanael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='satanaelGroundWave';f.specialT=.78;f.attack='kick';f.attackT=.78;
+    const floor=landFloorY();for(let i=0;i<9;i++)satanaelGroundWaves.push({owner:f,x:f.x+f.face*(70+i*78),y:floor+35,t:.12+i*.085,life:.34,hit:false,fired:false});
+    compatLabel('インフェルノウェーブ!');return true;
+  }
   function tryV2CompatSpecial(f,kind,forward,back){
     if(!f)return false;
     if(f.type==='mob'){
@@ -4374,10 +4401,10 @@
       if(kind==='tongue'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ヴェノムタン!');}
     }
     if(f.type==='satanael'){
-      if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return compatBurst(f,'アビスウェーブ!');}
-      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'サタナエルレイ!');}
-      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ヘルフレア!');}
-      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'ダークラッシュ!');}
+      if(kind==='guard'&&compatDir(f,'down','down',520)){clearCommand();return specialSatanaelGroundPressure(f);}
+      if(kind==='punch'&&compatDir(f,'back',back,520)){clearCommand();return specialSatanaelGroundFlare(f);}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return specialSatanaelGroundRay(f);}
+      if(kind==='kick'&&compatDir(f,'down','down',520)){clearCommand();return specialSatanaelGroundWave(f);}
     }
     return false;
   }
@@ -5275,7 +5302,14 @@
         if(dist<175&&r<.84){specialSeraphielGroundCyclone(enemy);return;}
         specialSeraphielGroundKick(enemy);return;
       }
-      if(['mob','jihal','sariel','kokabiel','flauros','samael','satanael'].includes(enemy.type) && enemy.specialT<=0 && Math.random()<dt*.22*diff.attack){
+      if(enemy.type==='satanael' && enemy.specialT<=0 && Math.random()<dt*.24*diff.attack){
+        enemy.face=dx>=0?1:-1;const r=Math.random();
+        if(dist>210&&r<.30){specialSatanaelGroundFlare(enemy);return;}
+        if(dist>170&&r<.55){specialSatanaelGroundRay(enemy);return;}
+        if(r<.75){specialSatanaelGroundPressure(enemy);return;}
+        specialSatanaelGroundWave(enemy);return;
+      }
+      if(['mob','jihal','sariel','kokabiel','flauros','samael'].includes(enemy.type) && enemy.specialT<=0 && Math.random()<dt*.22*diff.attack){
         const oldFace=enemy.face; enemy.face=dx>=0?1:-1;
         const pool={mob:['shot','upper','rush'],jihal:['shot','rush','burst'],remiel:['shot','rush'],seraphiel:['shot','upper','rush'],sariel:['shot','upper'],kokabiel:['shot','rush','burst'],flauros:['shot','upper','rush'],samael:['shot','rush'],satanael:['shot','upper','rush','burst']}[enemy.type]||['shot'];
         const pick=pool[(Math.random()*pool.length)|0];
@@ -5740,6 +5774,26 @@ function drawBackground(dt){
           spawnImpact(o.x,o.y,'hit');
         }
       });
+
+      // サタナエル：水中2と同じ4技を地上物理へ移植。
+      satanaelGroundFlares.forEach(q=>{
+        q.t-=dt;q.x+=q.vx*dt;
+        const target=q.owner&&q.owner.isPlayer?enemy:player;
+        if(target&&!q.hit&&Math.abs(target.x-q.x)<q.r+target.radius*.65&&Math.abs(target.y-q.y)<q.r+target.radius*.65){
+          if(target.guard){damageHit(q.owner,target,3.4*q.owner.damageMul,38*Math.sign(q.vx),-8);spawnImpact(target.x,target.y,'guard');}
+          else{damageHit(q.owner,target,12.5*q.owner.damageMul,185*Math.sign(q.vx),-45);spawnImpact(target.x,target.y,'hit');}q.hit=true;
+        }
+      });
+      satanaelGroundFlares=satanaelGroundFlares.filter(q=>q.t>0&&q.x>-100&&q.x<innerWidth+100);
+      satanaelGroundRays.forEach(r=>{
+        r.t-=dt;if(r.owner){r.x=r.owner.x+r.owner.face*55;r.y=r.owner.y-8;r.dir=r.owner.face;}const elapsed=r.life-r.t;r.active=elapsed>.32&&elapsed<.50;
+        const target=r.owner&&r.owner.isPlayer?enemy:player;if(r.active&&target&&!r.hit){const ahead=(target.x-r.x)*r.dir;if(ahead>0&&ahead<innerWidth&&Math.abs(target.y-r.y)<34+target.radius*.45){
+          if(target.guard){damageHit(r.owner,target,3.2*r.owner.damageMul,80*r.dir,-15);spawnImpact(target.x,target.y,'guard');}else{damageHit(r.owner,target,16.2*r.owner.damageMul,275*r.dir,-55);spawnImpact(target.x,target.y,'hit');}r.hit=true;}}
+      });satanaelGroundRays=satanaelGroundRays.filter(r=>r.t>0);
+      satanaelGroundPressures.forEach(p=>{p.t-=dt;const elapsed=p.life-p.t;const target=p.owner&&p.owner.isPlayer?enemy:player;if(target&&elapsed>.18&&elapsed<.68){const floor=landFloorY();target.y+=(floor-target.y)*Math.min(1,dt*7.5);target.vy=Math.max(target.vy,240);}});
+      satanaelGroundPressures=satanaelGroundPressures.filter(p=>p.t>0);
+      satanaelGroundWaves.forEach(w=>{w.t-=dt;if(w.t<=0&&!w.fired){w.fired=true;w.t=w.life;}if(w.fired){const target=w.owner&&w.owner.isPlayer?enemy:player;const floor=landFloorY();if(target&&!w.hit&&Math.abs(target.x-w.x)<38&&target.y>floor-150){w.hit=true;if(target.guard){damageHit(w.owner,target,1.6*w.owner.damageMul,45*w.owner.face,-25);spawnImpact(target.x,target.y,'guard');}else{damageHit(w.owner,target,5*w.owner.damageMul,115*w.owner.face,-95);spawnImpact(target.x,target.y,'hit');}}}});
+      satanaelGroundWaves=satanaelGroundWaves.filter(w=>w.t>0);
 
       // v2.3.5 セラフィエル固有技更新
       [player,enemy].forEach(f=>{
@@ -7137,6 +7191,12 @@ toxicWaters.forEach(v=>{
       ctx.stroke();
       ctx.restore();
     });
+
+    // サタナエル固有エフェクト（水中2準拠）
+    satanaelGroundFlares.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff1826';ctx.shadowBlur=30;const g=ctx.createRadialGradient(-5,-5,2,0,0,q.r*1.45);g.addColorStop(0,'#ff6b45');g.addColorStop(.22,'#c0192b');g.addColorStop(.52,'#3b030c');g.addColorStop(.78,'#080106');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,q.r*1.45,0,Math.PI*2);ctx.fill();ctx.restore();});
+    satanaelGroundRays.forEach(r=>{const elapsed=r.life-r.t;ctx.save();ctx.globalCompositeOperation='lighter';if(elapsed<.32){const p=Math.max(0,Math.min(1,elapsed/.32));ctx.globalAlpha=.35+.45*p;ctx.strokeStyle='#731124';ctx.lineWidth=2+5*p;ctx.shadowColor='#e11c34';ctx.shadowBlur=16;}else{ctx.globalAlpha=.9;ctx.strokeStyle='#120108';ctx.lineWidth=34;ctx.shadowColor='#c3132d';ctx.shadowBlur=30;}ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();if(elapsed>=.32){ctx.strokeStyle='#9a1730';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();}ctx.restore();});
+    satanaelGroundPressures.forEach(p=>{const elapsed=p.life-p.t,progress=Math.max(0,Math.min(1,(elapsed-.08)/.60)),frontY=-120+progress*(innerHeight+170);ctx.save();const g=ctx.createLinearGradient(0,frontY-280,0,frontY+90);g.addColorStop(0,'rgba(3,0,8,.72)');g.addColorStop(.54,'rgba(10,0,18,.60)');g.addColorStop(.84,'rgba(103,0,31,.28)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,-10,innerWidth,Math.max(0,frontY+100));ctx.restore();});
+    satanaelGroundWaves.forEach(w=>{if(!w.fired)return;ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createLinearGradient(w.x,w.y,w.x,w.y-150);g.addColorStop(0,'#160006');g.addColorStop(.2,'#8d0a20');g.addColorStop(.48,'#250008');g.addColorStop(.72,'#ae0c27');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.shadowColor='#c2112c';ctx.shadowBlur=26;ctx.beginPath();ctx.moveTo(w.x-32,w.y);ctx.quadraticCurveTo(w.x-18,w.y-95,w.x,w.y-150);ctx.quadraticCurveTo(w.x+20,w.y-90,w.x+32,w.y);ctx.fill();ctx.restore();});
 
     particles.forEach(p=>{p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.92;p.vy*=.92;
       ctx.globalAlpha=Math.max(0,p.t/.42);ctx.fillStyle=p.type==='guard'?'#d9f5ff':'#fff3a3';
