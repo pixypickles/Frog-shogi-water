@@ -42,7 +42,7 @@ const CHAR={
  flauros:{name:'フラウロスさん',body:'#e20b22',eye:'#ff3326',iris:'#f4c542',skills:['ヘルフレイム','フレイムクロー','レオパードラッシュ']},
  beelzebub:{name:'ベルゼブブさん',body:'#17121d',eye:'#35ff00',iris:'#b7e234',skills:['ヴェノム・ウォーター','アビスショック','ベノムショット']},
  samael:{name:'サマエルさん',body:'#2b193d',eye:'#7760be',iris:'#d9f7ff',skills:['ポイズンゲート','ヴェノムタン','毒系必殺技']},
- black:{name:'ルシファーさん',body:'#3b3e47',eye:'#50545f',iris:'#101010',skills:['ヘルクラッシュ','アビスチャージ','アイスショット']},
+ black:{name:'ルシファーさん',body:'#3b3e47',eye:'#35bdf2',iris:'#101010',skills:['ヘルクラッシュ','アビスチャージ','アイスショット']},
  purple:{name:'リリスさん',body:'#f24ca5',eye:'#ff66b8',iris:'#111',skills:['舌ラッシュ','バブルショット','バックスピンキック']},
  sariel:{name:'サリエルさん',body:'#5d6488',eye:'#d8ddf5',iris:'#991126',skills:['ルナ・スラッシュ','イーブルアイ','ブラッドムーン']},
  kokabiel:{name:'コカビエルさん',body:'#20263f',eye:'#63dbe7',iris:'#202738',skills:['成り専用ファイター','グラビティボール','メテオレイン']},

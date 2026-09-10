@@ -923,7 +923,7 @@
         limb:'#333b46',
         light:'#7fdff2',
         belly:'#bdeff7',
-        eyeBump:'#8de9f7'
+        eyeBump:'#35bdf2'
       };
     }
     if(type==='purple'){
@@ -5038,7 +5038,7 @@
     const timer=setInterval(()=>{
       if(gameOver||!other||f.specialType!=='seraphicCyclone'){clearInterval(timer);return;}
       // 約0.95秒で3回転。見た目でもしっかり回転が分かる速度にする。
-      f.spinAngle=(f.spinAngle||0)+0.90*(f.face>0?1:-1);
+      f.spinAngle=(f.spinAngle||0)+1.62*(f.face>0?1:-1);
       if(Math.abs(other.x-f.x)<105&&Math.abs(other.y-f.y)<90&&hits<3){
         hits++; damageHit(f,other,4.2*f.damageMul,105*f.face,(hits===3?-155:-35));spawnImpact(other.x,other.y,'hit');
       }

@@ -745,7 +745,7 @@
         limb:'#3b4048',
         light:'#59616d',
         belly:'#707984',
-        eyeBump:'#4b525c'
+        eyeBump:'#35bdf2'
       };
     }
     if(type==='purple'){
@@ -5636,7 +5636,7 @@ function drawBackground(dt){
           f.seraphielHit=true;damageHit(f,o,13.2*f.damageMul,175*f.face,-315);spawnImpact(o.x,o.y,'hit');
         }
         if(f.specialType==='seraphielGroundCyclone'&&f.specialT>0){
-          f.spinAngle=(f.spinAngle||0)+dt*22*(f.face>0?1:-1); f.vx+=f.face*95*dt;
+          f.spinAngle=(f.spinAngle||0)+dt*25*(f.face>0?1:-1); f.vx+=f.face*95*dt;
           f.seraphielCycloneHitT=Math.max(0,(f.seraphielCycloneHitT||0)-dt);
           if(f.seraphielCycloneHitT<=0&&Math.abs(o.x-f.x)<108&&Math.abs(o.y-f.y)<92){
             f.seraphielCycloneHitT=.12; f.seraphielCycloneHits=(f.seraphielCycloneHits||0)+1;
