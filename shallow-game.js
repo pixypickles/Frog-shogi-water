@@ -80,6 +80,7 @@
   let kawazuGhosts=[];
   let luciferIceShots=[];
   let michaelBurningShots=[];
+  let michaelRedAuraPunches=[];
   let luciferIceWalls=[];
   let siltClouds = [];
   let webTraps = [];
@@ -360,7 +361,7 @@
     green:[
       'バーニングアッパー：↑ ＋ パンチ',
       'バーニングキック：前 ＋ キック',
-      'バーニングサイクロン：↓ → 後ろ ＋ キック<br>レッドオーラ：↓ → 後ろ ＋ ガード'
+      'バーニングサイクロン：↓ → 後ろ ＋ キック<br>レッドオーラパンチ：前 ＋ パンチ'
     ],
     blue:[
       'アクアトルネード：ガード → パンチ',
@@ -2781,7 +2782,7 @@
       flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードラッシュ','↑ ＋ キック：インフェルノクロー'],
       samael:['前 ＋ パンチ：ポイズンゲート','前 ＋ キック：デッドリー・アクア','舌：ヴェノムタン'],
       satanael:['前 ＋ パンチ：ヘルフレア','↑ ＋ パンチ：サタナエルレイ','前 ＋ キック：ダークラッシュ','下 ＋ パンチ：アビスウェーブ'],
-      green:['↖ / ↑ / ↗：手動ジャンプ','↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','下 → 後ろ ＋ キック：バーニングサイクロン','下 → 後ろ ＋ ガード：レッドオーラ'],
+      green:['↖ / ↑ / ↗：手動ジャンプ','↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
       blue:['↖ / ↑ / ↗：手動ジャンプ','ガード → パンチ：アクアトルネード','ガード → キック：アクアストリーム','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）'],
       yellow:['↖ / ↑ / ↗：手動ジャンプ','ガード → パンチ：エアカッター','ガード → キック：エアカッター','ガード ×2：ヒーリングバブル','↑ ＋ ガード：エアブースト','↑ ＋ パンチ：ウィンドライズ'],
       orange:['↖ / ↑ / ↗：手動ジャンプ','ガード ×2：ホワイトカウンター','後ろ → 前 ＋ ガード：ガーディアンタックル','ガード長押し → 離す：ホワイトオーラ','ホワイトオーラ中：HPが少しずつ回復＋白いリーチ攻撃']
@@ -4067,14 +4068,12 @@
     clearCommand();return true;
   }
 
-  function specialMichaelRedAura(f){
-    if(gameOver || !f || f.type!=='green' || f.stun>0 || f.specialT>0) return false;
-    f.guard=false; f.specialType='michaelRedAura'; f.specialT=.42;
-    f.michaelRedAuraT=3.0; f.michaelPowerReady=true;
-    f.hp=Math.min(100,f.hp+3.0);
-    if(f.isPlayer)updateHud();
-    comboEl.textContent='レッドオーラ!';
-    setTimeout(()=>{if(comboEl.textContent==='レッドオーラ!')comboEl.textContent='';},720);
+  function specialMichaelRedAuraPunch(f){
+    if(gameOver || !f || f.type!=='green' || f.stun>0 || f.guard || f.specialT>0 || f.attackT>0) return false;
+    f.guard=false; f.specialType='michaelRedAuraPunch'; f.specialT=.34; f.attack='punch'; f.attackT=.34;
+    michaelRedAuraPunches.push({owner:f,t:.30,life:.30,hit:false});
+    comboEl.textContent='レッドオーラパンチ!';
+    setTimeout(()=>{if(comboEl.textContent==='レッドオーラパンチ!')comboEl.textContent='';},650);
     clearCommand(); return true;
   }
 
@@ -4384,6 +4383,7 @@
 
     // 水中格闘2準拠：ミカエル。基本技は方向＋ボタン、サイクロンだけ下→後ろ＋キック。
     if(f.type==='green'){
+      if(kind==='punch' && ((f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35))){ clearCommand(); return specialMichaelRedAuraPunch(f); }
       if(kind==='kick' && hasCommand(['down',back],760)){ clearCommand(); return specialBurningCyclone(f); }
       if(kind==='punch' && ((f.face>0&&input.y<-.35)||(f.face<0&&input.y<-.35))){ clearCommand(); return specialUppercut(f); }
       if(kind==='kick' && ((f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35))){ clearCommand(); return specialDropKick(f); }
@@ -4986,7 +4986,7 @@
             const back=player.face>0?'left':'right';
             if(hasCommand(['down',back],720)){
               input.simpleGuardTapTimes=[];
-              if(specialMichaelRedAura(player)){btn.classList.remove('pressed');return;}
+              /* レッドオーラは前＋パンチのレッドオーラパンチへ変更 */
             }
           }
 
@@ -5966,7 +5966,23 @@ function drawBackground(dt){
       });
       bossFish=bossFish.filter(f=>f.t>0 && f.hp>0);
 
-      luciferIceShots.forEach(q=>{
+      michaelRedAuraPunches.forEach(a=>{
+        a.t-=dt; const f=a.owner; if(!f)return;
+        const target=f.isPlayer?enemy:player;
+        const px=f.x+f.face*72, py=f.y-3;
+        if(!a.hit&&target&&Math.abs(target.x-px)<92+target.radius*.45&&Math.abs(target.y-py)<48+target.radius*.35){
+          a.hit=true; damageHit(f,target,6.2*f.damageMul,150*f.face,-18); spawnImpact(target.x,target.y,'hit');
+        }
+      });
+      michaelRedAuraPunches=michaelRedAuraPunches.filter(a=>a.t>0);
+      michaelBurningShots.forEach(q=>{
+        q.t-=dt; q.x+=q.vx*dt; const target=q.owner&&q.owner.isPlayer?enemy:player;
+        if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+7){q.hit=true;q.t=0;damageHit(q.owner,target,4.4*q.owner.damageMul,115*Math.sign(q.vx),-12);spawnImpact(q.x,q.y,'hit');}
+      });
+      michaelBurningShots=michaelBurningShots.filter(q=>q.t>0&&q.x>-70&&q.x<innerWidth+70);
+      michaelRedAuraPunches.forEach(a=>{const f=a.owner;if(!f)return;const k=Math.max(0,a.t/a.life);ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.55+.35*k;ctx.translate(f.x+f.face*76,f.y-4);ctx.scale(f.face,1);ctx.shadowColor='#ff2418';ctx.shadowBlur=28;const g=ctx.createRadialGradient(-30,0,4,0,0,92);g.addColorStop(0,'rgba(255,245,210,.98)');g.addColorStop(.25,'rgba(255,90,45,.95)');g.addColorStop(.7,'rgba(245,20,10,.72)');g.addColorStop(1,'rgba(255,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(18,0,92,34,0,0,Math.PI*2);ctx.fill();ctx.restore();});
+    michaelBurningShots.forEach(q=>{ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff3b16';ctx.shadowBlur=22;const g=ctx.createRadialGradient(q.x-q.r*.25,q.y-q.r*.2,2,q.x,q.y,q.r*1.25);g.addColorStop(0,'#fff6b0');g.addColorStop(.3,'#ffb21c');g.addColorStop(.7,'#ff4218');g.addColorStop(1,'rgba(220,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.3,0,Math.PI*2);ctx.fill();ctx.restore();});
+    luciferIceShots.forEach(q=>{
         q.x+=q.vx*dt;q.t-=dt;const target=q.owner===player?enemy:player;
         if(!q.hit&&target&&Math.abs(target.x-q.x)<48&&Math.abs(target.y-q.y)<60){q.hit=true;q.t=0;damageHit(q.owner,target,5.2,150*Math.sign(q.vx),-25);spawnImpact(q.x,q.y,'hit');}
       });

@@ -92,6 +92,7 @@
   let aquaVortices = [];
   let engineerShots = [];
   let michaelAuraShots = [];
+  let michaelRedAuraPunches=[];
   let water2Shots = [];
   let iceWalls = [];
   let samaelGates = [];
@@ -4763,14 +4764,12 @@
     clearCommand();return true;
   }
 
-  function specialMichaelRedAura(f){
-    if(gameOver || !f || f.type!=='green' || f.stun>0 || f.specialT>0) return false;
-    f.guard=false; f.specialType='michaelRedAura'; f.specialT=.42;
-    f.michaelRedAuraT=3.0; f.michaelPowerReady=true;
-    f.hp=Math.min(100,f.hp+3.0);
-    if(f.isPlayer)updateHud();
-    comboEl.textContent='レッドオーラ!';
-    setTimeout(()=>{if(comboEl.textContent==='レッドオーラ!')comboEl.textContent='';},720);
+  function specialMichaelRedAuraPunch(f){
+    if(gameOver || !f || f.type!=='green' || f.stun>0 || f.guard || f.specialT>0 || f.attackT>0) return false;
+    f.guard=false; f.specialType='michaelRedAuraPunch'; f.specialT=.34; f.attack='punch'; f.attackT=.34;
+    michaelRedAuraPunches.push({owner:f,t:.30,life:.30,hit:false});
+    comboEl.textContent='レッドオーラパンチ!';
+    setTimeout(()=>{if(comboEl.textContent==='レッドオーラパンチ!')comboEl.textContent='';},650);
     clearCommand(); return true;
   }
 
@@ -5414,6 +5413,7 @@
 
     // 水中格闘2：ミカエル。基本技は1方向＋ボタン、サイクロンだけ上位コマンド。
     if(f.type==='green'){
+      if(kind==='punch' && ((f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35))){ clearCommand(); return specialMichaelRedAuraPunch(f); }
       if(kind==='kick' && hasCommand(['down',back],760)){ clearCommand(); return specialBurningCyclone(f); }
       if(kind==='punch' && water2HeldDir(f,'up')){ clearCommand(); return specialUppercut(f); }
       if(kind==='kick' && water2HeldDir(f,'forward')){ clearCommand(); return specialDropKick(f); }
@@ -5966,7 +5966,7 @@
             const back=player.face>0?'left':'right';
             if(hasCommand(['down',back],720)){
               input.simpleGuardTapTimes=[];
-              if(specialMichaelRedAura(player)){btn.classList.remove('pressed');return;}
+              /* レッドオーラは前＋パンチのレッドオーラパンチへ変更 */
             }
           }
 
