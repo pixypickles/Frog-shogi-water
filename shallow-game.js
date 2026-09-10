@@ -1052,7 +1052,7 @@
         if(this.throwState){
           this.spinAngle += this.throwState.spinSpeed * dt;
         }
-      } else {
+      } else if(this.specialType!=='seraphicCyclone' && this.specialType!=='seraphielGroundCyclone') {
         this.spinAngle *= Math.pow(.03, dt);
       }
 
@@ -4385,7 +4385,7 @@
     }
 
     if(f.type==='black'){
-      if(kind==='punch' && hasForwardForwardTap(f,780)){
+      if(kind==='punch' && hasForwardForwardTap(f,1000)){
         input.forwardTapTimes=[]; clearCommand(); f.attackT=0; f.attack=null;
         return specialHellCrash(f);
       }
@@ -5700,7 +5700,7 @@ function drawBackground(dt){
           f.seraphielHit=true;damageHit(f,o,13.2*f.damageMul,175*f.face,-315);spawnImpact(o.x,o.y,'hit');
         }
         if(f.specialType==='seraphielGroundCyclone'&&f.specialT>0){
-          f.spinAngle=(f.spinAngle||0)+dt*25*(f.face>0?1:-1); f.vx+=f.face*95*dt;
+          f.spinAngle=(f.spinAngle||0)+dt*72*(f.face>0?1:-1); f.vx+=f.face*95*dt;
           f.seraphielCycloneHitT=Math.max(0,(f.seraphielCycloneHitT||0)-dt);
           if(f.seraphielCycloneHitT<=0&&Math.abs(o.x-f.x)<108&&Math.abs(o.y-f.y)<92){
             f.seraphielCycloneHitT=.12; f.seraphielCycloneHits=(f.seraphielCycloneHits||0)+1;
