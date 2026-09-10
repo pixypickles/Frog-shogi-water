@@ -4347,7 +4347,7 @@
   function specialSatanaelGroundWave(f){
     if(gameOver||!f||f.type!=='satanael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='satanaelGroundWave';f.specialT=.78;f.attack='kick';f.attackT=.78;
-    const floor=landFloorY();for(let i=0;i<9;i++)satanaelGroundWaves.push({owner:f,x:f.x+f.face*(70+i*78),y:floor+35,t:.12+i*.085,life:.34,hit:false,fired:false});
+    const floor=landFloorY();for(let i=0;i<9;i++)satanaelGroundWaves.push({owner:f,x:f.x+f.face*(70+i*78),y:floor+70,t:.12+i*.085,life:.34,hit:false,fired:false});
     compatLabel('インフェルノウェーブ!');return true;
   }
   function tryV2CompatSpecial(f,kind,forward,back){
@@ -5792,7 +5792,7 @@ function drawBackground(dt){
       });satanaelGroundRays=satanaelGroundRays.filter(r=>r.t>0);
       satanaelGroundPressures.forEach(p=>{p.t-=dt;const elapsed=p.life-p.t;const target=p.owner&&p.owner.isPlayer?enemy:player;if(target&&elapsed>.18&&elapsed<.68){const floor=landFloorY();target.y+=(floor-target.y)*Math.min(1,dt*7.5);target.vy=Math.max(target.vy,240);}});
       satanaelGroundPressures=satanaelGroundPressures.filter(p=>p.t>0);
-      satanaelGroundWaves.forEach(w=>{w.t-=dt;if(w.t<=0&&!w.fired){w.fired=true;w.t=w.life;}if(w.fired){const target=w.owner&&w.owner.isPlayer?enemy:player;const floor=landFloorY();if(target&&!w.hit&&Math.abs(target.x-w.x)<38&&target.y>floor-150){w.hit=true;if(target.guard){damageHit(w.owner,target,1.6*w.owner.damageMul,45*w.owner.face,-25);spawnImpact(target.x,target.y,'guard');}else{damageHit(w.owner,target,5*w.owner.damageMul,115*w.owner.face,-95);spawnImpact(target.x,target.y,'hit');}}}});
+      satanaelGroundWaves.forEach(w=>{w.t-=dt;if(w.t<=0&&!w.fired){w.fired=true;w.t=w.life;}if(w.fired){const target=w.owner&&w.owner.isPlayer?enemy:player;const floor=landFloorY();if(target&&!w.hit&&Math.abs(target.x-w.x)<38&&target.y>floor-105){w.hit=true;if(target.guard){damageHit(w.owner,target,1.6*w.owner.damageMul,45*w.owner.face,-25);spawnImpact(target.x,target.y,'guard');}else{damageHit(w.owner,target,5*w.owner.damageMul,115*w.owner.face,-95);spawnImpact(target.x,target.y,'hit');}}}});
       satanaelGroundWaves=satanaelGroundWaves.filter(w=>w.t>0);
 
       // v2.3.5 セラフィエル固有技更新
@@ -7196,7 +7196,7 @@ toxicWaters.forEach(v=>{
     satanaelGroundFlares.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff1826';ctx.shadowBlur=30;const g=ctx.createRadialGradient(-5,-5,2,0,0,q.r*1.45);g.addColorStop(0,'#ff6b45');g.addColorStop(.22,'#c0192b');g.addColorStop(.52,'#3b030c');g.addColorStop(.78,'#080106');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,q.r*1.45,0,Math.PI*2);ctx.fill();ctx.restore();});
     satanaelGroundRays.forEach(r=>{const elapsed=r.life-r.t;ctx.save();ctx.globalCompositeOperation='lighter';if(elapsed<.32){const p=Math.max(0,Math.min(1,elapsed/.32));ctx.globalAlpha=.35+.45*p;ctx.strokeStyle='#731124';ctx.lineWidth=2+5*p;ctx.shadowColor='#e11c34';ctx.shadowBlur=16;}else{ctx.globalAlpha=.9;ctx.strokeStyle='#120108';ctx.lineWidth=34;ctx.shadowColor='#c3132d';ctx.shadowBlur=30;}ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();if(elapsed>=.32){ctx.strokeStyle='#9a1730';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();}ctx.restore();});
     satanaelGroundPressures.forEach(p=>{const elapsed=p.life-p.t,progress=Math.max(0,Math.min(1,(elapsed-.08)/.60)),frontY=-120+progress*(innerHeight+170);ctx.save();const g=ctx.createLinearGradient(0,frontY-280,0,frontY+90);g.addColorStop(0,'rgba(3,0,8,.72)');g.addColorStop(.54,'rgba(10,0,18,.60)');g.addColorStop(.84,'rgba(103,0,31,.28)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,-10,innerWidth,Math.max(0,frontY+100));ctx.restore();});
-    satanaelGroundWaves.forEach(w=>{if(!w.fired)return;ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createLinearGradient(w.x,w.y,w.x,w.y-150);g.addColorStop(0,'#160006');g.addColorStop(.2,'#8d0a20');g.addColorStop(.48,'#250008');g.addColorStop(.72,'#ae0c27');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.shadowColor='#c2112c';ctx.shadowBlur=26;ctx.beginPath();ctx.moveTo(w.x-32,w.y);ctx.quadraticCurveTo(w.x-18,w.y-95,w.x,w.y-150);ctx.quadraticCurveTo(w.x+20,w.y-90,w.x+32,w.y);ctx.fill();ctx.restore();});
+    satanaelGroundWaves.forEach(w=>{if(!w.fired)return;ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createLinearGradient(w.x,w.y,w.x,w.y-105);g.addColorStop(0,'#160006');g.addColorStop(.2,'#8d0a20');g.addColorStop(.48,'#250008');g.addColorStop(.72,'#ae0c27');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.shadowColor='#c2112c';ctx.shadowBlur=26;ctx.beginPath();ctx.moveTo(w.x-32,w.y);ctx.quadraticCurveTo(w.x-18,w.y-68,w.x,w.y-105);ctx.quadraticCurveTo(w.x+20,w.y-64,w.x+32,w.y);ctx.fill();ctx.restore();});
 
     particles.forEach(p=>{p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.92;p.vy*=.92;
       ctx.globalAlpha=Math.max(0,p.t/.42);ctx.fillStyle=p.type==='guard'?'#d9f5ff':'#fff3a3';
