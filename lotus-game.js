@@ -78,6 +78,8 @@
   let abyssShocks=[];
   let kawazuShots=[];
   let kawazuGhosts=[];
+  let luciferIceShots=[];
+  let luciferIceWalls=[];
   let siltClouds = [];
   let webTraps = [];
   let ceilingWebs = [];
@@ -3128,6 +3130,23 @@
     return true;
   }
 
+  function specialLuciferIceShot(f){
+    if(gameOver||!f||f.type!=='black'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='luciferIceShot';f.specialT=.44;f.attack='punch';f.attackT=.44;
+    const dir=f.face;
+    setTimeout(()=>{if(gameOver||!f)return;luciferIceShots.push({owner:f,x:f.x+dir*58,y:f.y-5,vx:dir*255,r:17,t:4,hit:false});},440);
+    comboEl.textContent='アイスショット!';return true;
+  }
+  function specialLuciferIceWall(f){
+    if(gameOver||!f||f.type!=='black'||f.stun>0||f.specialT>0)return false;
+    f.guard=false;f.specialType='luciferIceWall';f.specialT=.42;f.attack=null;f.attackT=.18;
+    const x=Math.max(58,Math.min(innerWidth-58,f.x+f.face*60));
+    const y=Math.max(90,Math.min(innerHeight-85,f.y+5));
+    luciferIceWalls=luciferIceWalls.filter(w=>w.owner!==f);
+    luciferIceWalls.push({owner:f,x,y,w:25,h:112,t:3,hitCd:0});
+    comboEl.textContent='アイスウォール!';return true;
+  }
+
   function specialHellCrash(f){
     if(gameOver || f.stun>0 || f.guard || f.specialT>0) return false;
 
@@ -4337,10 +4356,8 @@
     }
 
     if(f.type==='black'){
-      if(kind==='punch' && hasForwardForwardTap(f,1000)){
-        input.forwardTapTimes=[]; clearCommand(); f.attackT=0; f.attack=null;
-        return specialHellCrash(f);
-      }
+      if(kind==='kick' && ((f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35))){ clearCommand(); f.attackT=0; f.attack=null; return specialHellCrash(f); }
+      if(kind==='punch' && ((f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35))){ clearCommand(); return specialLuciferIceShot(f); }
     }
 
     if(f.type==='piranha'){
@@ -5316,7 +5333,7 @@
     if(!f || f.specialType!=='burningCyclone') return 0;
     const elapsed=(performance.now()-(f.cycloneStartTime||performance.now()))/1000;
     // 右向きは時計回り、左向きは鏡映し
-    return elapsed*22*(f.face>0?1:-1);
+    return elapsed*11*(f.face>0?1:-1);
   }
 
   function updateNewSpecialMoves(f,dt){
@@ -5884,6 +5901,13 @@ function drawBackground(dt){
       });
       bossFish=bossFish.filter(f=>f.t>0 && f.hp>0);
 
+      luciferIceShots.forEach(q=>{
+        q.x+=q.vx*dt;q.t-=dt;const target=q.owner===player?enemy:player;
+        if(!q.hit&&target&&Math.abs(target.x-q.x)<48&&Math.abs(target.y-q.y)<60){q.hit=true;q.t=0;damageHit(q.owner,target,5.2,150*Math.sign(q.vx),-25);spawnImpact(q.x,q.y,'hit');}
+      });
+      luciferIceShots=luciferIceShots.filter(q=>q.t>0&&q.x>-60&&q.x<innerWidth+60);
+      luciferIceWalls.forEach(w=>{w.t-=dt;if(w.hitCd>0)w.hitCd-=dt;const target=w.owner===player?enemy:player;if(target&&w.hitCd<=0&&Math.abs(target.x-w.x)<42&&Math.abs(target.y-w.y)<75){w.hitCd=.55;target.vx*=-.35;target.stun=Math.max(target.stun,.22);spawnImpact(w.x,w.y,'guard');}});
+      luciferIceWalls=luciferIceWalls.filter(w=>w.t>0);
       abyssShocks.forEach(w=>{
         w.t-=dt;
         w.x+=w.vx*dt;
@@ -6587,6 +6611,8 @@ toxicWaters.forEach(v=>{
       ctx.fillStyle='#f2c230';ctx.beginPath();ctx.ellipse(0,0,fish.r*1.15,fish.r*.72,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#332b20';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-4,-fish.r*.6);ctx.lineTo(-4,fish.r*.6);ctx.moveTo(5,-fish.r*.55);ctx.lineTo(5,fish.r*.55);ctx.stroke();ctx.fillStyle='#332b20';ctx.beginPath();ctx.moveTo(-fish.r*1.05,0);ctx.lineTo(-fish.r*1.55,-4);ctx.lineTo(-fish.r*1.55,4);ctx.closePath();ctx.fill();ctx.restore();
     });
 
+    luciferIceShots.forEach(q=>{ctx.save();ctx.shadowColor='#bdf7ff';ctx.shadowBlur=20;const g=ctx.createRadialGradient(q.x-5,q.y-5,2,q.x,q.y,q.r);g.addColorStop(0,'#fff');g.addColorStop(.45,'#c8f8ff');g.addColorStop(1,'#62cfff');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,Math.PI*2);ctx.fill();ctx.restore();});
+    luciferIceWalls.forEach(w=>{ctx.save();ctx.globalAlpha=Math.min(1,w.t*2);ctx.fillStyle='rgba(190,245,255,.72)';ctx.strokeStyle='#eaffff';ctx.lineWidth=4;ctx.shadowColor='#9eefff';ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(w.x-w.w/2,w.y+w.h/2);ctx.lineTo(w.x-w.w*.7,w.y);ctx.lineTo(w.x,w.y-w.h/2);ctx.lineTo(w.x+w.w*.7,w.y);ctx.lineTo(w.x+w.w/2,w.y+w.h/2);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();});
     abyssShocks.forEach(w=>{
       const a=Math.max(0,w.t/w.life);
       ctx.save();

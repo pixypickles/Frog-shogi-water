@@ -6481,7 +6481,7 @@
     if(!f || f.specialType!=='burningCyclone') return 0;
     const elapsed=(performance.now()-(f.cycloneStartTime||performance.now()))/1000;
     // 右向きは時計回り、左向きは鏡映し
-    return elapsed*22*(f.face>0?1:-1);
+    return elapsed*11*(f.face>0?1:-1);
   }
 
   function updateNewSpecialMoves(f,dt){
