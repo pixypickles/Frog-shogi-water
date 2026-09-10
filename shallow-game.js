@@ -409,9 +409,10 @@
       'アビスショック：↓ → ＋ キック'
     ],
     kawazu:[
-      '水圧ラッシュ：パンチ ×2',
+      '水圧ラッシュ：パンチ連打',
+      'クロスラッシュ：前 ＋ パンチ（パンチ→パンチ→キック→キック→両サイドアッパー）',
       'ミラージュキック：前 ＋ キック',
-      'ハイスピードサイクロン：↓ → 後ろ ＋ キック'
+      'スピンキックカッター：後ろ ＋ キック（カッター3連発）'
     ]
   };
   function applySelectCardCommands(card){
@@ -4035,6 +4036,64 @@
     clearCommand();return true;
   }
 
+  function specialKawazuCrossRush(f){
+    if(gameOver||!f||f.type!=='kawazu'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const target=f.isPlayer?enemy:player;
+    if(!target)return false;
+    f.specialType='kawazuCrossRush'; f.specialT=1.20; f.attack='punch'; f.attackVariant='mid'; f.attackT=1.20;
+    f.vx=0; f.vy*=.15;
+    const firstSide=f.face>0?1:-1;
+    const leaveGhost=(x,y,angle=0,life=.16)=>kawazuGhosts.push({x,y,t:life,life,angle});
+    const dashHit=(side,kind='punch',damage=2.6,knock=42,vy=-12)=>{
+      if(gameOver||!target||f.specialType!=='kawazuCrossRush')return;
+      leaveGhost(f.x,f.y,0,.16);
+      const margin=82;
+      f.x=Math.max(58,Math.min(innerWidth-58,target.x+side*margin));
+      f.y=Math.max(72,Math.min(innerHeight-72,target.y+4));
+      f.face=target.x>=f.x?1:-1; f.attack=kind==='kick'?'kick':'punch'; f.attackVariant='mid';
+      leaveGhost(f.x-f.face*35,f.y,0,.14);
+      if(Math.abs(target.x-f.x)<128&&Math.abs(target.y-f.y)<88){
+        if(target.guard){spawnImpact(target.x,target.y,'guard');target.vx+=f.face*36;}
+        else {damageHit(f,target,damage*f.damageMul,knock*f.face,vy);spawnImpact(target.x,target.y,'hit');}
+      }
+    };
+    const dualUppercut=()=>{
+      if(gameOver||!target||f.specialType!=='kawazuCrossRush')return;
+      const margin=86,leftX=Math.max(58,target.x-margin),rightX=Math.min(innerWidth-58,target.x+margin);
+      const y=Math.max(72,Math.min(innerHeight-72,target.y-4));
+      f.x=firstSide>0?rightX:leftX; f.y=y; f.face=target.x>=f.x?1:-1; f.attack='punch'; f.attackVariant='up';
+      leaveGhost(leftX,y,0,.24);leaveGhost(rightX,y,0,.24);
+      leaveGhost(leftX+(target.x-leftX)*.28,y-5,0,.13);leaveGhost(rightX+(target.x-rightX)*.28,y-5,0,.13);
+      spawnImpact(target.x-24,target.y+4,'guard');spawnImpact(target.x+24,target.y+4,'guard');
+      if(Math.abs(target.x-f.x)<140&&Math.abs(target.y-f.y)<96){
+        if(target.guard){spawnImpact(target.x,target.y,'guard');target.vx*=.35;target.vy-=55;}
+        else {damageHit(f,target,5.4*f.damageMul,0,-285);spawnImpact(target.x,target.y,'hit');}
+      }
+    };
+    setTimeout(()=>dashHit(firstSide,'punch',2.6,46,-12),80);
+    setTimeout(()=>dashHit(-firstSide,'punch',2.6,46,-12),220);
+    setTimeout(()=>dashHit(firstSide,'kick',3.0,58,-18),360);
+    setTimeout(()=>dashHit(-firstSide,'kick',3.0,58,-18),500);
+    setTimeout(()=>dualUppercut(),680);
+    comboEl.textContent='クロスラッシュ!';
+    setTimeout(()=>{if(comboEl.textContent==='クロスラッシュ!')comboEl.textContent='';},1080);
+    clearCommand(); return true;
+  }
+
+  function specialKawazuSpinCutter(f){
+    if(gameOver||!f||f.type!=='kawazu'||f.stun>0||f.guard||f.specialT>0)return false;
+    const total=.84; f.specialType='kawazuSpinCutter'; f.specialT=total; f.attack='kick'; f.attackT=total;
+    comboEl.textContent='スピンキックカッター!';
+    const dir=f.face;
+    [90,330,570].forEach((delay,i)=>setTimeout(()=>{
+      if(gameOver||!f||f.specialType!=='kawazuSpinCutter')return;
+      const speed=390+i*16;
+      kawazuShots.push({owner:f,x:f.x+dir*62,y:f.y-4+(i-1)*9,vx:dir*speed,vy:(i-1)*10,r:15,t:1.35,life:1.35,hit:false,cutter:true,damage:2.0,spin:i*.65});
+      spawnImpact(f.x+dir*54,f.y+8,'guard');
+    },delay));
+    clearCommand(); return true;
+  }
+
   function specialKawazuMirageKick(f){
     if(gameOver || f.stun>0 || f.specialT>0)return false;
     const other=f.isPlayer?enemy:player;
@@ -4386,24 +4445,15 @@
     }
 
 
-    // カワズさん：4キャラ運用を前提に入力を短く。
+    // カワズさん：水中格闘2と同じ4技構成。
     if(f.type==='kawazu'){
-      if(kind==='tongue' && hasCommand(['down',forward],720)){
-        clearCommand();
-        return specialKawazuTonguePiledriver(f);
-      }
-      if(kind==='kick' && hasCommand(['down',back],720)){
-        clearCommand();
-        return specialKawazuCyclone(f);
-      }
-      if(kind==='kick' && hasCommand([forward],520)){
-        clearCommand();
-        return specialKawazuMirageKick(f);
-      }
+      const forwardHeld=(f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35);
+      const backHeld=(f.face>0&&input.x<-.35)||(f.face<0&&input.x>.35);
+      if(kind==='punch' && forwardHeld){ clearCommand(); return specialKawazuCrossRush(f); }
+      if(kind==='kick' && backHeld){ clearCommand(); return specialKawazuSpinCutter(f); }
+      if(kind==='kick' && forwardHeld){ clearCommand(); return specialKawazuMirageKick(f); }
       if(kind==='punch' && (input.punchTapTimes||[]).length>=2){
-        input.punchTapTimes=[];
-        clearCommand();
-        return specialKawazuPressureRush(f);
+        input.punchTapTimes=[]; clearCommand(); return specialKawazuPressureRush(f);
       }
     }
 
@@ -6221,7 +6271,8 @@ function drawBackground(dt){
         if(!p.hit&&target&&Math.hypot(target.x-p.x,target.y-p.y)<target.radius+p.r){
           p.hit=true;
           p.owner._projectileHit=true;
-          damageHit(p.owner,target,1.15*p.owner.damageMul,30*Math.sign(p.vx),p.vy*.08);
+          const dmg=(p.cutter?(p.damage||2.0):1.15)*p.owner.damageMul;
+          damageHit(p.owner,target,dmg,(p.cutter?72:30)*Math.sign(p.vx),p.vy*.08);
           p.owner._projectileHit=false;
         }
       });
@@ -6856,20 +6907,15 @@ toxicWaters.forEach(v=>{
 
     kawazuShots.forEach(p=>{
       const a=Math.max(0,p.t/p.life);
-      ctx.save();
-      ctx.translate(p.x,p.y);
-      ctx.globalCompositeOperation='lighter';
-      ctx.globalAlpha=.72*a;
-      ctx.fillStyle='#c8f7ff';
-      ctx.beginPath();
-      ctx.arc(0,0,p.r,0,Math.PI*2);
-      ctx.fill();
-      ctx.globalAlpha=.35*a;
-      ctx.strokeStyle='#6ee7ff';
-      ctx.lineWidth=5;
-      ctx.beginPath();
-      ctx.arc(0,0,p.r+5,0,Math.PI*2);
-      ctx.stroke();
+      ctx.save(); ctx.translate(p.x,p.y); ctx.globalCompositeOperation='lighter';
+      if(p.cutter){
+        p.spin=(p.spin||0)+.18; ctx.rotate(p.spin); ctx.globalAlpha=.88*a; ctx.strokeStyle='#e9fbff'; ctx.lineWidth=6;
+        ctx.beginPath(); ctx.arc(0,0,p.r+4,-1.15,1.15); ctx.stroke();
+        ctx.globalAlpha=.42*a; ctx.strokeStyle='#79e8ff'; ctx.lineWidth=3; ctx.beginPath();ctx.arc(0,0,p.r+10,-1.05,1.05);ctx.stroke();
+      }else{
+        ctx.globalAlpha=.72*a; ctx.fillStyle='#c8f7ff'; ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=.35*a; ctx.strokeStyle='#6ee7ff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,p.r+5,0,Math.PI*2);ctx.stroke();
+      }
       ctx.restore();
     });
 
