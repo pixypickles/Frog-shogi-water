@@ -2744,7 +2744,7 @@
       seraphiel:['↑ ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 後ろ ＋ キック：セラフィックサイクロン','下 → 前 ＋ パンチ：セラフィックレイ'],
       sariel:['↑ ＋ パンチ：ルナ・スラッシュ','前 ＋ ガード：イーブルアイ','後ろ ＋ ガード：ブラッドムーン','↑ ＋ キック：ムーンサルトキック'],
       kokabiel:['前 ＋ パンチ：グラビティボール','後ろ ＋ ガード：グラビティゾーン','下 ＋ パンチ：メテオレイン','下 ＋ キック：グラビティダイブ'],
-      flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードラッシュ','↑ ＋ キック：インフェルノクロー'],
+      flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードストライク','↑ ＋ キック：インフェルノクロー'],
       samael:['前 ＋ パンチ：ポイズンゲート','前 ＋ キック：デッドリー・アクア','舌：ヴェノムタン'],
       satanael:['ディザスターフレア：後ろ ＋ パンチ','ダークレイ：前 ＋ パンチ','ダークプレッシャー：下 ＋ ガード','インフェルノウェーブ：下 ＋ キック'],
       green:['↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','後ろ ＋ パンチ：バーニングショット','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
@@ -4393,7 +4393,7 @@
       if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'ヘルフレイム!');}
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'フレイムクロー!');}
       if(kind==='kick'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'インフェルノクロー!');}
-      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'レオパードラッシュ!');}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'レオパードストライク!');}
     }
     if(f.type==='samael'){
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ポイズンゲート!');}
@@ -5027,6 +5027,11 @@
         if(player){
           const remForward=player.face>0?'right':'left', remBack=player.face>0?'left':'right';
           if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
+          // サタナエル：下＋ガードは通常ガードより優先してダークプレッシャー。
+          if(player.type==='satanael' && !player.throwState && input.y>.35){
+            player.guard=false; player.attackT=0; player.attack=null;
+            if(specialSatanaelGroundPressure(player)){btn.classList.remove('pressed');return;}
+          }
           // ルシファー：後ろ＋ガードは通常ガードより優先してアイスウォール。
           const luciferBackHeld = player.type==='black' &&
             ((player.face>0 && input.x<-.35) || (player.face<0 && input.x>.35));
