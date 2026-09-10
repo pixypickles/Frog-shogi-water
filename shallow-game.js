@@ -1559,7 +1559,12 @@
         ctx.scale(1.08,.82);
       }
 
-      if(this.throwState || Math.abs(this.spinAngle)>.02) ctx.rotate(this.spinAngle);
+      if(this.type==='kawazu' && this.specialType==='kawazuSpinCutter' && this.specialT>0){
+        const total=.84;
+        const progress=Math.max(0,Math.min(1,(total-this.specialT)/total));
+        const spinDir=this.face>0?-1:1;
+        ctx.rotate(spinDir*progress*Math.PI*6);
+      }else if(this.throwState || Math.abs(this.spinAngle)>.02) ctx.rotate(this.spinAngle);
       if(this.face<0) ctx.scale(-1,1);
       if(this.flash>0) ctx.globalAlpha=.55;
 
@@ -4082,10 +4087,10 @@
 
   function specialKawazuSpinCutter(f){
     if(gameOver||!f||f.type!=='kawazu'||f.stun>0||f.guard||f.specialT>0)return false;
-    const total=.84; f.specialType='kawazuSpinCutter'; f.specialT=total; f.attack='kick'; f.attackT=total;
+    const total=.84; f.specialType='kawazuSpinCutter'; f.specialT=total; f.attack='kick'; f.attackVariant='mid'; f.attackT=total;
     comboEl.textContent='スピンキックカッター!';
     const dir=f.face;
-    [90,330,570].forEach((delay,i)=>setTimeout(()=>{
+    [105,385,665].forEach((delay,i)=>setTimeout(()=>{
       if(gameOver||!f||f.specialType!=='kawazuSpinCutter')return;
       const speed=390+i*16;
       kawazuShots.push({owner:f,x:f.x+dir*62,y:f.y-4+(i-1)*9,vx:dir*speed,vy:(i-1)*10,r:15,t:1.35,life:1.35,hit:false,cutter:true,damage:2.0,spin:i*.65});
@@ -6909,9 +6914,12 @@ toxicWaters.forEach(v=>{
       const a=Math.max(0,p.t/p.life);
       ctx.save(); ctx.translate(p.x,p.y); ctx.globalCompositeOperation='lighter';
       if(p.cutter){
-        p.spin=(p.spin||0)+.18; ctx.rotate(p.spin); ctx.globalAlpha=.88*a; ctx.strokeStyle='#e9fbff'; ctx.lineWidth=6;
-        ctx.beginPath(); ctx.arc(0,0,p.r+4,-1.15,1.15); ctx.stroke();
-        ctx.globalAlpha=.42*a; ctx.strokeStyle='#79e8ff'; ctx.lineWidth=3; ctx.beginPath();ctx.arc(0,0,p.r+10,-1.05,1.05);ctx.stroke();
+        p.spin=(p.spin||0)+.30; ctx.rotate(p.spin); ctx.lineCap='round';
+        ctx.shadowColor='#bff7ff'; ctx.shadowBlur=16;
+        ctx.globalAlpha=.95*a; ctx.strokeStyle='#f7ffff'; ctx.lineWidth=6;
+        ctx.beginPath(); ctx.moveTo(-p.r-8,0); ctx.lineTo(p.r+8,0); ctx.moveTo(0,-p.r-8); ctx.lineTo(0,p.r+8); ctx.stroke();
+        ctx.globalAlpha=.48*a; ctx.strokeStyle='#65ddff'; ctx.lineWidth=11;
+        ctx.beginPath(); ctx.moveTo(-p.r-5,0); ctx.lineTo(p.r+5,0); ctx.moveTo(0,-p.r-5); ctx.lineTo(0,p.r+5); ctx.stroke();
       }else{
         ctx.globalAlpha=.72*a; ctx.fillStyle='#c8f7ff'; ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();
         ctx.globalAlpha=.35*a; ctx.strokeStyle='#6ee7ff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,p.r+5,0,Math.PI*2);ctx.stroke();
