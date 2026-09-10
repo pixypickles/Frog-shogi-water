@@ -1878,7 +1878,7 @@
           drawIceAura(70,48,26,14,intensity);
         }else if(this.specialType==='abyssCharge'){
           // 曲げた腕の拳に赤い力を溜める。
-          drawRedAura(26,8,16,14,intensity);
+          drawIceAura(26,8,22,16,intensity);
         }else{
           // パンチが伸びた先で炸裂。
           drawRedAura(64,7,23,19,intensity);
@@ -6626,7 +6626,15 @@ toxicWaters.forEach(v=>{
     });
 
     luciferIceShots.forEach(q=>{ctx.save();ctx.shadowColor='#bdf7ff';ctx.shadowBlur=20;const g=ctx.createRadialGradient(q.x-5,q.y-5,2,q.x,q.y,q.r);g.addColorStop(0,'#fff');g.addColorStop(.45,'#c8f8ff');g.addColorStop(1,'#62cfff');ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,Math.PI*2);ctx.fill();ctx.restore();});
-    luciferIceWalls.forEach(w=>{ctx.save();ctx.globalAlpha=Math.min(1,w.t*2);ctx.fillStyle='rgba(190,245,255,.72)';ctx.strokeStyle='#eaffff';ctx.lineWidth=4;ctx.shadowColor='#9eefff';ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(w.x-w.w/2,w.y+w.h/2);ctx.lineTo(w.x-w.w*.7,w.y);ctx.lineTo(w.x,w.y-w.h/2);ctx.lineTo(w.x+w.w*.7,w.y);ctx.lineTo(w.x+w.w/2,w.y+w.h/2);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();});
+    luciferIceWalls.forEach(w=>{
+      ctx.save(); ctx.translate(w.x,w.y); ctx.globalAlpha=.82*Math.min(1,w.t/.18); ctx.globalCompositeOperation='lighter';
+      ctx.shadowColor='#9feeff';ctx.shadowBlur=20;
+      const g=ctx.createLinearGradient(-14,-55,14,55);g.addColorStop(0,'rgba(238,255,255,.92)');g.addColorStop(.45,'rgba(126,225,246,.78)');g.addColorStop(1,'rgba(70,155,205,.72)');
+      ctx.fillStyle=g;ctx.strokeStyle='#efffff';ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(-10,-56);ctx.lineTo(14,-48);ctx.lineTo(11,-18);ctx.lineTo(18,7);ctx.lineTo(9,55);ctx.lineTo(-15,49);ctx.lineTo(-12,15);ctx.lineTo(-19,-8);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.globalAlpha=.65;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-40);ctx.lineTo(7,-18);ctx.lineTo(-5,4);ctx.lineTo(10,27);ctx.stroke();
+      ctx.restore();
+    });
     abyssShocks.forEach(w=>{
       const a=Math.max(0,w.t/w.life);
       ctx.save();
