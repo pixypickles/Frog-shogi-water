@@ -80,6 +80,7 @@
   let kawazuGhosts=[];
   let luciferIceShots=[];
   let michaelBurningShots=[];
+  let urielWhiteShots=[];
   let michaelRedAuraPunches=[];
   let luciferIceWalls=[];
   let siltClouds = [];
@@ -386,9 +387,10 @@
       'エアブースト：↑ ＋ ガード',
     ],
     orange:[
-      'ホワイトカウンター：ガード ×2',
+      'ホワイトカウンター：下 → 後ろ ＋ ガード',
       'ガーディアンタックル：後ろ → 前 ＋ ガード',
-      'ホワイトオーラ：ガード長押し → 離す',
+      'ホワイトオーラ：ガード長押し → 離す'
+      ,'ホワイトショット：ガード → パンチ',
       '白い長リーチ攻撃：オーラ中 パンチ / キック'
     ],
     piranha:[
@@ -949,10 +951,7 @@
       if(this.tackleArmedT>0) this.tackleArmedT-=dt;
       if(this.bossSpecialCooldown>0) this.bossSpecialCooldown=Math.max(0,this.bossSpecialCooldown-dt);
       if(this.urielAuraT>0) this.urielAuraT=Math.max(0,this.urielAuraT-dt);
-      if(this.type==='orange' && this.urielAuraT>0){
-        this.hp=Math.min(100,this.hp+1.15*dt);
-        if(this.isPlayer)updateHud();
-      }
+      // ウリエル：地上/浅瀬ではホワイトオーラによるHP回復はなし。
       if(this.michaelRedAuraT>0){
         this.michaelRedAuraT=Math.max(0,this.michaelRedAuraT-dt);
         this.hp=Math.min(100,this.hp+1.7*dt);
@@ -2787,7 +2786,7 @@
       green:['↖ / ↑ / ↗：手動ジャンプ','↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
       blue:['↖ / ↑ / ↗：手動ジャンプ','ガード → パンチ：アクアトルネード','ガード → キック：アクアストリーム','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）'],
       yellow:['前 ＋ パンチ：エアカッター（正面）','前 ＋ キック：エアカッター（下15度）','後ろ ＋ パンチ：カープエアカッター（上から弧）','後ろ ＋ キック：カープエアカッター（下から弧）','ガード ×2：ヒーリングバブル','↑ ＋ ガード：高速バブル移動','↑ ＋ パンチ：ウィンドライズ'],
-      orange:['↖ / ↑ / ↗：手動ジャンプ','ガード ×2：ホワイトカウンター','後ろ → 前 ＋ ガード：ガーディアンタックル','ガード長押し → 離す：ホワイトオーラ','ホワイトオーラ中：HPが少しずつ回復＋白いリーチ攻撃']
+      orange:['↖ / ↑ / ↗：手動ジャンプ','下 → 後ろ ＋ ガード：ホワイトカウンター','後ろ → 前 ＋ ガード：ガーディアンタックル','ガード長押し → 離す：ホワイトオーラ','オーラ中 パンチ / キック：白い長リーチ攻撃','ガード → パンチ：ホワイトショット']
     };
     return map[type] || ['専用必殺技：練習対象外'];
   }
@@ -4358,6 +4357,16 @@
     return false;
   }
 
+  function specialUrielWhiteShot(f){
+    if(gameOver||!f||f.type!=='orange'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='urielWhiteShot'; f.specialT=.38; f.attack='punch'; f.attackT=.38;
+    const dir=f.face||1;
+    urielWhiteShots.push({owner:f,x:f.x+dir*60,y:f.y-10,vx:dir*290,r:19,t:1.9,life:1.9,hit:false,trail:[]});
+    comboEl.textContent='ホワイトショット!';
+    setTimeout(()=>{if(comboEl.textContent==='ホワイトショット!')comboEl.textContent='';},700);
+    return true;
+  }
+
   function trySpecial(f,kind){
     if(!f) return false;
     const forward=f.face>0?'right':'left';
@@ -4388,6 +4397,12 @@
         clearCommand();
         return specialKawazuPressureRush(f);
       }
+    }
+
+    // ウリエル：水中版と同じく、直前のガード入力＋パンチでホワイトショット。
+    if(f.type==='orange' && kind==='punch'){
+      const justGuarded=performance.now()-(input.lastSimpleGuardTapTime||0)<=650;
+      if(justGuarded){ input.lastSimpleGuardTapTime=0; clearCommand(); return specialUrielWhiteShot(f); }
     }
 
     // 水中格闘2準拠：ミカエル。基本技は方向＋ボタン、サイクロンだけ下→後ろ＋キック。
@@ -5015,13 +5030,17 @@
             }
           }
 
-          // ウリエル：ガード×2でホワイトカウンター。
-          if(player.type==='orange' && !player.throwState && input.simpleGuardTapTimes.length>=2){
-            input.simpleGuardTapTimes=[];
-            input.lastSimpleGuardTapTime=0;
-            if(specialWhiteCounter(player)){
-              btn.classList.remove('pressed');
-              return;
+          // ウリエル：水中版と同じく「下 → 後ろ ＋ ガード」でホワイトカウンター。
+          if(player.type==='orange' && !player.throwState){
+            const back=player.face>0?'left':'right';
+            if(hasCommand(['down',back],760)){
+              input.simpleGuardTapTimes=[];
+              input.lastSimpleGuardTapTime=0;
+              clearCommand();
+              if(specialWhiteCounter(player)){
+                btn.classList.remove('pressed');
+                return;
+              }
             }
           }
 
@@ -5986,6 +6005,15 @@ function drawBackground(dt){
         if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+7){q.hit=true;q.t=0;damageHit(q.owner,target,4.4*q.owner.damageMul,115*Math.sign(q.vx),-12);spawnImpact(q.x,q.y,'hit');}
       });
       michaelBurningShots=michaelBurningShots.filter(q=>q.t>0&&q.x>-70&&q.x<innerWidth+70);
+      urielWhiteShots.forEach(q=>{
+        q.t-=dt; q.x+=q.vx*dt;
+        q.trail.push({x:q.x,y:q.y,t:.20}); q.trail.forEach(v=>v.t-=dt); q.trail=q.trail.filter(v=>v.t>0);
+        const target=q.owner&&q.owner.isPlayer?enemy:player;
+        if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+6){
+          q.hit=true;q.t=0;damageHit(q.owner,target,3.7*q.owner.damageMul,105*Math.sign(q.vx),-10);spawnImpact(q.x,q.y,'hit');
+        }
+      });
+      urielWhiteShots=urielWhiteShots.filter(q=>q.t>0&&q.x>-80&&q.x<innerWidth+80);
     luciferIceShots.forEach(q=>{
         q.x+=q.vx*dt;q.t-=dt;const target=q.owner===player?enemy:player;
         if(!q.hit&&target&&Math.abs(target.x-q.x)<48&&Math.abs(target.y-q.y)<60){q.hit=true;q.t=0;damageHit(q.owner,target,5.2,150*Math.sign(q.vx),-25);spawnImpact(q.x,q.y,'hit');}
@@ -6488,6 +6516,19 @@ function drawBackground(dt){
       g.addColorStop(0,'#ffffff');g.addColorStop(.16,'#fff879');g.addColorStop(.42,'#ffb21c');
       g.addColorStop(.72,'#ff3215');g.addColorStop(1,'rgba(220,0,0,0)');
       ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.65,0,Math.PI*2);ctx.fill();ctx.restore();
+    });
+
+    urielWhiteShots.forEach(q=>{
+      q.trail.forEach(v=>{
+        ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.max(0,v.t/.20)*.34;
+        ctx.fillStyle='rgba(255,255,255,.9)';ctx.shadowColor='#ffffff';ctx.shadowBlur=14;
+        ctx.beginPath();ctx.ellipse(v.x-Math.sign(q.vx)*10,v.y,18,8,0,0,Math.PI*2);ctx.fill();ctx.restore();
+      });
+      ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=1;ctx.shadowColor='#ffffff';ctx.shadowBlur=28;
+      const g=ctx.createRadialGradient(q.x-5,q.y-5,2,q.x,q.y,q.r*1.55);
+      g.addColorStop(0,'#ffffff');g.addColorStop(.35,'#ffffff');g.addColorStop(.68,'#e9f7ff');g.addColorStop(1,'rgba(220,245,255,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.55,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(q.x,q.y,q.r*.95,0,Math.PI*2);ctx.stroke();ctx.restore();
     });
 
     // レミエルの幻影。薄い水色の同型シルエット＋攻撃時の残像。
