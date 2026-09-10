@@ -344,9 +344,9 @@
       'バーニングサイクロン：↓ → 後ろ ＋ キック<br>レッドオーラパンチ：前 ＋ パンチ'
     ],
     blue:[
-      'アクアトルネード：ガード → パンチ',
-      'アクアストリーム：ガード → キック',
-      'アクアボルテックス：後ろ ＋ パンチ'
+      'アクアトルネード：↑ ＋ パンチ',
+      'アクアストリーム：↓ ＋ キック',
+      'アクアボルテックス：後ろ ＋ パンチ<br>アクアショット：前 ＋ パンチ'
     ],
     black:[
       'ヘルクラッシュ：→ → ＋ パンチ',
@@ -2739,7 +2739,7 @@
       satanael:['前 ＋ パンチ：ヘルフレア','↑ ＋ パンチ：サタナエルレイ','前 ＋ キック：ダークラッシュ','下 ＋ パンチ：アビスウェーブ'],
       green:['↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','後ろ ＋ パンチ：バーニングショット','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
       black:['前 → 前 ＋ パンチ：ヘルクラッシュ','後ろ ＋ パンチ長押し → 離す：アビスチャージ'],
-      blue:['ガード → パンチ：アクアトルネード（約15°上）','ガード → キック：アクアストリーム（約8°下）','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）'],
+      blue:['↑ ＋ パンチ：アクアトルネード','↓ ＋ キック：アクアストリーム','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）','前 ＋ パンチ：アクアショット'],
       yellow:['前 ＋ パンチ：エアカッター（正面）','前 ＋ キック：エアカッター（下15度）','後ろ ＋ パンチ：カープエアカッター（上から弧）','後ろ ＋ キック：カープエアカッター（下から弧）','ガード ×2：ヒーリングバブル','↑ ＋ ガード：高速バブル移動','↑ ＋ パンチ：ウィンドライズ'],
       orange:['下 → 後ろ ＋ ガード：ホワイトカウンター','後ろ → 前 ＋ ガード：ガーディアンタックル','ガード長押し → 離す：ホワイトオーラ','オーラ中 パンチ / キック：白い長リーチ攻撃','ガード → パンチ：ホワイトショット']
     };
@@ -3148,8 +3148,16 @@
     f.specialType='michaelBurningShot';f.specialT=.30;f.attack='punch';f.attackT=.30;
     const dir=f.face;
     // 水中2と同様に、入力直後に拳の先から見える炎弾を出す。
-    michaelBurningShots.push({owner:f,x:f.x+dir*70,y:f.y-10,vx:dir*330,r:23,t:4,hit:false,trail:[]});
+    michaelBurningShots.push({owner:f,x:f.x+dir*70,y:f.y-10,vx:dir*330,r:23,t:4,hit:false,trail:[],style:'fire',damage:4.4});
     comboEl.textContent='バーニングショット!';return true;
+  }
+
+  function specialGabrielAquaShot(f){
+    if(gameOver||!f||f.type!=='blue'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='gabrielAquaShot';f.specialT=.36;f.attack='punch';f.attackT=.36;
+    const dir=f.face;
+    michaelBurningShots.push({owner:f,x:f.x+dir*66,y:f.y-8,vx:dir*285,r:18,t:4,hit:false,trail:[],style:'aqua',damage:3.8});
+    comboEl.textContent='アクアショット!';return true;
   }
 
   function specialLuciferIceShot(f){
@@ -4366,18 +4374,14 @@
       if(kind==='punch' && ((f.face>0&&input.x<-.35)||(f.face<0&&input.x>.35))){ clearCommand(); return specialMichaelBurningShot(f); }
     }
 
-    // ガブリエル：ガード→パンチ＝上水流、ガード→キック＝下水流、後ろ＋パンチ＝ボルテックス。
+    // ガブリエル：水中格闘2と同じ方向＋攻撃。
     if(f.type==='blue'){
-      const justGuarded=performance.now()-(input.lastSimpleGuardTapTime||0)<=650;
-      if(kind==='punch' && justGuarded){
-        input.lastSimpleGuardTapTime=0; clearCommand(); return specialAquaTornado(f);
-      }
-      if(kind==='kick' && justGuarded){
-        input.lastSimpleGuardTapTime=0; clearCommand(); return specialAquaStream(f);
-      }
-      if(kind==='punch' && hasCommand([back],520)){
-        clearCommand(); return specialAquaVortex(f);
-      }
+      const forwardHeld=(f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35);
+      const backHeld=(f.face>0&&input.x<-.35)||(f.face<0&&input.x>.35);
+      if(kind==='punch' && input.y<-.35){ clearCommand(); return specialAquaTornado(f); }
+      if(kind==='kick' && input.y>.35){ clearCommand(); return specialAquaStream(f); }
+      if(kind==='punch' && backHeld){ clearCommand(); return specialAquaVortex(f); }
+      if(kind==='punch' && forwardHeld){ clearCommand(); return specialGabrielAquaShot(f); }
     }
 
     if(f.type==='black'){
@@ -5951,7 +5955,7 @@ function drawBackground(dt){
       michaelRedAuraPunches=michaelRedAuraPunches.filter(a=>a.t>0);
       michaelBurningShots.forEach(q=>{
         q.t-=dt; q.x+=q.vx*dt; if(q.trail){q.trail.push({x:q.x,y:q.y,t:.22}); q.trail.forEach(v=>v.t-=dt); q.trail=q.trail.filter(v=>v.t>0);} const target=q.owner&&q.owner.isPlayer?enemy:player;
-        if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+7){q.hit=true;q.t=0;damageHit(q.owner,target,4.4*q.owner.damageMul,115*Math.sign(q.vx),-12);spawnImpact(q.x,q.y,'hit');}
+        if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+7){q.hit=true;q.t=0;damageHit(q.owner,target,(q.damage||4.4)*q.owner.damageMul,115*Math.sign(q.vx),-12);spawnImpact(q.x,q.y,'hit');}
       });
       michaelBurningShots=michaelBurningShots.filter(q=>q.t>0&&q.x>-70&&q.x<innerWidth+70);
       urielWhiteShots.forEach(q=>{
@@ -6460,6 +6464,10 @@ function drawBackground(dt){
       ctx.restore();
     });
     michaelBurningShots.forEach(q=>{
+      if(q.style==='aqua'){
+        if(q.trail){q.trail.forEach(v=>{ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.max(0,v.t/.22)*.45;ctx.fillStyle='#6ff6ff';ctx.shadowColor='#24dfff';ctx.shadowBlur=15;ctx.beginPath();ctx.ellipse(v.x-Math.sign(q.vx)*12,v.y,18,7,0,0,Math.PI*2);ctx.fill();ctx.restore();});}
+        ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor='#34eaff';ctx.shadowBlur=28;const ag=ctx.createRadialGradient(q.x-5,q.y-5,2,q.x,q.y,q.r*1.55);ag.addColorStop(0,'#ffffff');ag.addColorStop(.28,'#bfffff');ag.addColorStop(.62,'#38ddff');ag.addColorStop(1,'rgba(20,170,255,0)');ctx.fillStyle=ag;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.55,0,Math.PI*2);ctx.fill();ctx.restore();return;
+      }
       if(q.trail){q.trail.forEach(v=>{
         ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=Math.max(0,v.t/.22)*.62;
         ctx.fillStyle='#ff5a16';ctx.shadowColor='#ff3a12';ctx.shadowBlur=16;
