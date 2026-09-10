@@ -378,8 +378,10 @@
       'バックスピンキック：後ろ ＋ キック（追加入力で追加回転）'
     ],
     yellow:[
-      'エアカッター：ガード → パンチ',
-      'エアカッター：ガード → キック',
+      'エアカッター（正面）：前 ＋ パンチ',
+      'エアカッター（下15度）：前 ＋ キック',
+      'カープエアカッター（上から弧）：後ろ ＋ パンチ',
+      'カープエアカッター（下から弧）：後ろ ＋ キック',
       'ウィンドライズ：↑ ＋ パンチ',
       'エアブースト：↑ ＋ ガード',
     ],
@@ -2784,7 +2786,7 @@
       satanael:['前 ＋ パンチ：ヘルフレア','↑ ＋ パンチ：サタナエルレイ','前 ＋ キック：ダークラッシュ','下 ＋ パンチ：アビスウェーブ'],
       green:['↖ / ↑ / ↗：手動ジャンプ','↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
       blue:['↖ / ↑ / ↗：手動ジャンプ','ガード → パンチ：アクアトルネード','ガード → キック：アクアストリーム','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）'],
-      yellow:['↖ / ↑ / ↗：手動ジャンプ','ガード → パンチ：エアカッター','ガード → キック：エアカッター','ガード ×2：ヒーリングバブル','↑ ＋ ガード：エアブースト','↑ ＋ パンチ：ウィンドライズ'],
+      yellow:['前 ＋ パンチ：エアカッター（正面）','前 ＋ キック：エアカッター（下15度）','後ろ ＋ パンチ：カープエアカッター（上から弧）','後ろ ＋ キック：カープエアカッター（下から弧）','ガード ×2：ヒーリングバブル','↑ ＋ ガード：高速バブル移動','↑ ＋ パンチ：ウィンドライズ'],
       orange:['↖ / ↑ / ↗：手動ジャンプ','ガード ×2：ホワイトカウンター','後ろ → 前 ＋ ガード：ガーディアンタックル','ガード長押し → 離す：ホワイトオーラ','ホワイトオーラ中：HPが少しずつ回復＋白いリーチ攻撃']
     };
     return map[type] || ['専用必殺技：練習対象外'];
@@ -3703,37 +3705,35 @@
     return true;
   }
 
-  function specialPressureBlade(f,angleDeg=0,source='punch'){
+  function specialPressureBlade(f,angleDeg=0,source='punch',curve=0,label='エアカッター'){
     if(gameOver || f.stun>0 || f.guard || f.specialT>0) return false;
 
     f.specialType='pressureBlade';
     f.specialT=.42;
-    f.attack=source==='kick' ? 'kick' : (source==='punch' ? 'punch' : null);
+    f.attack=source==='kick' ? 'kick' : 'punch';
     f.attackT=.42;
 
-    const speed=355;
-    // v0.31: キック版は前方水平と約15°下へ飛ぶ2枚。
-    const angles = source==='punch' ? [0,-24] : [0,15];
-    const yOffset=source==='punch' ? -10 : 24;
-
-    angles.forEach((deg,i)=>{
-      const rad=deg*Math.PI/180;
-      pressureBlades.push({
-        owner:f,
-        x:f.x+f.face*(66+i*5),
-        y:f.y+yOffset,
-        vx:f.face*Math.cos(rad)*speed,
-        vy:Math.sin(rad)*speed,
-        t:1.25,
-        life:1.25,
-        hit:false,
-        size:.92,
-        angle:rad
-      });
+    const curved=Math.abs(curve)>0.01;
+    const speed=curved?285:355;
+    const yOffset=source==='kick' ? 24 : -10;
+    const rad=angleDeg*Math.PI/180;
+    pressureBlades.push({
+      owner:f,
+      x:f.x+f.face*68,
+      y:f.y+yOffset,
+      vx:f.face*Math.cos(rad)*speed,
+      vy:Math.sin(rad)*speed,
+      curve:curve,
+      t:1.45,
+      life:1.45,
+      hit:false,
+      size:1.0,
+      angle:rad,
+      reflected:0
     });
 
-    comboEl.textContent='エアカッター!';
-    setTimeout(()=>{if(comboEl.textContent==='エアカッター!')comboEl.textContent='';},900);
+    comboEl.textContent=label+'!';
+    setTimeout(()=>{if(comboEl.textContent===label+'!')comboEl.textContent='';},900);
     return true;
   }
 
@@ -4422,19 +4422,16 @@
       if(kind==='kick' && hasCommand(['up','down'],850)){ clearCommand(); return specialCrayfishBottomSmash(f); } if(kind==='punch' && hasCommand(['down','up'],850)){ clearCommand(); return specialBelialCeilingWeb(f); }
     }
 
-    // ラファエル：ガード→パンチ / ガード→キック。
+    // ラファエル：水中版の4方向カッターを空中向けに「エア」へ置換。
     if(f.type==='yellow'){
-      // 地上専用：上＋パンチでウィンドライズ。
-      if(kind==='punch' && hasCommand(['up'],620)){
-        clearCommand();
-        return specialRaphaelWindRise(f);
-      }
-      const justGuarded=performance.now()-(input.lastSimpleGuardTapTime||0)<=650;
-      if(justGuarded && (kind==='punch'||kind==='kick')){
-        input.lastSimpleGuardTapTime=0;
-        clearCommand();
-        return specialPressureBlade(f,0,kind);
-      }
+      const forwardHeld=(f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35);
+      const backHeld=(f.face>0&&input.x<-.35)||(f.face<0&&input.x>.35);
+      // 地上/浅瀬専用：上＋パンチのウィンドライズは残す。
+      if(kind==='punch' && input.y<-.35){ clearCommand(); return specialRaphaelWindRise(f); }
+      if(kind==='punch' && forwardHeld){ clearCommand(); return specialPressureBlade(f,0,'punch',0,'エアカッター'); }
+      if(kind==='kick' && forwardHeld){ clearCommand(); return specialPressureBlade(f,15,'kick',0,'エアカッター'); }
+      if(kind==='punch' && backHeld){ clearCommand(); return specialPressureBlade(f,-30,'punch',105,'カープエアカッター'); }
+      if(kind==='kick' && backHeld){ clearCommand(); return specialPressureBlade(f,30,'kick',-105,'カープエアカッター'); }
     }
 
     if(f.type==='beelzebub'){
@@ -6193,7 +6190,7 @@ function drawBackground(dt){
       kawazuGhosts=kawazuGhosts.filter(q=>q.t>0);
 
     pressureBlades.forEach(p=>{
-        p.t-=dt; p.x+=p.vx*dt; p.y+=(p.vy||0)*dt;
+        p.t-=dt; p.vy+=(p.curve||0)*dt; p.x+=p.vx*dt; p.y+=(p.vy||0)*dt;
         const target=p.owner && p.owner.isPlayer ? enemy : player;
         if(!p.hit && target){
           const d=Math.hypot(target.x-p.x,target.y-p.y);
@@ -6453,7 +6450,7 @@ function drawBackground(dt){
     ctx.restore();
 
 
-    // v2.4.8: ミカエルの新技エフェクトは背景描画後に表示する。
+    // v2.4.9: ミカエルの新技エフェクトは背景描画後に表示する。
     // 以前は update 中に描いていたため、直後の drawBackground() で消されていた。
     michaelRedAuraPunches.forEach(a=>{
       const f=a.owner;if(!f||a.t<=0)return;
