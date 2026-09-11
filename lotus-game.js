@@ -100,6 +100,9 @@
   let satanaelGroundRays=[];
   let satanaelGroundPressures=[];
   let satanaelGroundWaves=[];
+  let flaurosGroundPillars=[];
+  let flaurosGroundClaws=[];
+  let flaurosGroundShots=[];
   let burstWaves = [];
   let leafTargets=[];
   let leafMiniActive=false;
@@ -4350,6 +4353,41 @@
     const floor=landFloorY();for(let i=0;i<9;i++)satanaelGroundWaves.push({owner:f,x:f.x+f.face*(70+i*78),y:floor+70,t:.12+i*.085,life:.34,hit:false,fired:false});
     compatLabel('インフェルノウェーブ!');return true;
   }
+  function specialFlaurosGroundHellFlame(f){
+    if(gameOver||!f||f.stun>0||f.guard||f.specialT>0)return false;
+    const target=f.isPlayer?enemy:player;if(!target)return false;
+    f.specialType='flaurosHellFlame';f.specialT=.62;f.attack='punch';f.attackT=.62;
+    const floor=landFloorY();
+    flaurosGroundPillars.push({owner:f,x:target.x,y:floor+6,t:.42,life:.92,fired:false,hit:false});
+    compatLabel('ヘルフレイム…');return true;
+  }
+  function specialFlaurosGroundFlameClaw(f){
+    if(gameOver||!f||f.stun>0||f.guard||f.specialT>0)return false;
+    f.specialType='flaurosFlameClaw';f.specialT=.62;f.attack='punch';f.attackT=.62;
+    const dir=f.face||1;
+    for(const deg of [-20,0,20]){
+      const a=deg*Math.PI/180, speed=350;
+      flaurosGroundShots.push({owner:f,x:f.x+dir*54,y:f.y-5,vx:dir*Math.cos(a)*speed,vy:Math.sin(a)*speed,r:18,t:2.0,life:2.0,hit:false,spin:0});
+    }
+    compatLabel('フレイムクロー!');return true;
+  }
+  function specialFlaurosGroundLeopardStrike(f){
+    if(gameOver||!f||f.stun>0||f.guard||f.specialT>0)return false;
+    f.specialType='flaurosLeopardStrike';f.specialT=.48;f.attack='kick';f.attackT=.48;
+    f.flaurosStrikeHit=false;f.flaurosStrikeDir=f.face||1;f.vx=f.flaurosStrikeDir*760;f.vy=-75;
+    compatLabel('レオパードストライク!');return true;
+  }
+  function specialFlaurosGroundInfernoClaw(f){
+    if(gameOver||!f||f.stun>0||f.guard||f.specialT>0)return false;
+    f.specialType='flaurosInfernoClaw';f.specialT=1.12;f.attack='kick';f.attackT=1.12;
+    f.flaurosInfernoHit=false;f.flaurosInfernoStart=performance.now();
+    f.flaurosInfernoFromX=f.x;f.flaurosInfernoFromY=f.y;
+    f.flaurosInfernoWallX=f.face>0?68:innerWidth-68;
+    f.flaurosInfernoWallY=Math.max(86,landFloorY()-300);
+    f.flaurosInfernoEndX=f.face>0?innerWidth-76:76;
+    f.flaurosInfernoEndY=landFloorY()-42;
+    compatLabel('インフェルノクロー!');return true;
+  }
   function tryV2CompatSpecial(f,kind,forward,back){
     if(!f)return false;
     if(f.type==='mob'){
@@ -4390,10 +4428,10 @@
       if(kind==='guard'&&compatDir(f,'back',back,520)){f.counterReady=true;f.counterT=.75;compatLabel('グラビティゾーン!');clearCommand();return true;}
     }
     if(f.type==='flauros'){
-      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'ヘルフレイム!');}
-      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'フレイムクロー!');}
-      if(kind==='kick'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'インフェルノクロー!');}
-      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'レオパードストライク!');}
+      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return specialFlaurosGroundHellFlame(f);}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return specialFlaurosGroundFlameClaw(f);}
+      if(kind==='kick'&&compatDir(f,'up','up',520)){clearCommand();return specialFlaurosGroundInfernoClaw(f);}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return specialFlaurosGroundLeopardStrike(f);}
     }
     if(f.type==='samael'){
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ポイズンゲート!');}
@@ -5477,6 +5515,25 @@
   function updateNewSpecialMoves(f,dt){
     if(!f) return;
 
+
+    if(f.type==='flauros'){
+      const o=f.isPlayer?enemy:player;
+      if(f.specialType==='flaurosLeopardStrike'&&f.specialT>0){
+        f.vx=(f.flaurosStrikeDir||f.face)*760;
+        if(o&&!f.flaurosStrikeHit&&Math.abs(o.x-f.x)<76&&Math.abs(o.y-f.y)<74){
+          f.flaurosStrikeHit=true;damageHit(f,o,8.0*f.damageMul,300*(f.flaurosStrikeDir||f.face),-70);spawnImpact(o.x,o.y,'hit');
+        }
+      }
+      if(f.specialType==='flaurosInfernoClaw'&&f.specialT>0){
+        const elapsed=(performance.now()-(f.flaurosInfernoStart||performance.now()))/1000;
+        const wallT=.25,diveT=.50;f.vx=0;f.vy=0;
+        if(elapsed<wallT){let t=Math.max(0,Math.min(1,elapsed/wallT));t=1-Math.pow(1-t,2);f.x=f.flaurosInfernoFromX+(f.flaurosInfernoWallX-f.flaurosInfernoFromX)*t;f.y=f.flaurosInfernoFromY+(f.flaurosInfernoWallY-f.flaurosInfernoFromY)*t;}
+        else {const t=Math.max(0,Math.min(1,(elapsed-wallT)/diveT));f.x=f.flaurosInfernoWallX+(f.flaurosInfernoEndX-f.flaurosInfernoWallX)*t;f.y=f.flaurosInfernoWallY+(f.flaurosInfernoEndY-f.flaurosInfernoWallY)*t;const dir=Math.sign(f.flaurosInfernoEndX-f.flaurosInfernoWallX)||f.face;
+          if(o&&!f.flaurosInfernoHit&&Math.abs(o.x-f.x)<78&&Math.abs(o.y-f.y)<74){f.flaurosInfernoHit=true;if(o.guard){damageHit(f,o,1.0,55*dir,10);spawnImpact(o.x,o.y,'guard');}else{spawnImpact(o.x,o.y,'hit');for(let i=0;i<5;i++)flaurosGroundClaws.push({owner:f,target:o,x:o.x,y:o.y,t:.10+i*.075,index:i,hit:false});}}
+        }
+      }
+    }
+
     if(f.specialType==='burningCyclone'){
       const other=f.isPlayer?enemy:player;
       const ang=burningCycloneAngle(f);
@@ -5820,6 +5877,15 @@ function drawBackground(dt){
           }
         } else if(f.specialType!=='seraphielGroundCyclone'){ f.spinAngle=0; f.seraphielCycloneHits=0; }
       });
+      flaurosGroundPillars.forEach(p=>{
+        p.t-=dt;
+        if(!p.fired&&p.t<=0){p.fired=true;p.t=.48;const target=p.owner&&p.owner.isPlayer?enemy:player;if(target&&!p.hit&&Math.abs(target.x-p.x)<54&&Math.abs(target.y-p.y)<190){p.hit=true;damageHit(p.owner,target,7.2*p.owner.damageMul,95*p.owner.face,-105);spawnImpact(target.x,target.y,'hit');}}
+      });
+      flaurosGroundPillars=flaurosGroundPillars.filter(p=>p.t>0||!p.fired);
+      flaurosGroundClaws.forEach(c=>{c.t-=dt;if(c.t<=0&&!c.hit&&c.target&&c.target.hp>0){c.hit=true;const last=c.index===4;damageHit(c.owner,c.target,(last?2.5:1.55)*c.owner.damageMul,(last?145:20)*c.owner.face,last?-75:-8);spawnImpact(c.target.x,c.target.y,'hit');}});
+      flaurosGroundClaws=flaurosGroundClaws.filter(c=>!c.hit);
+      flaurosGroundShots.forEach(q=>{q.t-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.spin+=dt*8;const target=q.owner&&q.owner.isPlayer?enemy:player;if(target&&!q.hit&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r){q.hit=true;damageHit(q.owner,target,3.1*q.owner.damageMul,105*q.owner.face,q.vy*.18);spawnImpact(target.x,target.y,'hit');}});
+      flaurosGroundShots=flaurosGroundShots.filter(q=>q.t>0&&!q.hit&&q.x>-100&&q.x<innerWidth+100&&q.y>-100&&q.y<innerHeight+100);
       seraphielGroundShots.forEach(q=>{
         q.t-=dt;q.x+=q.vx*dt;q.y+=(q.vy||0)*dt;q.phase=(q.phase||0)+dt*10;
         const target=q.owner&&q.owner.isPlayer?enemy:player;
@@ -7198,6 +7264,9 @@ toxicWaters.forEach(v=>{
     });
 
     // サタナエル固有エフェクト（水中2準拠）
+    flaurosGroundPillars.forEach(p=>{ctx.save();ctx.globalCompositeOperation='lighter';if(!p.fired){ctx.globalAlpha=.72;ctx.strokeStyle='#ff5138';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(p.x,p.y,42,10,0,0,Math.PI*2);ctx.stroke();}else{const g=ctx.createLinearGradient(p.x,p.y,p.x,p.y-175);g.addColorStop(0,'#ff281d');g.addColorStop(.48,'#ff7a28');g.addColorStop(1,'rgba(255,235,120,0)');ctx.fillStyle=g;ctx.shadowColor='#ff5a20';ctx.shadowBlur=25;ctx.beginPath();ctx.moveTo(p.x-30,p.y);ctx.quadraticCurveTo(p.x-18,p.y-105,p.x,p.y-178);ctx.quadraticCurveTo(p.x+22,p.y-100,p.x+30,p.y);ctx.fill();}ctx.restore();});
+    flaurosGroundClaws.forEach(c=>{if(c.t>.09)return;ctx.save();ctx.translate(c.x,c.y);ctx.globalCompositeOperation='lighter';ctx.strokeStyle='#ff3028';ctx.shadowColor='#ff1f18';ctx.shadowBlur=16;ctx.lineWidth=5;ctx.globalAlpha=.88;for(let j=-1;j<=1;j++){ctx.beginPath();ctx.moveTo(-34,-22+j*15);ctx.lineTo(36,18+j*15);ctx.stroke();}ctx.restore();});
+    flaurosGroundShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.spin);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff3a20';ctx.shadowBlur=20;ctx.strokeStyle='#ff4028';ctx.lineWidth=6;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(-18,i*8);ctx.quadraticCurveTo(0,-15+i*7,24,i*5);ctx.stroke();}ctx.strokeStyle='#ffd05a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-10,0);ctx.lineTo(27,0);ctx.stroke();ctx.restore();});
     satanaelGroundFlares.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff1826';ctx.shadowBlur=30;const g=ctx.createRadialGradient(-5,-5,2,0,0,q.r*1.45);g.addColorStop(0,'#ff6b45');g.addColorStop(.22,'#c0192b');g.addColorStop(.52,'#3b030c');g.addColorStop(.78,'#080106');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,q.r*1.45,0,Math.PI*2);ctx.fill();ctx.restore();});
     satanaelGroundRays.forEach(r=>{const elapsed=r.life-r.t;ctx.save();ctx.globalCompositeOperation='lighter';if(elapsed<.32){const p=Math.max(0,Math.min(1,elapsed/.32));ctx.globalAlpha=.35+.45*p;ctx.strokeStyle='#120008';ctx.lineWidth=2+5*p;ctx.shadowColor='#5b0018';ctx.shadowBlur=14;}else{ctx.globalAlpha=.96;ctx.strokeStyle='#020104';ctx.lineWidth=36;ctx.shadowColor='#42000f';ctx.shadowBlur=22;}ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();if(elapsed>=.32){ctx.strokeStyle='#1b0209';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.dir*innerWidth,r.y);ctx.stroke();}ctx.restore();});
     satanaelGroundPressures.forEach(p=>{const elapsed=p.life-p.t,progress=Math.max(0,Math.min(1,(elapsed-.08)/.60)),frontY=-120+progress*(innerHeight+170);ctx.save();const g=ctx.createLinearGradient(0,frontY-280,0,frontY+90);g.addColorStop(0,'rgba(3,0,8,.72)');g.addColorStop(.54,'rgba(10,0,18,.60)');g.addColorStop(.84,'rgba(103,0,31,.28)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,-10,innerWidth,Math.max(0,frontY+100));ctx.restore();});

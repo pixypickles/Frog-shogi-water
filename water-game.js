@@ -3230,7 +3230,7 @@
       jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック長押し → 離す：サンダーチャージ','下 ＋ パンチ：スパークバースト'],
       remiel:['上 ＋ ガード：ミラージュ（上）','下 ＋ ガード：ミラージュ（下）','後ろ ＋ ガード：ミラージュカウンター','前 ＋ ガード：アクアパリィ','前 ＋ パンチ：フロストショット','前 ＋ キック：ミラージュキック'],
       seraphiel:['上 ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 後ろ ＋ キック：セラフィックサイクロン','下 → 前 ＋ パンチ：セラフィックレイ'],
-      flauros:['上 ＋ パンチ：ヘルフレイム（相手の足元から火柱）','前 ＋ パンチ：フレイムクロー（3方向の炎爪）','前 ＋ キック：レオパードラッシュ','上 ＋ キック：インフェルノクロー（壁から急降下→時間差5連斬）'],
+      flauros:['上 ＋ パンチ：ヘルフレイム（相手の足元から火柱）','前 ＋ パンチ：フレイムクロー（3方向の炎爪）','前 ＋ キック：レオパードストライク','上 ＋ キック：インフェルノクロー（壁から急降下→時間差5連斬）'],
       satanael:[
       'ディザスターフレア：後ろ ＋ パンチ',
       'ダークレイ：前 ＋ パンチ',
@@ -5273,7 +5273,7 @@
   function specialLeopardRush(f){
     if(gameOver||!f||f.stun>0||f.guard||f.specialT>0)return false;
     f.specialType='leopardRush';f.specialT=.46;f.attack='kick';f.attackT=.46;f.flaurosRushHit=false;f.flaurosRushDir=f.face;f.vx=f.face*760;f.vy=-55;
-    comboEl.textContent='レオパードラッシュ!';return true;
+    comboEl.textContent='レオパードストライク!';return true;
   }
   function specialInfernoClaw(f){
     if(gameOver||!f||f.stun>0||f.guard||f.specialT>0)return false;
