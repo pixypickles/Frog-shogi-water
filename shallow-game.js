@@ -1898,7 +1898,7 @@
           ctx.restore();
         }
 
-        if(this.specialType==='uppercut' && this.specialT<=.54 && this.specialT>=.08){
+        if(this.specialType==='uppercut' && this.type!=='mob' && this.specialT<=.54 && this.specialT>=.08){
           drawBurningAura(48,-22,13,18,-.35);
         }
       }
