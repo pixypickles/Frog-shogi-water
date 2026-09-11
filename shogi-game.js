@@ -6,7 +6,7 @@ const PROMO_LABEL={R:'龍',B:'馬',S:'全',N:'圭',L:'杏',P:'と'};
 const ROLE_VALUE={K:10000,R:900,B:800,G:600,S:500,N:350,L:300,P:120};
 const TEAMS={
   angel:{label:'天使軍',promotionPawn:'kawazu',roles:{K:'seraphiel',R:'jihal',B:'yellow',G:'orange',S:'green',N:'blue',L:'remiel',P:'mob'}},
-  devil:{label:'悪魔軍',promotionPawn:'kokabiel',roles:{K:'satanael',R:'flauros',B:'beelzebub',G:'samael',S:'black',N:'purple',L:'sariel',P:'mob'}}
+  devil:{label:'悪魔軍',promotionPawn:'kokabiel_awakened',roles:{K:'satanael',R:'flauros',B:'beelzebub',G:'samael',S:'black',N:'purple',L:'sariel',P:'mob'}}
 };
 const STAGES={
   standard:{id:'standard',label:'標準盤',size:9,promoDepth:3},
@@ -45,7 +45,8 @@ const CHAR={
  black:{name:'ルシファーさん',body:'#3b3e47',eye:'#35bdf2',iris:'#101010',skills:['ヘルクラッシュ','アビスチャージ','アイスショット']},
  purple:{name:'リリスさん',body:'#f24ca5',eye:'#ff66b8',iris:'#111',skills:['舌ラッシュ','バブルショット','バックスピンキック','ドロップキック']},
  sariel:{name:'サリエルさん',body:'#5d6488',eye:'#d8ddf5',iris:'#991126',skills:['ルナ・スラッシュ（上下）','イーブルアイ','ブラッドムーン','ムーンサルトキック']},
- kokabiel:{name:'コカビエルさん',body:'#20263f',eye:'#63dbe7',iris:'#202738',skills:['成り専用ファイター','グラビティボール','メテオレイン']},
+ kokabiel:{name:'コカビエルさん',body:'#20263f',eye:'#63dbe7',iris:'#202738',skills:['グラビティボール','グラビティゾーン','メテオレイン','グラビティダイブ']},
+ kokabiel_awakened:{name:'覚醒コカビエルさん',body:'#151b35',eye:'#9ff7ff',iris:'#111a34',skills:['成り専用ファイター','グラビティボール×3','超重力グラビティゾーン','強化メテオレイン','強化グラビティダイブ']},
  mob:{name:'モブさん',body:'#9be348',eye:'#c9f57a',iris:'#29420f',skills:['前 ＋ パンチ：バブルショット（大きめ・ゆっくり）','上 ＋ パンチ：カエル跳びアッパー','前 ＋ キック：トリプルキック（横移動しながら3回）']}
 };
 
@@ -229,7 +230,7 @@ function completeBoardMove(fx,fy,tx,ty,wasCapture){
 }
 function showPromotionChoice(piece,after,forced){
   pendingMove={type:'promotionOnly',piece,after,forced};
-  const specialName=piece.team==='angel'?'カワズさん':'コカビエルさん';
+  const specialName=piece.team==='angel'?'カワズさん':'覚醒コカビエルさん';
   promoText.textContent=forced?`${charOf(piece).name}（${ROLE_NAME[piece.role]}）はこの位置では成りが必須です。`:`${charOf(piece).name}（${ROLE_NAME[piece.role]}）の成り方を選んでください。`;
   promoteSpecial.textContent=`${specialName}で成る`;promoteNo.hidden=forced;promoModal.hidden=false;
 }

@@ -158,6 +158,7 @@
     orange:  { speed: 142, tongue: 215, damage: 1.05, defense:1.28, sink:9, hue:0, scale:1.10 },
     sariel:{speed:160,tongue:190,damage:1.01,defense:1.00,sink:7,hue:0,scale:1.02},
     kokabiel:{speed:152,tongue:190,damage:1.00,defense:1.04,sink:8,hue:0,scale:1.04},
+    kokabiel_awakened:{speed:162,tongue:195,damage:1.10,defense:1.08,sink:9,hue:0,scale:1.07},
     jihal:{speed:184,tongue:190,damage:1.02,defense:.97,sink:5,hue:0,scale:1.00},
     remiel:{speed:170,tongue:205,damage:.98,defense:1.00,sink:5,hue:0,scale:1.00},
     seraphiel:{speed:178,tongue:205,damage:1.24,defense:.84,sink:5,hue:0,scale:1.02},
@@ -758,6 +759,7 @@
     if(type==='flauros')return {body:'#e20b22',limb:'#c40a1d',light:'#ff4c42',belly:'#f39a75',eyeBump:'#ee2635'};
     if(type==='samael')return {body:'#2b193d',limb:'#231431',light:'#7760be',belly:'#a38bd2',eyeBump:'#4a3564'};
     if(type==='sariel')return {body:'#5d6488',limb:'#4d5476',light:'#8d96ba',belly:'#c5cbe1',eyeBump:'#70789d'};
+    if(type==='kokabiel_awakened')return {body:'#151b35',limb:'#10172f',light:'#b8fbff',belly:'#9cebf2',eyeBump:'#9ff7ff'};
     if(type==='kokabiel')return {body:'#20263f',limb:'#181e34',light:'#63dbe7',belly:'#8dcfd8',eyeBump:'#34405f'};
     if(type==='kawazu'){
       return {
@@ -1211,10 +1213,10 @@
       }
 
       // コカビエル：グラビティダイブは一度ふわっと上昇してから前方斜め下へ急降下。
-      if(this.type==='kokabiel' && this.specialType==='kokabielGroundDive' && this.specialT>0){
-        const d=this.gravityDiveDir||this.face||1;
-        if(this.specialT>.56){ this.vx=d*85; this.vy=Math.min(this.vy,-175); }
-        else { this.vx=d*330; this.vy=500; }
+      if((this.type==='kokabiel'||this.type==='kokabiel_awakened') && this.specialType==='kokabielGroundDive' && this.specialT>0){
+        const d=this.gravityDiveDir||this.face||1,aw=this.type==='kokabiel_awakened';
+        if(this.specialT>(aw?.72:.56)){ this.vx=d*(aw?125:85); this.vy=Math.min(this.vy,aw?-205:-175); }
+        else { this.vx=d*(aw?470:330); this.vy=aw?545:500; }
       }
 
       this.x += this.vx * dt;
@@ -2786,7 +2788,7 @@
   }
 
 
-  const playableTypes=['green','blue','black','purple','yellow','orange','mob','jihal','remiel','seraphiel','sariel','kokabiel','flauros','samael','satanael','beelzebub','piranha','crayfish'].concat(isKawazuUnlocked()?['kawazu']:[]);
+  const playableTypes=['green','blue','black','purple','yellow','orange','mob','jihal','remiel','seraphiel','sariel','kokabiel','kokabiel_awakened','flauros','samael','satanael','beelzebub','piranha','crayfish'].concat(isKawazuUnlocked()?['kawazu']:[]);
 
   function practiceSpecialText(type){
     const map={
@@ -2797,6 +2799,7 @@
       seraphiel:['↑ ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 後ろ ＋ キック：セラフィックサイクロン','下 → 前 ＋ パンチ：セラフィックレイ'],
       sariel:['↑ ＋ パンチ：ルナ・スラッシュ（上弧）','↓ ＋ パンチ：ルナ・スラッシュ（下弧）','前 ＋ ガード：イーブルアイ（3秒麻痺）','後ろ ＋ ガード：ブラッドムーン（成立で10秒スロー）','↑ ＋ キック：ムーンサルトキック（回転多段）'],
       kokabiel:['前 ＋ パンチ：グラビティボール','後ろ ＋ ガード：グラビティゾーン','下 ＋ パンチ：メテオレイン','下 ＋ キック：グラビティダイブ'],
+      kokabiel_awakened:['前 ＋ パンチ：グラビティボール×3','後ろ ＋ ガード：超重力グラビティゾーン','下 ＋ パンチ：強化メテオレイン','下 ＋ キック：強化グラビティダイブ'],
       flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードストライク','↑ ＋ キック：インフェルノクロー'],
       samael:['方向 ＋ パンチ：ポイズンゲート（指定方向に毒の発生点 → 相手へ毒弾）','舌：ヴェノムタン（舌先から毒弾）','前 → 下 → 後ろ ＋ キック：デッドリー・アクア'],
       satanael:['ディザスターフレア：後ろ ＋ パンチ','ダークレイ：前 ＋ パンチ','ダークプレッシャー：下 ＋ ガード','インフェルノウェーブ：下 ＋ キック'],
@@ -2838,7 +2841,7 @@
       'モブ':'mob','モブさん':'mob','mobAngel':'mob','mobDevil':'mob','mob':'mob',
       'セラフィエル':'seraphiel','セラフィエルさん':'seraphiel','ジィハル':'jihal','ジィハルさん':'jihal',
       'レミエル':'remiel','レミエルさん':'remiel','サリエル':'sariel','サリエルさん':'sariel',
-      'コカビエル':'kokabiel','コカビエルさん':'kokabiel','フラウロス':'flauros','フラウロスさん':'flauros',
+      'コカビエル':'kokabiel','コカビエルさん':'kokabiel','覚醒コカビエル':'kokabiel_awakened','覚醒コカビエルさん':'kokabiel_awakened','フラウロス':'flauros','フラウロスさん':'flauros',
       'サマエル':'samael','サマエルさん':'samael','サタナエル':'satanael','サタナエルさん':'satanael',
       'カワズ':'kawazu','カワズさん':'kawazu',
       'ミカエル':'green','ミカエルさん':'green','ガブリエル':'blue','ガブリエルさん':'blue',
@@ -2878,7 +2881,7 @@
   function fighterDisplayName(type){
     return {
       mob:'モブさん', seraphiel:'セラフィエルさん', jihal:'ジィハルさん', remiel:'レミエルさん',
-      satanael:'サタナエルさん', flauros:'フラウロスさん', samael:'サマエルさん', sariel:'サリエルさん', kokabiel:'コカビエルさん',
+      satanael:'サタナエルさん', flauros:'フラウロスさん', samael:'サマエルさん', sariel:'サリエルさん', kokabiel:'コカビエルさん', kokabiel_awakened:'覚醒コカビエルさん',
       green:'ミカエルさん', blue:'ガブリエルさん', black:'ルシファーさん',
       purple:'リリスさん', yellow:'ラファエルさん', orange:'ウリエルさん',
       piranha:'アザゼルさん', crayfish:'ベリアルさん',
@@ -4507,7 +4510,7 @@
       if(kind==='guard'&&compatDir(f,'forward',forward,520)){clearCommand();return specialSarielGroundEvilEye(f);}
       if(kind==='guard'&&compatDir(f,'back',back,520)){clearCommand();return specialSarielGroundBloodMoon(f);}
     }
-    if(f.type==='kokabiel'){
+    if((f.type==='kokabiel'||f.type==='kokabiel_awakened')){
       if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return specialKokabielGroundMeteor(f);}
       if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return specialKokabielGroundBall(f);}
       if(kind==='kick'&&compatDir(f,'down','down',520)){clearCommand();return specialKokabielGroundDive(f);}
@@ -4538,24 +4541,24 @@
 
   // v2.7.2 サリエル: 水中2の月刃・邪眼・血月・ムーンサルトを地上向けに移植。
   function specialKokabielGroundBall(f){
-    if(gameOver||!f||f.type!=='kokabiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    f.specialType='kokabielGroundBall';f.specialT=.54;f.attack='punch';f.attackT=.54;
-    kokabielGroundBalls.push({owner:f,x:f.x+(f.face||1)*48,y:f.y-8,vx:(f.face||1)*185,vy:0,r:20,t:4,damage:4.4,reflects:0,maxReflect:4,pull:210});compatLabel('グラビティボール…');return true;
+    if(gameOver||!f||!(f.type==='kokabiel'||f.type==='kokabiel_awakened')||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const aw=f.type==='kokabiel_awakened';f.specialType='kokabielGroundBall';f.specialT=.54;f.attack='punch';f.attackT=.54;
+    (aw?[-40,0,40]:[0]).forEach(vy=>kokabielGroundBalls.push({owner:f,x:f.x+(f.face||1)*48,y:f.y-8,vx:(f.face||1)*(aw?210:185),vy,r:aw?22:20,t:4.4,damage:aw?4.8:4.4,reflects:0,maxReflect:4,pull:aw?285:210}));compatLabel(aw?'覚醒グラビティボール×3!':'グラビティボール…');return true;
   }
   function specialKokabielGroundZone(f){
-    if(gameOver||!f||f.type!=='kokabiel'||f.stun>0||f.specialT>0)return false;
+    if(gameOver||!f||!(f.type==='kokabiel'||f.type==='kokabiel_awakened')||f.stun>0||f.specialT>0)return false;
     f.guard=false;f.specialType='kokabielGroundZone';f.specialT=.58;const t=f.isPlayer?enemy:player;
     const x=t?Math.max(80,Math.min(innerWidth-80,t.x-(f.face||1)*85)):f.x+(f.face||1)*150;const y=t?t.y:f.y;
-    kokabielGroundZones=kokabielGroundZones.filter(z=>z.owner!==f);kokabielGroundZones.push({owner:f,x,y,r:22,maxR:132,t:3.2,life:3.2,arm:.42});compatLabel('グラビティゾーン…');return true;
+    const aw=f.type==='kokabiel_awakened';kokabielGroundZones=kokabielGroundZones.filter(z=>z.owner!==f);kokabielGroundZones.push({owner:f,x,y,r:22,maxR:aw?178:132,t:aw?6.2:3.2,life:aw?6.2:3.2,arm:.42,strength:aw?2.15:1});compatLabel(aw?'超重力グラビティゾーン…':'グラビティゾーン…');return true;
   }
   function specialKokabielGroundMeteor(f){
-    if(gameOver||!f||f.type!=='kokabiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;const t=f.isPlayer?enemy:player;if(!t)return false;
-    f.specialType='kokabielGroundMeteor';f.specialT=.85;f.attack='punch';f.attackT=.42;const base=t.x,offs=[-90,-38,35,82,0];
-    offs.forEach((ox,i)=>kokabielGroundMeteors.push({owner:f,x:Math.max(55,Math.min(innerWidth-55,base+ox)),y:-45-i*18,vy:265+i*18,r:18+(i%2)*3,delay:.18+i*.13,t:2.4,active:false,damage:4}));compatLabel('メテオレイン…');return true;
+    if(gameOver||!f||!(f.type==='kokabiel'||f.type==='kokabiel_awakened')||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;const t=f.isPlayer?enemy:player;if(!t)return false;
+    const aw=f.type==='kokabiel_awakened';f.specialType='kokabielGroundMeteor';f.specialT=.85;f.attack='punch';f.attackT=.42;const base=t.x,offs=aw?[-145,-105,-65,-25,15,55,95,135,0]:[-90,-38,35,82,0];
+    offs.forEach((ox,i)=>kokabielGroundMeteors.push({owner:f,x:Math.max(55,Math.min(innerWidth-55,base+ox)),y:-45-i*14,vy:(aw?315:265)+i*(aw?12:18),r:(aw?22:18)+(i%2)*3,delay:(aw?.08:.18)+i*(aw?.075:.13),t:aw?3.0:2.4,active:false,damage:aw?5.2:4}));compatLabel(aw?'強化メテオレイン!':'メテオレイン…');return true;
   }
   function specialKokabielGroundDive(f){
-    if(gameOver||!f||f.type!=='kokabiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    f.specialType='kokabielGroundDive';f.specialT=.82;f.attack='kick';f.attackT=.82;f.gravityDiveHit=false;f.gravityDiveDir=f.face||1;f.vx=f.gravityDiveDir*85;f.vy=-310;compatLabel('グラビティダイブ!');return true;
+    if(gameOver||!f||!(f.type==='kokabiel'||f.type==='kokabiel_awakened')||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const aw=f.type==='kokabiel_awakened';f.specialType='kokabielGroundDive';f.specialT=aw?1.02:.82;f.attack='kick';f.attackT=f.specialT;f.gravityDiveHit=false;f.gravityDiveDir=f.face||1;f.vx=f.gravityDiveDir*(aw?125:85);f.vy=aw?-345:-310;compatLabel(aw?'強化グラビティダイブ!':'グラビティダイブ!');return true;
   }
 
   function specialSarielGroundLuna(f,arc){
@@ -5235,7 +5238,7 @@
           // サリエル：前/後ろ＋ガードは通常ガードより先に邪眼/血月を発動。
           if(player.type==='sariel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
           // コカビエル：後ろ＋ガードは通常ガードより先にグラビティゾーン。
-          if(player.type==='kokabiel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
+          if((player.type==='kokabiel'||player.type==='kokabiel_awakened') && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
           // サタナエル：下＋ガードは通常ガードより優先してダークプレッシャー。
           if(player.type==='satanael' && !player.throwState && input.y>.35){
             player.guard=false; player.attackT=0; player.attack=null;
@@ -5473,7 +5476,7 @@
       const forward=player.face>0?'right':'left', back=player.face>0?'left':'right';
       if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
       if(player.type==='sariel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
-      if(player.type==='kokabiel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
+      if((player.type==='kokabiel'||player.type==='kokabiel_awakened') && tryV2CompatSpecial(player,'guard',forward,back)) return;
       if(player.type==='black'){
         const backHeld=(player.face>0&&keys['a'])||(player.face<0&&keys['d']);
         if(backHeld){player.guard=false;player.attackT=0;player.attack=null;if(specialLuciferIceWall(player))return;}
@@ -5525,7 +5528,7 @@
         if(r<.75){specialSatanaelGroundPressure(enemy);return;}
         specialSatanaelGroundWave(enemy);return;
       }
-      if(['mob','jihal','sariel','kokabiel','flauros','samael'].includes(enemy.type) && enemy.specialT<=0 && Math.random()<dt*.22*diff.attack){
+      if(['mob','jihal','sariel','kokabiel','kokabiel_awakened','flauros','samael'].includes(enemy.type) && enemy.specialT<=0 && Math.random()<dt*.22*diff.attack){
         const oldFace=enemy.face; enemy.face=dx>=0?1:-1;
         const pool={mob:['shot','upper','rush'],jihal:['shot','rush','burst'],remiel:['shot','rush'],seraphiel:['shot','upper','rush'],sariel:['shot','upper'],kokabiel:['shot','rush','burst'],flauros:['shot','upper','rush'],samael:['shot','rush'],satanael:['shot','upper','rush','burst']}[enemy.type]||['shot'];
         const pick=pool[(Math.random()*pool.length)|0];
@@ -6056,9 +6059,9 @@ function drawBackground(dt){
       });
       kokabielGroundBalls.forEach(q=>{q.t-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;const t=q.owner.isPlayer?enemy:player;if(!t||q.t<=0)return;const dx=q.x-t.x,dy=q.y-t.y,d=Math.hypot(dx,dy)||1;if(d<230){const ff=(1-d/230)*q.pull+28;t.vx+=dx/d*ff*dt;t.vy+=dy/d*ff*.72*dt;}if(Math.abs(q.x-t.x)<t.radius+q.r+8&&Math.abs(q.y-t.y)<t.radius+q.r+8){if(t.guard){q.owner=t;q.vx=-q.vx*1.05;q.reflects++;q.x=t.x+Math.sign(q.vx)*56;spawnImpact(t.x,t.y,'guard');if(q.reflects>=q.maxReflect)q.t=0;}else{damageHit(q.owner,t,q.damage,Math.sign(q.vx)*100,-24);spawnImpact(q.x,q.y,'hit');q.t=0;}}});
       kokabielGroundBalls=kokabielGroundBalls.filter(q=>q.t>0&&q.x>-100&&q.x<innerWidth+100);
-      kokabielGroundZones.forEach(z=>{z.t-=dt;z.arm=Math.max(0,z.arm-dt);const t=z.owner.isPlayer?enemy:player;if(!t||z.t<=0)return;const dx=z.x-t.x,dy=z.y-t.y,d=Math.hypot(dx,dy)||1;if(z.arm<=0&&d<z.maxR){const ff=(1-d/z.maxR)*520+95;t.vx+=dx/d*ff*dt;t.vy+=dy/d*ff*.78*dt;}});kokabielGroundZones=kokabielGroundZones.filter(z=>z.t>0);
+      kokabielGroundZones.forEach(z=>{z.t-=dt;z.arm=Math.max(0,z.arm-dt);const t=z.owner.isPlayer?enemy:player;if(!t||z.t<=0)return;const dx=z.x-t.x,dy=z.y-t.y,d=Math.hypot(dx,dy)||1;if(z.arm<=0&&d<z.maxR){const ff=((1-d/z.maxR)*520+95)*(z.strength||1);t.vx+=dx/d*ff*dt;t.vy+=dy/d*ff*.78*dt;}});kokabielGroundZones=kokabielGroundZones.filter(z=>z.t>0);
       kokabielGroundMeteors.forEach(m=>{m.t-=dt;if(!m.active){m.delay-=dt;if(m.delay<=0)m.active=true;}if(!m.active)return;m.y+=m.vy*dt;const t=m.owner.isPlayer?enemy:player;if(t&&Math.abs(m.x-t.x)<t.radius+m.r&&Math.abs(m.y-t.y)<t.radius+m.r){if(t.guard){damageHit(m.owner,t,1.3,0,35);spawnImpact(t.x,t.y,'guard');}else{damageHit(m.owner,t,m.damage,Math.sign(t.x-m.x||1)*55,160);spawnImpact(m.x,m.y,'hit');}m.t=0;}});kokabielGroundMeteors=kokabielGroundMeteors.filter(m=>m.t>0&&m.y<innerHeight+90);
-      [player,enemy].forEach(f=>{if(!f||f.type!=='kokabiel')return;const o=f.isPlayer?enemy:player;if(f.specialType==='kokabielGroundDive'&&f.specialT>0&&o&&!f.gravityDiveHit&&Math.abs(f.x-o.x)<88&&Math.abs(f.y-o.y)<92){f.gravityDiveHit=true;damageHit(f,o,8.2*f.damageMul,145*(f.face||1),135);o.gravityHeavyT=2.25;o.vy=Math.max(o.vy,180);spawnImpact(o.x,o.y,'hit');compatLabel('ヘヴィ・グラビティ!');}});
+      [player,enemy].forEach(f=>{if(!f||!(f.type==='kokabiel'||f.type==='kokabiel_awakened'))return;const o=f.isPlayer?enemy:player;if(f.specialType==='kokabielGroundDive'&&f.specialT>0&&o&&!f.gravityDiveHit&&Math.abs(f.x-o.x)<88&&Math.abs(f.y-o.y)<92){f.gravityDiveHit=true;damageHit(f,o,8.2*f.damageMul,145*(f.face||1),135);o.gravityHeavyT=f.type==='kokabiel_awakened'?5.2:2.25;o.vy=Math.max(o.vy,180);spawnImpact(o.x,o.y,'hit');compatLabel('ヘヴィ・グラビティ!');}});
 
       sarielGroundSlashes.forEach(q=>{
         q.t-=dt;q.age+=dt;const p=Math.min(1,q.age/1.45),a=Math.PI*p;
