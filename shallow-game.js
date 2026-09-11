@@ -411,9 +411,10 @@
       'セイリング・ウェブ：↓ ↑ ＋ パンチ'
     ],
     beelzebub:[
-      'ヴェノム・ウォーター：方向キー1回転 ＋ ガード',
-      'フィッシュ・レイド：↓ → ＋ パンチ',
-      'アビスショック：↓ → ＋ キック'
+      'ヴェノム・ウォーター：下 → 後ろ ＋ ガード（毒液3方向・着地後に毒霧）',
+      '上 ＋ パンチ：アビスショック（上弧）',
+      '下 ＋ キック：アビスショック（下弧）',
+      '前 ＋ パンチ：ベノムショット（高速の単発毒液）'
     ],
     kawazu:[
       '水圧ラッシュ：パンチ連打',
@@ -3121,7 +3122,7 @@
     f.specialT=.78;
     f.specialHitDone=false;
     f.attack='punch';
-    f.attackVariant='up';
+    f.attackVariant=arcDir<0?'up':'down';
     f.attackT=.78;
 
     // 手元から斜め前上へ。画面上端を越える長さにしておく。
@@ -3459,7 +3460,7 @@
     f.specialT=.72;
     f.specialHitDone=false;
     f.attack='punch';
-    f.attackVariant='up';
+    f.attackVariant=arcDir<0?'up':'down';
     f.attackT=.72;
 
     // 一瞬しゃがんだ後に、画面上方向へ強く跳ぶ
@@ -3555,8 +3556,19 @@
       });
     });
 
-    comboEl.textContent='ヴェノム・ファウンテン!';
-    setTimeout(()=>{if(comboEl.textContent==='ヴェノム・ファウンテン!')comboEl.textContent='';},800);
+    comboEl.textContent='ヴェノム・ウォーター!';
+    setTimeout(()=>{if(comboEl.textContent==='ヴェノム・ウォーター!')comboEl.textContent='';},800);
+    clearCommand(); return true;
+  }
+
+  function specialGroundVenomShot(f){
+    if(gameOver || !f || f.stun>0 || f.specialT>0 || f.bossSpecialCooldown>0) return false;
+    f.guard=false; f.specialType='venomShot'; f.specialT=.34; f.attack='punch'; f.attackT=.34; f.bossSpecialCooldown=.72;
+    // ヴェノム・ウォーターの単発版。前方速度を強くし、少しだけ上へ噴き出して落下する。
+    toxicWaters.push({owner:f,t:4.4,life:4.4,tick:0,x:f.x+f.face*42,y:f.y-18,
+      vx:f.face*720,vy:-235,r:18,landed:false,seed:Math.random()*1000,airHitAt:0});
+    comboEl.textContent='ベノムショット!';
+    setTimeout(()=>{if(comboEl.textContent==='ベノムショット!')comboEl.textContent='';},650);
     clearCommand(); return true;
   }
 
@@ -3593,13 +3605,13 @@
     return true;
   }
 
-  function specialAbyssShock(f){
+  function specialAbyssShock(f,arcDir=-1){
     if(gameOver || !f || f.stun>0 || f.specialT>0 || f.bossSpecialCooldown>0) return false;
 
     f.specialType='abyssShock';
     f.specialT=.68;
     f.attack='kick';
-    f.attackVariant='up';
+    f.attackVariant=arcDir<0?'up':'down';
     f.attackT=.68;
     f.bossSpecialCooldown=1.7;
 
@@ -3608,9 +3620,9 @@
       abyssShocks.push({
         owner:f,
         x:f.x+f.face*48,
-        y:f.y+42,
+        y:f.y+(arcDir<0?30:58),
         vx:f.face*430,
-        vy:-120,
+        vy:arcDir<0?-170:145,
         t:1.5,
         life:1.5,
         r:58,
@@ -4090,7 +4102,7 @@
       if(gameOver||!target||f.specialType!=='kawazuCrossRush')return;
       const margin=86,leftX=Math.max(58,target.x-margin),rightX=Math.min(innerWidth-58,target.x+margin);
       const y=Math.max(72,Math.min(innerHeight-72,target.y-4));
-      f.x=firstSide>0?rightX:leftX; f.y=y; f.face=target.x>=f.x?1:-1; f.attack='punch'; f.attackVariant='up';
+      f.x=firstSide>0?rightX:leftX; f.y=y; f.face=target.x>=f.x?1:-1; f.attack='punch'; f.attackVariant=arcDir<0?'up':'down';
       leaveGhost(leftX,y,0,.24);leaveGhost(rightX,y,0,.24);
       leaveGhost(leftX+(target.x-leftX)*.28,y-5,0,.13);leaveGhost(rightX+(target.x-rightX)*.28,y-5,0,.13);
       spawnImpact(target.x-24,target.y+4,'guard');spawnImpact(target.x+24,target.y+4,'guard');
@@ -4369,7 +4381,7 @@
   // v2.3.5 セラフィエル: 水中2の固有技を蓮/浅瀬向けに専用実装。
   function specialSeraphielGroundUpper(f){
     if(gameOver||!f||f.type!=='seraphiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    f.specialType='seraphielGroundUpper';f.specialT=.68;f.attack='punch';f.attackVariant='up';f.attackT=.68;f.seraphicAura='hand';f.seraphicAuraT=.68;
+    f.specialType='seraphielGroundUpper';f.specialT=.68;f.attack='punch';f.attackVariant=arcDir<0?'up':'down';f.attackT=.68;f.seraphicAura='hand';f.seraphicAuraT=.68;
     f.vx=f.face*120;f.vy=-430;f.seraphielHit=false;compatLabel('セラフィックアッパー!');return true;
   }
   function specialSeraphielGroundKick(f){
@@ -4599,11 +4611,10 @@
     }
 
     if(f.type==='beelzebub'){
-      const downForward=f.face>0?'downRight':'downLeft';
-      const bossQuarterCommand=
-        hasCommand(['down',forward],850)||hasCommand(['down',downForward],850)||hasCommand([downForward,forward],850);
-      if(kind==='punch' && bossQuarterCommand) return specialFishRaid(f);
-      if(kind==='kick' && bossQuarterCommand) return specialAbyssShock(f);
+      const forwardHeld=(f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35);
+      if(kind==='punch' && input.y<-.35){ clearCommand(); return specialAbyssShock(f,-1); }
+      if(kind==='kick' && input.y>.35){ clearCommand(); return specialAbyssShock(f,1); }
+      if(kind==='punch' && forwardHeld){ clearCommand(); return specialGroundVenomShot(f); }
     }
 
     return false;
@@ -5190,8 +5201,8 @@
             }
           }
 
-          // ベルゼブブさん：方向キー1回転＋ガードで毒水
-          if(player.type==='beelzebub' && !player.throwState && hasFullCircle(1100)){
+          // ベルゼブブさん：水中版と同じく「下 → 後ろ ＋ ガード」でヴェノム・ウォーター。
+          if(player.type==='beelzebub' && !player.throwState && hasCommand(['down',player.face>0?'left':'right'],850)){
             if(specialVenomWater(player)){
               btn.classList.remove('pressed');
               return;
@@ -5427,8 +5438,9 @@
       if(enemy.type==='beelzebub' && enemy.specialT<=0 && enemy.bossSpecialCooldown<=0){
         const roll=Math.random();
         if(roll<dt*.16){ specialVenomWater(enemy); return; }
-        if(roll<dt*.34){ specialFishRaid(enemy); return; }
-        if(roll<dt*.52){ specialAbyssShock(enemy); return; }
+        if(roll<dt*.34){ specialGroundVenomShot(enemy); return; }
+        if(roll<dt*.43){ specialAbyssShock(enemy,-1); return; }
+        if(roll<dt*.52){ specialAbyssShock(enemy,1); return; }
       }
 
       // 地上CPU。カエルは横追尾＋自動ジャンプ。
