@@ -88,6 +88,7 @@
   let ceilingWebs = [];
   let belialPoisonShots = [];
   let catfishCharges = [];
+  let lilithBubbleShots = [];
   let pressureBlades = [];
   let jihalGroundBolts = [];
   let jihalGroundSparks = [];
@@ -385,9 +386,10 @@
       'アイスウォール：後ろ ＋ ガード'
     ],
     purple:[
-      'リボンラッシュ：舌 ×3',
-      'ゲンゴロウ突進：後ろ ＋ ガード ×2',
-      'バックスピンキック：後ろ ＋ キック（追加入力で追加回転）'
+      '舌ラッシュ：舌連打',
+      'バブルショット：後ろ ＋ 舌',
+      'バックスピンキック：後ろ ＋ キック（追加入力で追加回転）',
+      'ドロップキック：前 ＋ キック'
     ],
     yellow:[
       'エアカッター（正面）：前 ＋ パンチ',
@@ -1875,7 +1877,7 @@
       }
 
       // キックは脚だけ前へ
-      if(this.attack==='kick' && this.specialType!=='dropkick' && this.specialType!=='aquaStream' && this.specialType!=='lilithBackSpin'){
+      if(this.attack==='kick' && this.specialType!=='dropkick' && this.specialType!=='aquaStream' && this.specialType!=='lilithBackSpin' && this.specialType!=='lilithDropKick'){
         ctx.save();
         ctx.filter='none';
         ctx.strokeStyle=pal.limb;
@@ -1906,6 +1908,17 @@
       if(this.specialType==='lilithBackSpin'){
         ctx.save(); ctx.filter='none'; ctx.strokeStyle=pal.limb; ctx.lineWidth=13; ctx.lineCap='round';
         ctx.beginPath(); ctx.moveTo(-13,45); ctx.lineTo(-58,46); ctx.moveTo(13,45); ctx.lineTo(58,46); ctx.stroke();
+        ctx.restore();
+      }
+
+
+      if(this.specialType==='lilithDropKick'){
+        ctx.save(); ctx.filter='none'; ctx.strokeStyle=pal.limb; ctx.lineWidth=13; ctx.lineCap='round';
+        // 横倒し気味の両脚を前へ揃えて突き出す。
+        ctx.beginPath();
+        ctx.moveTo(-11,45); ctx.lineTo(58,26);
+        ctx.moveTo( 12,46); ctx.lineTo(66,36);
+        ctx.stroke();
         ctx.restore();
       }
 
@@ -2509,7 +2522,7 @@
     }));
 
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[];
-    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
+    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
 
     for(let i=0;i<12;i++){
       spawnLeafTarget(i,true);
@@ -2593,7 +2606,7 @@
     if(practiceExitButton){practiceExitButton.hidden=false;practiceExitButton.textContent='ミニゲーム終了';}
     if(practiceLabel) practiceLabel.style.display='none';
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[]; siltClouds=[];
-    catfishCharges=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
+    catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
 
     // 最初は1体だけ。いきなり複数が同時に来ないようにする。
     spawnGuardTarget();
@@ -2780,12 +2793,12 @@
     guardWaves=[];
     aquaTornadoes=[]; aquaVortices=[];
     siltClouds=[];
-    catfishCharges=[];
+    catfishCharges=[]; lilithBubbleShots=[];
     pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[];
     burstWaves=[];
     aquaTornadoes=[]; aquaVortices=[];
     siltClouds=[];
-    catfishCharges=[];
+    catfishCharges=[]; lilithBubbleShots=[];
     burstWaves=[];
 
     if(practiceExitButton) practiceExitButton.hidden=false;
@@ -2903,7 +2916,7 @@
 
   function resetBattleEffects(){
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[];
-    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
+    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
     leafTargets=[]; guardTargets=[]; toxicWaters=[]; bossFish=[]; abyssShocks=[]; kawazuShots=[]; kawazuGhosts=[];
   }
 
@@ -3171,9 +3184,9 @@
     f.attackT=.82;
     f.ribbonWhipIndex=0;
 
-    comboEl.textContent='リボンラッシュ!';
+    comboEl.textContent='舌ラッシュ!';
     setTimeout(()=>{
-      if(comboEl.textContent==='リボンラッシュ!') comboEl.textContent='';
+      if(comboEl.textContent==='舌ラッシュ!') comboEl.textContent='';
     },720);
 
     // 百裂キック風：舌先を高速で7回突き出す。
@@ -3454,6 +3467,27 @@
     f.vx-=f.face*285; f.vy*=.25;
     comboEl.textContent='バックスピンキック!';
     setTimeout(()=>{if(comboEl.textContent==='バックスピンキック!')comboEl.textContent='';},600);
+    return true;
+  }
+
+
+  function specialLilithBubbleShot(f){
+    if(gameOver||!f||f.type!=='purple'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const dir=f.face;
+    f.specialType='lilithBubbleShot'; f.specialT=.34; f.attack='tongue'; f.attackT=.34;
+    lilithBubbleShots.push({owner:f,x:f.x+dir*58,y:f.y+5,vx:dir*175,vy:-10,r:20,t:4.2,phase:Math.random()*6.28,hit:false});
+    comboEl.textContent='バブルショット!';
+    setTimeout(()=>{if(comboEl.textContent==='バブルショット!')comboEl.textContent='';},600);
+    return true;
+  }
+
+  function specialLilithDropKick(f){
+    if(gameOver||!f||f.type!=='purple'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='lilithDropKick'; f.specialT=.72; f.attack='kick'; f.attackT=.72; f.attackVariant='mid';
+    f.lilithDropStart=performance.now(); f.lilithDropHitDone=false;
+    f.vx=f.face*560; f.vy=Math.min(f.vy,-35);
+    comboEl.textContent='ドロップキック!';
+    setTimeout(()=>{if(comboEl.textContent==='ドロップキック!')comboEl.textContent='';},620);
     return true;
   }
 
@@ -4619,6 +4653,15 @@
       if(kind==='punch' && ((f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35))){ clearCommand(); return specialLuciferIceShot(f); }
     }
 
+
+    // リリス：水中2と同じ4技。地上でも入力と性質を統一。
+    if(f.type==='purple'){
+      const forwardHeld=(f.face>0&&input.x>.35)||(f.face<0&&input.x<-.35);
+      const backHeld=(f.face>0&&input.x<-.35)||(f.face<0&&input.x>.35);
+      if(kind==='tongue' && backHeld){ clearCommand(); return specialLilithBubbleShot(f); }
+      if(kind==='kick' && forwardHeld){ clearCommand(); return specialLilithDropKick(f); }
+    }
+
     if(f.type==='piranha'){
       if(!true && kind==='tongue' && hasCommand([back,forward],850)){
         clearCommand(); return specialPiranhaRush(f);
@@ -5271,7 +5314,7 @@
           }
 
           // リリスさん：後ろを入れたまま、または直前に後ろ入力してガード×2。
-          if(player.type==='purple' && !player.throwState){
+          if(false && player.type==='purple' && !player.throwState){
             const now=performance.now();
 
             // 現在のスティック方向も直接見る。
@@ -5623,6 +5666,18 @@
 
   function updateNewSpecialMoves(f,dt){
     if(!f) return;
+
+    if(f.specialType==='lilithDropKick'){
+      const other=f.isPlayer?enemy:player;
+      f.vx=f.face*560;
+      f.vy*=.78;
+      if(other && !f.lilithDropHitDone && Math.abs(other.x-f.x)<82 && Math.abs(other.y-f.y)<66){
+        f.lilithDropHitDone=true;
+        damageHit(f,other,7.2*f.damageMul,245*f.face,-72);
+        spawnImpact(other.x,other.y,'hit');
+      }
+    }
+
 
 
     if(f.type==='flauros'){
@@ -6588,6 +6643,20 @@ function drawBackground(dt){
       });
       catfishCharges=catfishCharges.filter(n=>n.t>0);
 
+
+      lilithBubbleShots.forEach(b=>{
+        b.t-=dt; b.phase+=dt*5.2;
+        b.x+=b.vx*dt; b.y+=(b.vy+Math.sin(b.phase)*14)*dt;
+        const target=b.owner&&b.owner.isPlayer?enemy:player;
+        if(!b.hit&&target&&Math.hypot(target.x-b.x,target.y-b.y)<target.radius+b.r){
+          b.hit=true;
+          if(projectileImmuneByBubble(target)) spawnImpact(target.x,target.y,'guard');
+          else { b.owner._projectileHit=true; damageHit(b.owner,target,3.0*b.owner.damageMul,92*Math.sign(b.vx||1),-24); b.owner._projectileHit=false; }
+          b.t=0;
+        }
+      });
+      lilithBubbleShots=lilithBubbleShots.filter(b=>b.t>0&&b.x>-80&&b.x<innerWidth+80&&b.y>-80&&b.y<innerHeight+80);
+
     burstWaves.forEach(b=>{b.t-=dt;});
       burstWaves=burstWaves.filter(b=>b.t>0);
 
@@ -7210,6 +7279,17 @@ toxicWaters.forEach(v=>{
       ctx.arc(-44,-3,2,0,Math.PI*2);
       ctx.fill();
 
+      ctx.restore();
+    });
+
+
+    lilithBubbleShots.forEach(b=>{
+      const a=Math.max(0,Math.min(1,b.t/.35));
+      ctx.save(); ctx.translate(b.x,b.y); ctx.globalCompositeOperation='lighter';
+      ctx.globalAlpha=.24*a; ctx.fillStyle='#8fe8ff'; ctx.beginPath(); ctx.arc(0,0,b.r+8,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=.55*a; ctx.fillStyle='rgba(175,240,255,.65)'; ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=.95*a; ctx.strokeStyle='#e8fdff'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.stroke();
+      ctx.globalAlpha=.8*a; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-b.r*.32,-b.r*.35,4.2,0,Math.PI*2); ctx.fill();
       ctx.restore();
     });
 
