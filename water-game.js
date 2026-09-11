@@ -1205,7 +1205,7 @@
 
       // セラフィックサイクロン：1秒弱で約10回転。フレーム更新で描画と完全同期。
       if(this.specialType==='seraphicCyclone'){
-        this.spinAngle += dt*34*(this.face>0?1:-1);
+        this.spinAngle += dt*22*(this.face>0?1:-1);
       }
 
       // ルシファーさん：斜め下降キック連打。
@@ -7236,7 +7236,7 @@ function drawBackground(dt){
         if(f.specialType==='moonSalt'&&f.specialT>0){
           // 上昇を抑え、相手の高さに長く留まる回転多段技にする。
           f.vy=Math.min(f.vy,-72);
-          f.moonSaltSpin=(f.moonSaltSpin||0)+dt*34;
+          f.moonSaltSpin=(f.moonSaltSpin||0)+dt*22;
           f.moonSaltHitCd=Math.max(0,(f.moonSaltHitCd||0)-dt);
           // 回転そのものが攻撃。最大6ヒット、約0.09秒ごとに再ヒット可能。
           if((f.moonSaltHits||0)<6&&f.moonSaltHitCd<=0&&Math.abs(o.x-f.x)<82&&Math.abs(o.y-f.y)<88){
