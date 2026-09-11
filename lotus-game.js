@@ -1210,6 +1210,13 @@
         }
       }
 
+      // コカビエル：グラビティダイブは一度ふわっと上昇してから前方斜め下へ急降下。
+      if(this.type==='kokabiel' && this.specialType==='kokabielGroundDive' && this.specialT>0){
+        const d=this.gravityDiveDir||this.face||1;
+        if(this.specialT>.56){ this.vx=d*85; this.vy=Math.min(this.vy,-175); }
+        else { this.vx=d*330; this.vy=500; }
+      }
+
       this.x += this.vx * dt;
       this.y += this.vy * dt;
       const minY=78, maxY=landFloorY();
@@ -4548,7 +4555,7 @@
   }
   function specialKokabielGroundDive(f){
     if(gameOver||!f||f.type!=='kokabiel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    f.specialType='kokabielGroundDive';f.specialT=.58;f.attack='kick';f.attackT=.58;f.gravityDiveHit=false;f.vx=(f.face||1)*285;f.vy=430;compatLabel('グラビティダイブ!');return true;
+    f.specialType='kokabielGroundDive';f.specialT=.82;f.attack='kick';f.attackT=.82;f.gravityDiveHit=false;f.gravityDiveDir=f.face||1;f.vx=f.gravityDiveDir*85;f.vy=-310;compatLabel('グラビティダイブ!');return true;
   }
 
   function specialSarielGroundLuna(f,arc){
@@ -5227,6 +5234,8 @@
           if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
           // サリエル：前/後ろ＋ガードは通常ガードより先に邪眼/血月を発動。
           if(player.type==='sariel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
+          // コカビエル：後ろ＋ガードは通常ガードより先にグラビティゾーン。
+          if(player.type==='kokabiel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
           // サタナエル：下＋ガードは通常ガードより優先してダークプレッシャー。
           if(player.type==='satanael' && !player.throwState && input.y>.35){
             player.guard=false; player.attackT=0; player.attack=null;
@@ -5464,6 +5473,7 @@
       const forward=player.face>0?'right':'left', back=player.face>0?'left':'right';
       if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
       if(player.type==='sariel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
+      if(player.type==='kokabiel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
       if(player.type==='black'){
         const backHeld=(player.face>0&&keys['a'])||(player.face<0&&keys['d']);
         if(backHeld){player.guard=false;player.attackT=0;player.attack=null;if(specialLuciferIceWall(player))return;}
