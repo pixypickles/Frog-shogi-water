@@ -6633,71 +6633,70 @@
   }
 
 function drawBackground(dt){
-    const arenaActive=!(gameMode==='story' && (enemy?.type==='piranha' || enemy?.type==='crayfish'));
+    // 通常戦・将棋からの水中戦は「明るい自然水中」。
+    // ストーリーの大会戦だけ、後段の drawAquariumArena() で競技場を重ねる。
+    const w=innerWidth,h=innerHeight,now=performance.now();
+    const grad=ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#78e9f2');
+    grad.addColorStop(.38,'#35c6d3');
+    grad.addColorStop(.72,'#1597aa');
+    grad.addColorStop(1,'#087487');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
 
-    if(arenaActive){
-      // 明るく透明度の高い大会水槽。草や暗転は使わない。
-      const grad=ctx.createLinearGradient(0,0,0,innerHeight);
-      grad.addColorStop(0,'#d8fbff');
-      grad.addColorStop(.48,'#9ceff6');
-      grad.addColorStop(1,'#6ddde8');
-      ctx.fillStyle=grad;
-      ctx.fillRect(0,0,innerWidth,innerHeight);
+    // 水面の明るい帯
+    const surf=ctx.createLinearGradient(0,0,0,h*.20);
+    surf.addColorStop(0,'rgba(238,255,255,.70)');
+    surf.addColorStop(.42,'rgba(185,250,255,.24)');
+    surf.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=surf;ctx.fillRect(0,0,w,h*.22);
 
-      // 薄い水面の光
-      ctx.save();
-      ctx.globalAlpha=.08;
-      ctx.fillStyle='#ffffff';
-      for(let i=0;i<7;i++){
-        const x=(i+.5)*innerWidth/7 + Math.sin(performance.now()/1700+i)*18;
-        ctx.beginPath();
-        ctx.ellipse(x,innerHeight*.15,innerWidth*.10,11,.08,0,Math.PI*2);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      // 泡
-      ctx.fillStyle='rgba(242,255,255,.34)';
-      bubbles.forEach(b=>{
-        b.y-=b.s*dt;
-        if(b.y<-12){b.y=innerHeight+10;b.x=Math.random()*innerWidth}
-        ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
-      });
-      return;
+    // 水面から差し込む光。競技場の直線照明ではなく、幅広い自然光。
+    ctx.save();ctx.globalAlpha=.12;
+    for(let i=0;i<5;i++){
+      const x=(i+.35)*w/5+Math.sin(now*.00035+i*1.7)*25;
+      const g=ctx.createLinearGradient(x,0,x,h*.76);
+      g.addColorStop(0,'rgba(255,255,238,.95)');g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x-28,0);ctx.lineTo(x+28,0);
+      ctx.lineTo(x+105,h*.78);ctx.lineTo(x-105,h*.78);ctx.closePath();ctx.fill();
     }
+    ctx.restore();
 
-    // リヴァイア／アスモデウス戦のみ、自然の池背景。
-    const themes=[
-      {top:'#56b78f',mid:'#29786f',bottom:'#174f50',floor:'#3e5438',plant:'#718347'}
-    ];
-    const th=themes[0];
-    const grad=ctx.createLinearGradient(0,0,0,innerHeight);
-    grad.addColorStop(0,th.top);
-    grad.addColorStop(.52,th.mid);
-    grad.addColorStop(1,th.bottom);
-    ctx.fillStyle=grad;
-    ctx.fillRect(0,0,innerWidth,innerHeight);
-
-    ctx.fillStyle=th.floor;
-    ctx.fillRect(0,innerHeight-35,innerWidth,35);
-
-    ctx.strokeStyle=th.plant;ctx.lineWidth=8;ctx.lineCap='round';
-    for(let x=20;x<innerWidth;x+=75){
-      ctx.beginPath();ctx.moveTo(x,innerHeight);
-      ctx.quadraticCurveTo(x-18,innerHeight-60,x+4,innerHeight-105);ctx.stroke();
+    // 遠景の柔らかい岩・水草シルエット
+    ctx.save();ctx.globalAlpha=.16;ctx.fillStyle='#0a7b79';
+    for(let i=0;i<7;i++){
+      const x=i*w/6-45, y=h*.78;
+      ctx.beginPath();ctx.ellipse(x,y,105+(i%3)*28,62+(i%2)*18,0,Math.PI,Math.PI*2);ctx.fill();
     }
+    ctx.restore();
 
-    ctx.fillStyle='rgba(230,255,255,.5)';
+    // 水底
+    const floorY=h*.86;
+    const fg=ctx.createLinearGradient(0,floorY,0,h);
+    fg.addColorStop(0,'#168a83');fg.addColorStop(1,'#096b69');
+    ctx.fillStyle=fg;ctx.fillRect(0,floorY,w,h-floorY);
+
+    // 水草。ゆっくり揺れる。
+    ctx.save();ctx.lineCap='round';ctx.lineWidth=Math.max(5,w*.0045);
+    for(let i=0,x=18;x<w+30;x+=Math.max(58,w*.055),i++){
+      const sway=Math.sin(now*.00115+i*.85)*15;
+      ctx.strokeStyle=i%3===0?'rgba(16,142,83,.72)':'rgba(12,126,91,.68)';
+      ctx.beginPath();ctx.moveTo(x,h+4);
+      ctx.bezierCurveTo(x-9,floorY-10,x+sway,floorY-62,x+sway*.65,floorY-112-(i%3)*12);ctx.stroke();
+    }
+    ctx.restore();
+
+    // 泡
+    ctx.fillStyle='rgba(236,255,255,.46)';
     bubbles.forEach(b=>{
       b.y-=b.s*dt;
-      if(b.y<-12){b.y=innerHeight+10;b.x=Math.random()*innerWidth}
+      if(b.y<-12){b.y=h+10;b.x=Math.random()*w}
       ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
     });
   }
 
-
   function drawAquariumArena(){
-    if(gameMode==='story' && (enemy?.type==='piranha' || enemy?.type==='crayfish')) return;
+    // 大会競技場はストーリーの大会戦専用。通常戦・将棋・練習は自然水中。
+    if(gameMode!=='story' || enemy?.type==='piranha' || enemy?.type==='crayfish') return;
 
     const w=innerWidth,h=innerHeight;
     const finalStage=(gameMode==='story' && (enemy?.type==='samael' || enemy?.type==='seraphiel' || enemy?.type==='satanael'));
