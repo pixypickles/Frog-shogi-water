@@ -4574,7 +4574,7 @@
     return false;
   }
 
-  // v2.7.1 サリエル: 水中2の月刃・邪眼・血月・ムーンサルトを地上向けに移植。
+  // v2.7.2 サリエル: 水中2の月刃・邪眼・血月・ムーンサルトを地上向けに移植。
   function specialSarielGroundLuna(f,arc){
     if(gameOver||!f||f.type!=='sariel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
     f.specialType='sarielGroundLuna';f.specialT=.50;f.attack='punch';f.attackT=.50;
@@ -5249,6 +5249,8 @@
         if(player){
           const remForward=player.face>0?'right':'left', remBack=player.face>0?'left':'right';
           if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
+          // サリエル：前/後ろ＋ガードは通常ガードより先に邪眼/血月を発動。
+          if(player.type==='sariel' && tryV2CompatSpecial(player,'guard',remForward,remBack)){btn.classList.remove('pressed');return;}
           // サタナエル：下＋ガードは通常ガードより優先してダークプレッシャー。
           if(player.type==='satanael' && !player.throwState && input.y>.35){
             player.guard=false; player.attackT=0; player.attack=null;
@@ -5485,6 +5487,7 @@
     if(e.key==='i'&&player){
       const forward=player.face>0?'right':'left', back=player.face>0?'left':'right';
       if(player.type==='remiel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
+      if(player.type==='sariel' && tryV2CompatSpecial(player,'guard',forward,back)) return;
       if(player.type==='black'){
         const backHeld=(player.face>0&&keys['a'])||(player.face<0&&keys['d']);
         if(backHeld){player.guard=false;player.attackT=0;player.attack=null;if(specialLuciferIceWall(player))return;}
