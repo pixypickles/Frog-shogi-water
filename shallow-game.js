@@ -1590,6 +1590,23 @@
       ctx.ellipse(2,36,19,23,0,0,Math.PI*2);
       ctx.fill();
 
+      if(this.type==='flauros'){
+        // 水中版と同じヒョウ柄。黒いロゼット＋暖色の芯を胴体・腹に重ねる。
+        const drawRosette=(x,y,rx,ry,rot,open=0)=>{
+          ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.lineCap='round';
+          ctx.strokeStyle='#21120e';ctx.lineWidth=4.8;
+          ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,.25+open,2.55);ctx.stroke();
+          ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,3.45,5.95-open);ctx.stroke();
+          ctx.fillStyle='#9a542b';ctx.beginPath();ctx.ellipse(0,0,rx*.48,ry*.48,0,0,Math.PI*2);ctx.fill();ctx.restore();
+        };
+        ctx.save();
+        drawRosette(-18,19,8,6,.20,.08); drawRosette(18,25,9,6,-.35,.16);
+        drawRosette(-16,43,8,7,-.18,.12); drawRosette(17,49,7,6,.32,.05);
+        drawRosette(1,12,7,5,.08,.18);
+        ctx.fillStyle='#21120e';[[-27,31,2.8],[27,37,2.6],[-6,57,2.8],[9,59,2.4]].forEach(([x,y,r])=>{ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();});
+        ctx.restore();
+      }
+
       if(this.type==='kawazu'){
         // 参考のアカメアマガエル風：胴体の左右に青い差し色
         ctx.save();
