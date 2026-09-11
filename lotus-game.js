@@ -1603,24 +1603,26 @@
         ctx.restore();
       }
 
-      // ニュートラル脚：
-      // リリスのドロップキック中は専用の両脚だけを描く。通常脚を残すと4本脚に見えるため完全に隠す。
-      if(this.specialType!=='lilithDropKick'){
-        ctx.strokeStyle=pal.limb;
-        ctx.lineWidth=12;
-        ctx.lineCap='round';
-        ctx.lineJoin='round';
-        ctx.beginPath();
-
+      // ニュートラル脚。リリスのドロップキックでは「追加の脚」を作らず、
+      // 元々の左右2本の脚そのものを閉じて真っ直ぐ伸ばす。
+      ctx.strokeStyle=pal.limb;
+      ctx.lineWidth=12;
+      ctx.lineCap='round';
+      ctx.lineJoin='round';
+      ctx.beginPath();
+      if(this.specialType==='lilithDropKick'){
+        // 本体が90度回転するため、ローカル座標で下へ伸ばすと敵方向へ両足が向く。
+        ctx.moveTo(-9,46); ctx.lineTo(-7,61); ctx.lineTo(-6,76);
+        ctx.moveTo( 9,46); ctx.lineTo( 7,61); ctx.lineTo( 6,76);
+      }else{
         // 左側の脚は軸足として常に残す
         ctx.moveTo(-15,48); ctx.lineTo(-19,62); ctx.lineTo(-28,67);
-
         // 右側の脚はキック中だけ攻撃ポーズ側へ差し替える
         if(this.attack!=='kick'){
           ctx.moveTo(15,48); ctx.lineTo(19,62); ctx.lineTo(28,67);
         }
-        ctx.stroke();
       }
+      ctx.stroke();
 
       // ニュートラル腕。
       // パンチ中・ガード中は通常腕を描かず、それぞれ専用ポーズに差し替える。
@@ -1878,16 +1880,6 @@
         ctx.restore();
       }
 
-
-      if(this.specialType==='lilithDropKick'){
-        ctx.save(); ctx.filter='none'; ctx.strokeStyle=pal.limb; ctx.lineWidth=13; ctx.lineCap='round';
-        // 横倒し気味の両脚を前へ揃えて突き出す。
-        ctx.beginPath();
-        ctx.moveTo(-11,45); ctx.lineTo(58,26);
-        ctx.moveTo( 12,46); ctx.lineTo(66,36);
-        ctx.stroke();
-        ctx.restore();
-      }
 
       if(this.specialType==='dropkick'){
         // 攻撃する脚は1本だけ。反対側の脚は軸足として身体側に残す。
