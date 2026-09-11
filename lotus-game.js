@@ -4476,12 +4476,34 @@
     f.flaurosInfernoEndY=landFloorY()-42;
     compatLabel('インフェルノクロー!');return true;
   }
+  // v2.7.6 モブさん：水中版3技を地上物理向けに移植。
+  function specialMobGroundBubble(f){
+    if(gameOver||!f||f.type!=='mob'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const dir=f.face;
+    f.specialType='mobGroundBubble'; f.specialT=.42; f.attack='punch'; f.attackT=.42;
+    lilithBubbleShots.push({owner:f,x:f.x+dir*48,y:f.y-4,vx:dir*145,vy:-5,r:27,t:4.8,phase:Math.random()*6.28,hit:false});
+    compatLabel('バブルショット!'); return true;
+  }
+  function specialMobGroundTripleKick(f){
+    if(gameOver||!f||f.type!=='mob'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const dir=f.face, foe=f.isPlayer?enemy:player;
+    f.specialType='mobGroundTripleKick'; f.specialT=.72; f.attack='kick'; f.attackT=.72; f.attackVariant='mid';
+    f.mobGroundKickToken=(f.mobGroundKickToken||0)+1; const token=f.mobGroundKickToken;
+    [0,150,300].forEach((ms,i)=>setTimeout(()=>{
+      if(gameOver||!f||f.mobGroundKickToken!==token)return;
+      f.vx=dir*(i===2?430:360); f.attack='kick'; f.attackT=.20; f.attackVariant=(i===1?'high':'mid');
+      if(foe && Math.hypot(foe.x-(f.x+dir*34),foe.y-f.y)<foe.radius+52){
+        damageHit(f,foe,2.15*f.damageMul,dir*72,-18); spawnImpact(foe.x,foe.y,'hit');
+      }
+    },ms));
+    compatLabel('トリプルキック!'); return true;
+  }
   function tryV2CompatSpecial(f,kind,forward,back){
     if(!f)return false;
     if(f.type==='mob'){
       if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'カエル跳びアッパー!');}
-      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'バブルショット!');}
-      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'トリプルキック!');}
+      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return specialMobGroundBubble(f);}
+      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return specialMobGroundTripleKick(f);}
     }
     if(f.type==='jihal'){
       if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return specialJihalGroundSpark(f);}
