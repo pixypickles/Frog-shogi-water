@@ -16,7 +16,8 @@ const STAGES={
   heroes:{id:'heroes',label:'七英雄戦',size:7,promoDepth:2,special:'heroes'},
   rookbishop:{id:'rookbishop',label:'飛角決戦',size:5,promoDepth:1,special:'rookbishop',annihilation:true},
   pawnwar:{id:'pawnwar',label:'歩兵乱戦',size:7,promoDepth:2,special:'pawnwar',annihilation:true},
-  temple:{id:'temple',label:'水上神殿',size:7,promoDepth:2,terrainMap:true}
+  temple:{id:'temple',label:'水上神殿',size:7,promoDepth:2,terrainMap:true},
+  shuffle:{id:'shuffle',label:'混成シャッフル',size:7,promoDepth:2,special:'shuffle'}
 };
 const DIFFICULTIES={
   easy:{id:'easy',label:'やさしい',think:700,pool:12,captureMul:1.55,promoBonus:30,noise:70},
@@ -28,6 +29,7 @@ const ANGEL_POOL=['seraphiel','jihal','yellow','orange','green','blue','remiel']
 const DEVIL_POOL=['satanael','flauros','beelzebub','samael','black','purple','sariel'];
 const HERO_ROLES=['K','R','B','G','S','N','L'];
 const RB_ROLES=['R','B','B','R'];
+const MIXED_POOL=[...ANGEL_POOL,...DEVIL_POOL];
 
 const CHAR={
  seraphiel:{name:'セラフィエルさん',body:'#f5f1df',eye:'#fff9d5',iris:'#ffd85c',skills:['セラフィックアッパー','セラフィックキック','セラフィックショット','セラフィックサイクロン','セラフィックレイ']},
@@ -61,21 +63,26 @@ const battleLoading=document.getElementById('battleLoading'),loadingAttacker=doc
 const boardResultEffect=document.getElementById('boardResultEffect'),boardResultKicker=document.getElementById('boardResultKicker'),boardResultMain=document.getElementById('boardResultMain'),boardResultSub=document.getElementById('boardResultSub');
 const startModal=document.getElementById('startModal'),startGameBtn=document.getElementById('startGameBtn'),modeSummary=document.getElementById('modeSummary');
 const formationBlock=document.getElementById('formationBlock'),formationGrid=document.getElementById('formationGrid'),formationHelp=document.getElementById('formationHelp');
-let setupChoice={difficulty:'normal',stage:'standard',hands:'auto',formations:{heroes:[...ANGEL_POOL],rookbishop:ANGEL_POOL.slice(0,4),pawnwar:[...ANGEL_POOL]}};
+let setupChoice={difficulty:'normal',stage:'standard',hands:'auto',playerTeam:'angel',formations:{heroes:[...ANGEL_POOL],rookbishop:ANGEL_POOL.slice(0,4),pawnwar:[...ANGEL_POOL]}};
 let state,selected=null,legal=[],selectedHand=null,pendingMove=null,cpuTimer=null,cpuBusy=false,resultEffectTimer=null;
 
 function other(t){return t==='angel'?'devil':'angel'}
 function mk(team,role,promoted=false,promotionForm=null,fighter=null){return{team,role,promoted,promotionForm,fighter}}
 function shuffled(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function rosterFor(team){return team==='angel'?ANGEL_POOL:DEVIL_POOL}
 function formationFor(stageId,team){
-  if(team==='angel')return [...(setupChoice.formations?.[stageId]||ANGEL_POOL)];
-  if(stageId==='rookbishop')return shuffled(DEVIL_POOL).slice(0,4);
-  return shuffled(DEVIL_POOL);
+  const human=setupChoice.playerTeam||'angel';
+  if(team===human)return [...(setupChoice.formations?.[stageId]||rosterFor(team))];
+  const pool=rosterFor(team); if(stageId==='rookbishop')return shuffled(pool).slice(0,4);
+  return shuffled(pool);
 }
 function initialBoard(stageId='standard') {
   const stage=STAGES[stageId]||STAGES.standard, n=stage.size;
   const b=Array.from({length:n},()=>Array(n).fill(null));
-  if(stageId==='heroes'){
+  if(stageId==='shuffle'){
+    const mixed=shuffled(MIXED_POOL), top=mixed.slice(0,7), bottom=mixed.slice(7,14);
+    HERO_ROLES.forEach((r,x)=>{b[0][x]=mk('devil',r,false,null,top[x]);b[n-1][x]=mk('angel',r,false,null,bottom[x])});
+  }else if(stageId==='heroes'){
     const af=formationFor('heroes','angel'),df=formationFor('heroes','devil');
     HERO_ROLES.forEach((r,x)=>{b[0][x]=mk('devil',r,false,null,df[x]);b[n-1][x]=mk('angel',r,false,null,af[x])});
   }else if(stageId==='rookbishop'){
@@ -103,20 +110,21 @@ function emptyHands(){return{angel:{R:0,B:0,G:0,S:0,N:0,L:0,P:0},devil:{R:0,B:0,
 function freshState(opts=setupChoice){
   const stage=opts.stage||'standard',difficulty=opts.difficulty||'normal';
   const handsMode=stage==='standard'?'on':(opts.hands||'off');
-  return{schemaVersion:220,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,handsMode,turn:'angel',hands:emptyHands(),winner:null,lastMessage:'天使軍の手番'}
+  const playerTeam=opts.playerTeam||'angel'; return{schemaVersion:221,board:initialBoard(stage),boardSize:STAGES[stage].size,stage,difficulty,handsMode,playerTeam,turn:playerTeam,hands:emptyHands(),winner:null,lastMessage:`${TEAMS[playerTeam].label}の手番`}
 }
 function normalizeState(s){
   // v2.2.0 では freshState が schemaVersion:220 なのに、
   // 復帰時は 219 だけを許可していたため、格闘後に保存対局を無効扱いして
   // 対局設定メニューへ戻ってしまっていた。219/220 を受け入れて 220 へ統一する。
-  if(!s||!s.board||![219,220].includes(s.schemaVersion))return null;
-  s.schemaVersion=220;
+  if(!s||!s.board||![219,220,221].includes(s.schemaVersion))return null;
+  s.schemaVersion=221;
   s.stage=s.stage||((s.board.length===7)?'compact':'standard');
   s.difficulty=s.difficulty||'normal';
   s.boardSize=s.board.length;
   s.hands=s.hands||emptyHands();
   s.handsMode=s.handsMode||((s.stage==='standard')?'on':'off');
-  s.turn=s.turn||'angel';
+  s.playerTeam=s.playerTeam||'angel';
+  s.turn=s.turn||s.playerTeam;
   s.winner=s.winner||null;
   return s;
 }
@@ -125,7 +133,9 @@ function load(){try{return normalizeState(JSON.parse(localStorage.getItem('water
 function boardSize(){return state?.boardSize||state?.board?.length||9}
 function stageConfig(){return STAGES[state?.stage]||STAGES.standard}
 function difficultyConfig(){return DIFFICULTIES[state?.difficulty]||DIFFICULTIES.normal}
-function updateModeSummary(){if(modeSummary&&state)modeSummary.textContent=`${stageConfig().label} / CPU ${difficultyConfig().label} / 持ち駒${state.handsMode==='on'?'あり':'なし'}`}
+function updateModeSummary(){if(modeSummary&&state)modeSummary.textContent=`${stageConfig().label} / あなた:${TEAMS[state.playerTeam].label} / CPU ${difficultyConfig().label} / 持ち駒${state.handsMode==='on'?'あり':'なし'}`}
+function playerTeam(){return state?.playerTeam||'angel'}
+function cpuTeam(){return other(playerTeam())}
 
 function fighterType(piece){if(piece.promoted&&piece.promotionForm==='special')return TEAMS[piece.team].promotionPawn;if(piece.fighter)return piece.fighter;return TEAMS[piece.team].roles[piece.role]}
 function charOf(piece){return CHAR[fighterType(piece)]||CHAR.mob}
@@ -197,22 +207,23 @@ function render(){
     cell.addEventListener('click',()=>onCell(x,y));boardEl.appendChild(cell);
   }
   renderHands();updateModeSummary();
-  turnBanner.textContent=state.winner?`${TEAMS[state.winner].label}の勝利！`:(state.turn==='devil'?(cpuBusy?'悪魔軍 CPU 思考中…':'悪魔軍 CPU の手番'):'天使軍の手番');
+  const isCpuTurn=state.turn===cpuTeam(); turnBanner.textContent=state.winner?`${TEAMS[state.winner].label}の勝利！`:(isCpuTurn?(cpuBusy?`${TEAMS[cpuTeam()].label} CPU 思考中…`:`${TEAMS[cpuTeam()].label} CPU の手番`):`${TEAMS[playerTeam()].label}の手番`);
+  document.querySelectorAll('.side-title').forEach(el=>{const isAngel=el.textContent.includes('天使軍');const team=isAngel?'angel':'devil';const sm=el.querySelector('small');if(sm)sm.textContent=team===playerTeam()?'PLAYER':'CPU'});
   turnBanner.style.boxShadow=state.turn==='angel'?'inset 0 0 0 2px rgba(255,235,130,.45)':'inset 0 0 0 2px rgba(255,90,110,.45)';
   save();scheduleCpuIfNeeded();
 }
 function renderHands(){
   if(state.handsMode!=='on'){angelHandEl.innerHTML='<span class="hand-count">このステージは持ち駒なし</span>';devilHandEl.innerHTML='<span class="hand-count">このステージは持ち駒なし</span>';return}
-  for(const team of ['angel','devil']){const el=team==='angel'?angelHandEl:devilHandEl;el.innerHTML='';for(const role of ['R','B','G','S','N','L','P']){const n=state.hands[team][role]||0;if(!n)continue;const b=document.createElement('button');b.className='hand-piece'+(selectedHand&&selectedHand.team===team&&selectedHand.role===role?' selected':'');b.innerHTML=`<span>${ROLE_LABEL[role]}</span><span class="hand-count">×${n}</span>`;b.disabled=team==='devil';b.addEventListener('click',()=>selectHand(team,role));el.appendChild(b)}if(!el.children.length)el.innerHTML='<span class="hand-count">持ち駒なし</span>'}
+  for(const team of ['angel','devil']){const el=team==='angel'?angelHandEl:devilHandEl;el.innerHTML='';for(const role of ['R','B','G','S','N','L','P']){const n=state.hands[team][role]||0;if(!n)continue;const b=document.createElement('button');b.className='hand-piece'+(selectedHand&&selectedHand.team===team&&selectedHand.role===role?' selected':'');b.innerHTML=`<span>${ROLE_LABEL[role]}</span><span class="hand-count">×${n}</span>`;b.disabled=team!==playerTeam();b.addEventListener('click',()=>selectHand(team,role));el.appendChild(b)}if(!el.children.length)el.innerHTML='<span class="hand-count">持ち駒なし</span>'}
 }
 function clearSelection(){selected=null;selectedHand=null;legal=[]}
-function selectHand(team,role){if(state.winner||cpuBusy||team!=='angel'||state.turn!=='angel'||!state.hands[team][role])return;selected=null;selectedHand={team,role};legal=dropMoves(role,team);updateInfo(mk(team,role));render()}
+function selectHand(team,role){if(state.winner||cpuBusy||team!==playerTeam()||state.turn!==playerTeam()||!state.hands[team][role])return;selected=null;selectedHand={team,role};legal=dropMoves(role,team);updateInfo(mk(team,role));render()}
 function onCell(x,y){
-  if(state.winner||cpuBusy||state.turn!=='angel'||!battleLoading.hidden||!promoModal.hidden)return;
+  if(state.winner||cpuBusy||state.turn!==playerTeam()||!battleLoading.hidden||!promoModal.hidden)return;
   const p=state.board[y][x],target=legal.find(m=>m.x===x&&m.y===y);
-  if(selectedHand&&target){state.board[y][x]=mk('angel',selectedHand.role,false,null,null);state.hands.angel[selectedHand.role]--;finishTurn(`天使軍が${ROLE_LABEL[selectedHand.role]}を打ちました`);return}
+  if(selectedHand&&target){state.board[y][x]=mk(playerTeam(),selectedHand.role,false,null,null);state.hands[playerTeam()][selectedHand.role]--;finishTurn(`${TEAMS[playerTeam()].label}が${ROLE_LABEL[selectedHand.role]}を打ちました`);return}
   if(selected&&target){attemptMove(selected.x,selected.y,x,y);return}
-  if(p&&p.team==='angel'){selected={x,y};selectedHand=null;legal=movesFor(x,y);updateInfo(p);render();return}
+  if(p&&p.team===playerTeam()){selected={x,y};selectedHand=null;legal=movesFor(x,y);updateInfo(p);render();return}
   clearSelection();if(p)updateInfo(p);render();
 }
 function attemptMove(fx,fy,tx,ty){const attacker=state.board[fy][fx],defender=state.board[ty][tx];if(defender){pendingMove={fx,fy,tx,ty,attacker:{...attacker},defender:{...defender}};launchBattle(pendingMove);return}completeBoardMove(fx,fy,tx,ty,false)}
@@ -220,7 +231,7 @@ function completeBoardMove(fx,fy,tx,ty,wasCapture){
   const p=state.board[fy][fx];if(!p)return;state.board[fy][fx]=null;state.board[ty][tx]=p;
   const after=()=>finishTurn(`${charOf(p).name} が ${ROLE_LABEL[p.role]}を進めました`);
   const forced=mustPromote(p,ty),optional=canPromote(p,fy,ty);
-  if(p.team==='devil'){
+  if(p.team===cpuTeam()){
     if(forced||optional){const should=forced||Math.random()<.82;if(should)setPromoted(p,Math.random()<.22?'special':'standard')}
     after();return;
   }
@@ -243,14 +254,14 @@ function launchBattle(m){
   loadingAttacker.textContent=charOf(attacker).name;loadingDefender.textContent=charOf(defender).name;
   if(loadingTerrain)loadingTerrain.textContent=terr.label+'で格闘';battleLoading.hidden=false;
   sessionStorage.removeItem('mixBattleResult');sessionStorage.setItem('frogShogiPendingMove',JSON.stringify(m));
-  sessionStorage.setItem('mixBattle',JSON.stringify({mode:'shogi',source:'water-frog-shogi',playerRole:attacker.team==='angel'?'attacker':'defender',attackerTeam:attacker.team,defenderTeam:defender.team,attacker:'shogi-attacker',defender:'shogi-defender',attackerType:fighterType(attacker),defenderType:fighterType(defender),attackerHp:100,defenderHp:33,battleHazard:terr.hazard||null,battleTerrain:terr.label,returnUrl:'index.html'}));
+  sessionStorage.setItem('mixBattle',JSON.stringify({mode:'shogi',source:'water-frog-shogi',playerRole:attacker.team===playerTeam()?'attacker':'defender',attackerTeam:attacker.team,defenderTeam:defender.team,attacker:'shogi-attacker',defender:'shogi-defender',attackerType:fighterType(attacker),defenderType:fighterType(defender),attackerHp:100,defenderHp:33,battleHazard:terr.hazard||null,battleTerrain:terr.label,returnUrl:'index.html'}));
   save();
   setTimeout(()=>{location.href=terr.page+'?mix=1&battle=1&shogi=1'},700);
 }
 
 function showBoardBattleEffect(attackerWon,attacker,defender){
   clearTimeout(resultEffectTimer);
-  const playerWon=(attackerWon&&attacker.team==='angel')||(!attackerWon&&defender.team==='angel');
+  const playerWon=(attackerWon&&attacker.team===playerTeam())||(!attackerWon&&defender.team===playerTeam());
   boardResultEffect.className='board-result-effect '+(playerWon?'win':'lose');
   boardResultKicker.textContent=attackerWon?'攻撃側の勝利':'防御側の勝利';
   boardResultMain.textContent=playerWon?'格闘勝利！':'格闘敗北';
@@ -292,36 +303,36 @@ function cpuActions(){
   const actions=[];
   const n=boardSize(),cfg=difficultyConfig();
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-    const p=state.board[y][x];if(!p||p.team!=='devil')continue;
+    const p=state.board[y][x];if(!p||p.team!==cpuTeam())continue;
     for(const m of movesFor(x,y)){
       const target=state.board[m.y][m.x];let score=Math.random()*cfg.noise;
       if(target)score+=ROLE_VALUE[target.role]*cfg.captureMul + (target.role==='K'?50000:0);
-      score+=(m.y-y)*6;
+      score+=(p.team==='angel'?(y-m.y):(m.y-y))*6;
       if(canPromote(p,y,m.y))score+=cfg.promoBonus;
       if(p.role==='K'&&target==null)score-=20;
       actions.push({type:'move',fx:x,fy:y,tx:m.x,ty:m.y,score});
     }
   }
   for(const role of ['R','B','G','S','N','L','P']){
-    if(!state.hands.devil[role])continue;
-    for(const m of dropMoves(role,'devil')){
-      let score=20+Math.random()*cfg.noise;score+=(m.y-(n-1)/2)*3;if(role==='R'||role==='B')score+=20;
+    if(!state.hands[cpuTeam()][role])continue;
+    for(const m of dropMoves(role,cpuTeam())){
+      let score=20+Math.random()*cfg.noise;score+=(cpuTeam()==='angel'?((n-1)/2-m.y):(m.y-(n-1)/2))*3;if(role==='R'||role==='B')score+=20;
       actions.push({type:'drop',role,tx:m.x,ty:m.y,score});
     }
   }
   return actions;
 }
 function scheduleCpuIfNeeded(){
-  clearTimeout(cpuTimer);if(state.winner||state.turn!=='devil'||cpuBusy||!promoModal.hidden||!battleLoading.hidden)return;
-  cpuBusy=true;turnBanner.textContent='悪魔軍 CPU 思考中…';
+  clearTimeout(cpuTimer);if(state.winner||state.turn!==cpuTeam()||cpuBusy||!promoModal.hidden||!battleLoading.hidden)return;
+  cpuBusy=true;turnBanner.textContent=`${TEAMS[cpuTeam()].label} CPU 思考中…`;
   cpuTimer=setTimeout(cpuPlay,difficultyConfig().think);
 }
 function cpuPlay(){
-  if(state.winner||state.turn!=='devil'){cpuBusy=false;return}
-  const actions=cpuActions();if(!actions.length){cpuBusy=false;if(stageConfig().annihilation&&!teamHasForces('devil')){state.winner='angel';showGameOver('angel','悪魔軍を全滅させました。')}else{state.winner='angel';showGameOver('angel','悪魔軍に指せる手がありません。')}render();return}
+  if(state.winner||state.turn!==cpuTeam()){cpuBusy=false;return}
+  const actions=cpuActions();if(!actions.length){cpuBusy=false;if(stageConfig().annihilation&&!teamHasForces(cpuTeam())){state.winner=playerTeam();showGameOver(playerTeam(),`${TEAMS[cpuTeam()].label}を全滅させました。`)}else{state.winner=playerTeam();showGameOver(playerTeam(),`${TEAMS[cpuTeam()].label}に指せる手がありません。`)}render();return}
   actions.sort((a,b)=>b.score-a.score);const pool=actions.slice(0,Math.min(difficultyConfig().pool,actions.length));const action=pool[Math.floor(Math.random()*pool.length)];
   if(action.type==='drop'){
-    state.board[action.ty][action.tx]=mk('devil',action.role,false);state.hands.devil[action.role]--;finishTurn(`CPUが${ROLE_LABEL[action.role]}を打ちました`);return;
+    state.board[action.ty][action.tx]=mk(cpuTeam(),action.role,false);state.hands[cpuTeam()][action.role]--;finishTurn(`CPUが${ROLE_LABEL[action.role]}を打ちました`);return;
   }
   attemptMove(action.fx,action.fy,action.tx,action.ty);
 }
@@ -331,7 +342,7 @@ function startNewGame(){clearRuntime();localStorage.removeItem('waterFrogShogiSt
 function openSetup(){clearTimeout(cpuTimer);cpuBusy=false;startModal.hidden=false;syncSetupButtons()}
 function fighterName(id){return CHAR[id]?.name||id}
 function formationSpec(stage){
-  if(stage==='heroes')return {labels:['王','飛','角','金','銀','桂','香'],count:7,help:'天使7人を、王・飛・角・金・銀・桂・香へ自由に割り当てます。悪魔軍の配役はCPUが毎局変更します。'};
+  if(stage==='heroes')return {labels:['王','飛','角','金','銀','桂','香'],count:7,help:`${TEAMS[setupChoice.playerTeam||'angel'].label}の7人を、王・飛・角・金・銀・桂・香へ自由に割り当てます。CPU側の配役は毎局変更されます。`};
   if(stage==='rookbishop')return {labels:['飛①','角①','角②','飛②'],count:4,help:'4人を選び、飛車2体・角2体へ割り当てます。同じキャラは使えません。王はいないため全滅させた側の勝利です。'};
   if(stage==='pawnwar')return {labels:['左1','左2','左3','中央','右3','右2','右1'],count:7,help:'全員が「歩」の動き。7人の並び順だけを決めます。王はいないため全滅させた側の勝利です。'};
   return null;
@@ -339,18 +350,19 @@ function formationSpec(stage){
 function ensureFormation(stage){
   setupChoice.formations=setupChoice.formations||{};
   const spec=formationSpec(stage);if(!spec)return;
-  let arr=setupChoice.formations[stage];if(!Array.isArray(arr)||arr.length!==spec.count||new Set(arr).size!==arr.length)arr=ANGEL_POOL.slice(0,spec.count);
+  const pool=rosterFor(setupChoice.playerTeam||'angel');let arr=setupChoice.formations[stage];if(!Array.isArray(arr)||arr.length!==spec.count||new Set(arr).size!==arr.length||arr.some(id=>!pool.includes(id)))arr=pool.slice(0,spec.count);
   setupChoice.formations[stage]=arr;
 }
 function renderFormation(){
   const spec=formationSpec(setupChoice.stage);formationBlock.hidden=!spec;formationGrid.innerHTML='';if(!spec)return;
   ensureFormation(setupChoice.stage);formationHelp.textContent=spec.help;const arr=setupChoice.formations[setupChoice.stage];
   spec.labels.forEach((label,i)=>{const box=document.createElement('div');box.className='formation-slot';const lab=document.createElement('label');lab.textContent=label;const sel=document.createElement('select');
-    ANGEL_POOL.forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=fighterName(id);o.selected=arr[i]===id;sel.appendChild(o)});
+    rosterFor(setupChoice.playerTeam||'angel').forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=fighterName(id);o.selected=arr[i]===id;sel.appendChild(o)});
     sel.addEventListener('change',()=>{const next=sel.value,old=arr[i],otherIndex=arr.findIndex((v,idx)=>idx!==i&&v===next);arr[i]=next;if(otherIndex>=0)arr[otherIndex]=old;renderFormation()});
     box.append(lab,sel);formationGrid.appendChild(box)});
 }
-function syncSetupButtons(){document.querySelectorAll('[data-difficulty]').forEach(b=>b.classList.toggle('selected',b.dataset.difficulty===setupChoice.difficulty));document.querySelectorAll('[data-stage]').forEach(b=>b.classList.toggle('selected',b.dataset.stage===setupChoice.stage));document.querySelectorAll('[data-hands]').forEach(b=>b.classList.toggle('selected',b.dataset.hands===(setupChoice.stage==='standard'?'on':setupChoice.hands)));const locked=setupChoice.stage==='standard';document.querySelectorAll('[data-hands]').forEach(b=>b.disabled=locked);const note=document.getElementById('handsNote');if(note)note.textContent=locked?'標準盤は「あり」固定です。':'変則ステージは「なし」推奨。ありにもできます。';renderFormation()}
+function syncSetupButtons(){document.querySelectorAll('[data-player-team]').forEach(b=>b.classList.toggle('selected',b.dataset.playerTeam===setupChoice.playerTeam));document.querySelectorAll('[data-player-team]').forEach(b=>b.addEventListener('click',()=>{setupChoice.playerTeam=b.dataset.playerTeam;setupChoice.formations={heroes:rosterFor(setupChoice.playerTeam).slice(0,7),rookbishop:rosterFor(setupChoice.playerTeam).slice(0,4),pawnwar:rosterFor(setupChoice.playerTeam).slice(0,7)};syncSetupButtons()}));
+document.querySelectorAll('[data-difficulty]').forEach(b=>b.classList.toggle('selected',b.dataset.difficulty===setupChoice.difficulty));document.querySelectorAll('[data-stage]').forEach(b=>b.classList.toggle('selected',b.dataset.stage===setupChoice.stage));document.querySelectorAll('[data-hands]').forEach(b=>b.classList.toggle('selected',b.dataset.hands===(setupChoice.stage==='standard'?'on':setupChoice.hands)));const locked=setupChoice.stage==='standard';document.querySelectorAll('[data-hands]').forEach(b=>b.disabled=locked);const note=document.getElementById('handsNote');if(note)note.textContent=locked?'標準盤は「あり」固定です。':'変則ステージは「なし」推奨。ありにもできます。';renderFormation()}
 document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{setupChoice.difficulty=b.dataset.difficulty;syncSetupButtons()}));
 document.querySelectorAll('[data-stage]').forEach(b=>b.addEventListener('click',()=>{setupChoice.stage=b.dataset.stage;if(setupChoice.stage!=='standard'&&(setupChoice.hands==='auto'||setupChoice.hands==='on'))setupChoice.hands='off';syncSetupButtons()}));
 document.querySelectorAll('[data-hands]').forEach(b=>b.addEventListener('click',()=>{if(setupChoice.stage==='standard')return;setupChoice.hands=b.dataset.hands;syncSetupButtons()}));
@@ -359,6 +371,6 @@ document.getElementById('resetBtn').onclick=()=>{if(confirm('対局設定に戻�
 document.getElementById('gameOverReset').onclick=openSetup;
 
 state=load();
-if(state){setupChoice={difficulty:state.difficulty||'normal',stage:state.stage||'standard',hands:state.handsMode||'off',formations:{heroes:[...ANGEL_POOL],rookbishop:ANGEL_POOL.slice(0,4),pawnwar:[...ANGEL_POOL]}};applyBattleResult();updateInfo(null);render();}
+if(state){setupChoice={difficulty:state.difficulty||'normal',stage:state.stage||'standard',hands:state.handsMode||'off',playerTeam:state.playerTeam||'angel',formations:{heroes:[...ANGEL_POOL],rookbishop:ANGEL_POOL.slice(0,4),pawnwar:[...ANGEL_POOL]}};applyBattleResult();updateInfo(null);render();}
 else{state=freshState(setupChoice);updateInfo(null);render();localStorage.removeItem('waterFrogShogiState');openSetup()}
 })();

@@ -94,7 +94,14 @@
     <div id="startModal" class="modal start-modal" hidden>
       <div class="modal-card start-card">
         <h2>対局設定</h2>
-        <p>CPUの強さとステージを選んでください。</p>
+        <p>操作する軍、CPUの強さ、ステージを選んでください。</p>
+        <div class="setup-block">
+          <div class="setup-label">操作する軍</div>
+          <div class="choice-grid side-grid">
+            <button class="choice-btn selected" data-player-team="angel"><strong>天使軍</strong><small>天使側を操作</small></button>
+            <button class="choice-btn" data-player-team="devil"><strong>悪魔軍</strong><small>悪魔側を操作</small></button>
+          </div>
+        </div>
         <div class="setup-block">
           <div class="setup-label">CPU難易度</div>
           <div class="choice-grid difficulty-grid">
@@ -114,6 +121,7 @@
             <button class="choice-btn" data-stage="rookbishop"><strong>飛角決戦</strong><small>5×5・飛車と角だけの殲滅戦</small></button>
             <button class="choice-btn" data-stage="pawnwar"><strong>歩兵乱戦</strong><small>7×7・全員が歩、キャラは別々</small></button>
             <button class="choice-btn" data-stage="temple"><strong>水上神殿</strong><small>7×7・水／浅瀬／蓮／急流が混在</small></button>
+            <button class="choice-btn" data-stage="shuffle"><strong>混成シャッフル</strong><small>7×7・天使悪魔を混ぜて毎局ランダム編成</small></button>
           </div>
         </div>
         <div class="setup-block">
