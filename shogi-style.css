@@ -55,3 +55,11 @@ button,a{font:inherit}
 /* v2.2.3 battle practice selector */
 .practice-select-modal{z-index:80}.practice-select-card{max-width:min(860px,95vw);text-align:left}.practice-select-card>h2,.practice-select-card>p{text-align:center}.practice-select-card>p{margin:4px 0 10px;color:#c8edf1;font-size:12px}.practice-select-layout{display:grid;grid-template-columns:minmax(180px,.75fr) minmax(420px,1.7fr);gap:14px}.practice-select-control{width:100%;border:1px solid rgba(255,255,255,.28);border-radius:12px;background:#073e4e;color:#fff;font-weight:900;padding:12px;font-size:15px}.practice-select-control option,.practice-select-control optgroup{background:#073e4e;color:#fff}.practice-terrain-grid{grid-template-columns:repeat(3,1fr)}
 @media(max-height:520px) and (orientation:landscape){.practice-select-card{padding:10px 14px}.practice-select-layout{grid-template-columns:minmax(160px,.7fr) minmax(460px,2fr);gap:10px}.practice-terrain-grid{grid-template-columns:repeat(3,1fr)}.practice-select-control{padding:8px;font-size:12px}.practice-select-card .choice-btn{min-height:42px}.practice-select-card .modal-actions{margin-top:7px}}
+
+/* v2.7.9 環状急流: ドーナツ型の流れるプール */
+.cell.terrain-pool-current{--cell:#76d9e7;--cell2:#2daec8;background:linear-gradient(145deg,var(--cell),var(--cell2));overflow:hidden}
+.cell.terrain-pool-current::before{position:absolute;z-index:0;color:rgba(0,72,92,.43);font-weight:1000;font-size:clamp(12px,2.3vmin,20px);line-height:1;pointer-events:none;text-shadow:0 1px 0 rgba(255,255,255,.18)}
+.cell.terrain-pool-current.pool-flow-right::before{content:'➜';right:4px;bottom:3px}
+.cell.terrain-pool-current.pool-flow-left::before{content:'➜';left:4px;top:3px;transform:rotate(180deg)}
+.cell.terrain-pool-current.pool-flow-down::before{content:'➜';right:3px;top:4px;transform:rotate(90deg)}
+.cell.terrain-pool-current.pool-flow-up::before{content:'➜';left:3px;bottom:4px;transform:rotate(-90deg)}

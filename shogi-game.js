@@ -17,7 +17,8 @@ const STAGES={
   rookbishop:{id:'rookbishop',label:'飛角決戦',size:5,promoDepth:1,special:'rookbishop',annihilation:true},
   pawnwar:{id:'pawnwar',label:'歩兵乱戦',size:7,promoDepth:2,special:'pawnwar',annihilation:true},
   temple:{id:'temple',label:'水上神殿',size:7,promoDepth:2,terrainMap:true},
-  shuffle:{id:'shuffle',label:'混成シャッフル',size:7,promoDepth:2,special:'shuffle'}
+  shuffle:{id:'shuffle',label:'混成シャッフル',size:7,promoDepth:2,special:'shuffle'},
+  poolring:{id:'poolring',label:'環状急流',size:7,promoDepth:2,shape:'poolring',battleHazard:'current'}
 };
 const DIFFICULTIES={
   easy:{id:'easy',label:'やさしい',think:700,pool:12,captureMul:1.55,promoBonus:30,noise:70},
@@ -92,6 +93,11 @@ function initialBoard(stageId='standard') {
   }else if(stageId==='pawnwar'){
     const af=formationFor('pawnwar','angel'),df=formationFor('pawnwar','devil');
     for(let x=0;x<n;x++){b[1][x]=mk('devil','P',false,null,df[x]);b[n-2][x]=mk('angel','P',false,null,af[x])}
+  }else if(stageId==='poolring'){
+    // ドーナツ型の急流ステージ。小回りが利きにくい桂・香・歩は不参加。
+    // 上下の丸みを残した5マスに、王・飛・角・金・銀を各1体ずつ配置する。
+    const roles=['R','B','K','G','S'];
+    roles.forEach((r,i)=>{b[0][i+1]=mk('devil',r);b[n-1][n-2-i]=mk('angel',r)});
   }else if(stageId==='compact'||stageId==='current'||stageId==='channel'||stageId==='temple'){
     const back=['L','N','S','K','G','B','R'];
     back.forEach((r,x)=>b[0][x]=mk('devil',r));
@@ -153,10 +159,23 @@ const TERRAIN={
   lotus:{label:'蓮の葉マス',cls:'terrain-lotus',page:'lotus-fighter.html',hazard:null},
   waterCurrent:{label:'急流水',cls:'terrain-current-water',page:'water-fighter.html',hazard:'current'},
   shallowCurrent:{label:'急流浅瀬',cls:'terrain-current-shallow',page:'shallow-fighter.html',hazard:'shallow-current'},
-  lotusCurrent:{label:'流れる蓮',cls:'terrain-current-lotus',page:'lotus-fighter.html',hazard:'lotus-current'}
+  lotusCurrent:{label:'流れる蓮',cls:'terrain-current-lotus',page:'lotus-fighter.html',hazard:'lotus-current'},
+  poolRight:{label:'環状急流 →',cls:'terrain-pool-current pool-flow-right',page:'water-fighter.html',hazard:'current'},
+  poolLeft:{label:'環状急流 ←',cls:'terrain-pool-current pool-flow-left',page:'water-fighter.html',hazard:'current-left'},
+  poolDown:{label:'環状急流 ↓',cls:'terrain-pool-current pool-flow-down',page:'water-fighter.html',hazard:'current'},
+  poolUp:{label:'環状急流 ↑',cls:'terrain-pool-current pool-flow-up',page:'water-fighter.html',hazard:'current-left'}
 };
 function terrainAt(x,y){
   if(state?.stage==='current')return TERRAIN.waterCurrent;
+  if(state?.stage==='poolring'){
+    const n=boardSize(),c=(n-1)/2;
+    // 時計回りの流れるプールを盤上の矢印で表現。
+    // 格闘画面は横長なので、上・右半分は右流れ、下・左半分は左流れとして体感を分ける。
+    if(y<c && Math.abs(y-c)>=Math.abs(x-c))return TERRAIN.poolRight;
+    if(x>c && Math.abs(x-c)>Math.abs(y-c))return TERRAIN.poolDown;
+    if(y>c && Math.abs(y-c)>=Math.abs(x-c))return TERRAIN.poolLeft;
+    return TERRAIN.poolUp;
+  }
   if(state?.stage!=='temple')return TERRAIN.water;
   // 水上神殿: 外周は水、中央帯は浅瀬、対角に蓮。急流は右寄りの縦帯。
   const n=boardSize();
@@ -167,7 +186,17 @@ function terrainAt(x,y){
   if(x===0||x===n-1||y===0||y===n-1)return TERRAIN.waterCurrent;
   return TERRAIN.water;
 }
-function isBlocked(x,y){if(state?.stage!=='channel')return false;const n=boardSize();return (y===2||y===4)&&(x<2||x>n-3)}
+function isBlocked(x,y){
+  const n=boardSize();
+  if(state?.stage==='channel')return (y===2||y===4)&&(x<2||x>n-3);
+  if(state?.stage==='poolring'){
+    // 7×7の中央3×3を水のない中島扱いにし、四隅も削って丸い環状コースにする。
+    const center=(x>=2&&x<=4&&y>=2&&y<=4);
+    const roundedCorner=(x===0||x===n-1)&&(y===0||y===n-1);
+    return center||roundedCorner;
+  }
+  return false;
+}
 function inBounds(x,y){const n=boardSize();return x>=0&&x<n&&y>=0&&y<n&&!isBlocked(x,y)}
 function pathMoves(x,y,dirs,piece){const out=[];for(const [dx,dy] of dirs){let nx=x+dx,ny=y+dy;while(inBounds(nx,ny)){const q=state.board[ny][nx];if(!q)out.push({x:nx,y:ny});else{if(q.team!==piece.team)out.push({x:nx,y:ny,capture:true});break}nx+=dx;ny+=dy}}return out}
 function stepMoves(x,y,dirs,piece){const out=[];for(const [dx0,dy0] of dirs){const dir=piece.team==='angel'?-1:1;const nx=x+dx0,ny=y+dy0*dir;if(!inBounds(nx,ny))continue;const q=state.board[ny][nx];if(!q||q.team!==piece.team)out.push({x:nx,y:ny,capture:!!q})}return out}
@@ -186,6 +215,7 @@ function movesFor(x,y){
 }
 function dropMoves(role,team){
   const out=[],n=boardSize();for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    if(!inBounds(x,y))continue;
     if(state.board[y][x])continue;
     if((role==='P'||role==='L')&&((team==='angel'&&y===0)||(team==='devil'&&y===n-1)))continue;
     if(role==='N'&&((team==='angel'&&y<=1)||(team==='devil'&&y>=n-2)))continue;

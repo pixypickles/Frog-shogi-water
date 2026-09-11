@@ -7058,6 +7058,7 @@ function drawBackground(dt){
       enemyAI(dt);
       // 水中蛙将棋『急流回廊』: 格闘中も全員が画面左→右へ流され続ける。
       if(((mixBattleMode&&mixBattleContext?.battleHazard==='current')||(mixPracticeMode&&mixPracticeHazard==='current'))){const flow=150;player.vx+=flow*dt;enemy.vx+=flow*dt;}
+      if(((mixBattleMode&&mixBattleContext?.battleHazard==='current-left')||(mixPracticeMode&&mixPracticeHazard==='current-left'))){const flow=-150;player.vx+=flow*dt;enemy.vx+=flow*dt;}
       player.update(dt);enemy.update(dt);
       updateNewSpecialMoves(player,dt);
       updateNewSpecialMoves(enemy,dt);
