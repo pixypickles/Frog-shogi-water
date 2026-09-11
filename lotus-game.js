@@ -103,6 +103,8 @@
   let flaurosGroundPillars=[];
   let flaurosGroundClaws=[];
   let flaurosGroundShots=[];
+  let samaelGroundGates=[];
+  let samaelGroundShots=[];
   let burstWaves = [];
   let leafTargets=[];
   let leafMiniActive=false;
@@ -2766,7 +2768,7 @@
       sariel:['↑ ＋ パンチ：ルナ・スラッシュ','前 ＋ ガード：イーブルアイ','後ろ ＋ ガード：ブラッドムーン','↑ ＋ キック：ムーンサルトキック'],
       kokabiel:['前 ＋ パンチ：グラビティボール','後ろ ＋ ガード：グラビティゾーン','下 ＋ パンチ：メテオレイン','下 ＋ キック：グラビティダイブ'],
       flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードストライク','↑ ＋ キック：インフェルノクロー'],
-      samael:['前 ＋ パンチ：ポイズンゲート','前 ＋ キック：デッドリー・アクア','舌：ヴェノムタン'],
+      samael:['方向 ＋ パンチ：ポイズンゲート（指定方向に毒の発生点 → 相手へ毒弾）','舌：ヴェノムタン（舌先から毒弾）','前 → 下 → 後ろ ＋ キック：デッドリー・アクア'],
       satanael:['ディザスターフレア：後ろ ＋ パンチ','ダークレイ：前 ＋ パンチ','ダークプレッシャー：下 ＋ ガード','インフェルノウェーブ：下 ＋ キック'],
       beelzebub:['下 → 後ろ ＋ ガード：ヴェノム・ウォーター（毒液3方向・着地後に毒霧）','前 ＋ パンチ：ベノムショット（高速の単発毒液）','↑ ＋ パンチ：アビスショック（上弧）','↓ ＋ キック：アビスショック（下弧）'],
       green:['↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','後ろ ＋ パンチ：バーニングショット','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
@@ -4464,9 +4466,12 @@
       if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return specialFlaurosGroundLeopardStrike(f);}
     }
     if(f.type==='samael'){
-      if(kind==='punch'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ポイズンゲート!');}
-      if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return compatRush(f,'デッドリー・アクア!');}
-      if(kind==='tongue'&&compatDir(f,'forward',forward,520)){clearCommand();return compatShot(f,'ヴェノムタン!');}
+      if(kind==='kick'&&compatHeldDir(f,'back')&&hasCommand([forward,'down'],1500)){clearCommand();return specialSamaelGroundDeadly(f);}
+      if(kind==='punch'){
+        let side=null;if(compatHeldDir(f,'up'))side='up';else if(compatHeldDir(f,'down'))side='down';else if(compatHeldDir(f,'forward'))side='forward';else if(compatHeldDir(f,'back'))side='back';
+        if(side){clearCommand();return specialSamaelGroundGate(f,side);}
+      }
+      if(kind==='tongue'){clearCommand();return specialSamaelGroundTongue(f);}
     }
     if(f.type==='satanael'){
       if(kind==='guard'&&((f.isPlayer&&input.down)||( !f.isPlayer&&f.aiDown)||compatDir(f,'down','down',620))){clearCommand();return specialSatanaelGroundPressure(f);}
@@ -4475,6 +4480,31 @@
       if(kind==='kick'&&compatDir(f,'down','down',520)){clearCommand();return specialSatanaelGroundWave(f);}
     }
     return false;
+  }
+
+  function specialSamaelGroundGate(f,side){
+    if(gameOver||!f||f.type!=='samael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const target=f.isPlayer?enemy:player;if(!target)return false;
+    f.specialType='samaelGroundGate';f.specialT=.64;f.attack='punch';f.attackT=.64;
+    let x=target.x,y=target.y;const floor=innerHeight-105;
+    if(side==='up'){x=target.x;y=Math.max(90,target.y-150);}
+    else if(side==='down'){x=target.x;y=Math.min(floor,target.y+120);}
+    else if(side==='forward'){x=Math.max(70,Math.min(innerWidth-70,target.x+f.face*180));y=target.y;}
+    else{x=Math.max(70,Math.min(innerWidth-70,target.x-f.face*180));y=target.y;}
+    samaelGroundGates.push({owner:f,target,x,y,t:.56,life:.56,fired:false,deadly:false});compatLabel('ポイズンゲート…');return true;
+  }
+  function specialSamaelGroundTongue(f){
+    if(gameOver||!f||f.type!=='samael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const target=f.isPlayer?enemy:player;if(!target)return false;
+    f.specialType='samaelGroundTongue';f.specialT=.58;f.attack='tongue';f.attackT=.58;f.tongueT=.46;
+    setTimeout(()=>{if(gameOver||!target||target.hp<=0)return;const sx=f.x+f.face*85,sy=f.y+2,dx=target.x-sx,dy=target.y-sy,d=Math.hypot(dx,dy)||1;const sp=360;samaelGroundShots.push({owner:f,x:sx,y:sy,vx:dx/d*sp,vy:dy/d*sp,r:15,t:2.2,hit:false,poison:2.0});compatLabel('ヴェノムタン!');},240);return true;
+  }
+  function specialSamaelGroundDeadly(f){
+    if(gameOver||!f||f.type!=='samael'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    const target=f.isPlayer?enemy:player;if(!target)return false;
+    f.specialType='deadlyAqua';f.specialT=1.18;f.attack='kick';f.attackT=.28;
+    const floor=innerHeight-105,pts=[[target.x-175,target.y-105],[target.x+175,target.y+80],[target.x+165,target.y-115],[target.x-165,target.y+90]];
+    pts.forEach((pt,i)=>samaelGroundGates.push({owner:f,target,x:Math.max(70,Math.min(innerWidth-70,pt[0])),y:Math.max(85,Math.min(floor,pt[1])),t:.58+i*.15,life:.58+i*.15,fired:false,deadly:true}));compatLabel('デッドリー・アクア…!');return true;
   }
 
   function specialUrielWhiteShot(f){
@@ -6169,6 +6199,10 @@ function drawBackground(dt){
         if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+7){q.hit=true;q.t=0;damageHit(q.owner,target,(q.damage||4.4)*q.owner.damageMul,115*Math.sign(q.vx),-12);spawnImpact(q.x,q.y,'hit');}
       });
       michaelBurningShots=michaelBurningShots.filter(q=>q.t>0&&q.x>-70&&q.x<innerWidth+70);
+      samaelGroundGates.forEach(g=>{g.t-=dt;if(g.t<=0&&!g.fired){g.fired=true;const target=g.target&&g.target.hp>0?g.target:(g.owner.isPlayer?enemy:player);if(target){const dx=target.x-g.x,dy=target.y-g.y,d=Math.hypot(dx,dy)||1,sp=g.deadly?300:335;samaelGroundShots.push({owner:g.owner,x:g.x,y:g.y,vx:dx/d*sp,vy:dy/d*sp,r:g.deadly?19:16,t:2.4,hit:false,poison:g.deadly?2.8:2.2});compatLabel(g.deadly?'デッドリー・アクア!':'ポイズンゲート!');}}});
+      samaelGroundGates=samaelGroundGates.filter(g=>!g.fired&&g.t>-.08);
+      samaelGroundShots.forEach(q=>{q.t-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;const target=q.owner&&q.owner.isPlayer?enemy:player;if(!q.hit&&target&&Math.hypot(target.x-q.x,target.y-q.y)<target.radius+q.r+6){q.hit=true;q.t=0;damageHit(q.owner,target,4.8*q.owner.damageMul,90*Math.sign(q.vx||1),-15);target.poisonT=Math.max(target.poisonT||0,q.poison||2.1);spawnImpact(q.x,q.y,'hit');}});
+      samaelGroundShots=samaelGroundShots.filter(q=>q.t>0&&q.x>-80&&q.x<innerWidth+80&&q.y>-80&&q.y<innerHeight+80);
       urielWhiteShots.forEach(q=>{
         q.t-=dt; q.x+=q.vx*dt;
         q.trail.push({x:q.x,y:q.y,t:.20}); q.trail.forEach(v=>v.t-=dt); q.trail=q.trail.filter(v=>v.t>0);
@@ -6692,6 +6726,9 @@ function drawBackground(dt){
       g.addColorStop(.72,'#ff3215');g.addColorStop(1,'rgba(220,0,0,0)');
       ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,q.r*1.65,0,Math.PI*2);ctx.fill();ctx.restore();
     });
+
+    samaelGroundGates.forEach(g=>{const p=Math.max(0,Math.min(1,1-g.t/g.life));ctx.save();ctx.translate(g.x,g.y);ctx.globalCompositeOperation='lighter';ctx.rotate(performance.now()/230);ctx.globalAlpha=.38+.48*p;ctx.shadowColor=g.deadly?'#e7b8ff':'#bff8ff';ctx.shadowBlur=g.deadly?28:20;for(let i=0;i<3;i++){ctx.strokeStyle=i===0?'#7040bd':(i===1?'#b56dff':'#e4fdff');ctx.lineWidth=8-i*2;ctx.beginPath();ctx.arc(0,0,15+i*7,-1+p*.8,4.3+p);ctx.stroke();}ctx.restore();});
+    samaelGroundShots.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#a66cff';ctx.shadowBlur=24;const g=ctx.createRadialGradient(-4,-4,2,0,0,q.r*1.5);g.addColorStop(0,'#efffff');g.addColorStop(.28,'#baf5ff');g.addColorStop(.58,'#9a65e8');g.addColorStop(1,'rgba(75,20,120,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,q.r*1.55,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c78cff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,q.r*.9,0,Math.PI*2);ctx.stroke();ctx.restore();});
 
     urielWhiteShots.forEach(q=>{
       q.trail.forEach(v=>{
