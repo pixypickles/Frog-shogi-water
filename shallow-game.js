@@ -2800,7 +2800,7 @@
   }
 
 
-  const playableTypes=['green','blue','black','purple','yellow','orange','mob','jihal','remiel','seraphiel','sariel','kokabiel','flauros','samael','satanael','piranha','crayfish'].concat(isKawazuUnlocked()?['kawazu']:[]);
+  const playableTypes=['green','blue','black','purple','yellow','orange','mob','jihal','remiel','seraphiel','sariel','kokabiel','flauros','samael','satanael','beelzebub','piranha','crayfish'].concat(isKawazuUnlocked()?['kawazu']:[]);
 
   function practiceSpecialText(type){
     const map={
@@ -2814,6 +2814,7 @@
       flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードストライク','↑ ＋ キック：インフェルノクロー'],
       samael:['前 ＋ パンチ：ポイズンゲート','前 ＋ キック：デッドリー・アクア','舌：ヴェノムタン'],
       satanael:['ディザスターフレア：後ろ ＋ パンチ','ダークレイ：前 ＋ パンチ','ダークプレッシャー：下 ＋ ガード','インフェルノウェーブ：下 ＋ キック'],
+      beelzebub:['下 → 後ろ ＋ ガード：ヴェノム・ウォーター（毒液3方向・着地後に毒霧）','前 ＋ パンチ：ベノムショット（高速の単発毒液）','↑ ＋ パンチ：アビスショック（上弧）','↓ ＋ キック：アビスショック（下弧）'],
       green:['↖ / ↑ / ↗：手動ジャンプ','↑ ＋ パンチ：バーニングアッパー','前 ＋ キック：バーニングキック','下 → 後ろ ＋ キック：バーニングサイクロン','前 ＋ パンチ：レッドオーラパンチ'],
       blue:['↖ / ↑ / ↗：手動ジャンプ','↑ ＋ パンチ：アクアトルネード','↓ ＋ キック：アクアストリーム','後ろ ＋ パンチ：アクアボルテックス（HP少量吸収）','前 ＋ パンチ：アクアショット'],
       yellow:['前 ＋ パンチ：エアカッター（正面）','前 ＋ キック：エアカッター（下15度）','後ろ ＋ パンチ：カープエアカッター（上から弧）','後ろ ＋ キック：カープエアカッター（下から弧）','ガード ×2：ヒーリングバブル','↑ ＋ ガード：高速バブル移動','↑ ＋ パンチ：ウィンドライズ'],
