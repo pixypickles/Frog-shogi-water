@@ -1352,6 +1352,17 @@
         const elapsed=(performance.now()-(this.lilithSpinStartTime||performance.now()))/1000;
         ctx.rotate(elapsed*18*(this.face>0?-1:1));
       }
+      if(this.specialType==='lilithDropKick'){
+        const dir=this.lilithDropDir||this.face;
+        const spinDir=dir>0?-1:1;
+        let ang=Math.PI/2;
+        if(this.lilithDropHitDone){
+          const after=(performance.now()-(this.lilithDropHitTime||performance.now()))/1000;
+          // 命中後0.34秒で残り270度を回転し、合計360度。
+          ang=Math.PI/2 + Math.min(1,after/.34)*Math.PI*1.5;
+        }
+        ctx.rotate(spinDir*ang);
+      }
 
 
       // トンボ：アザゼルさん。オニヤンマを意識した黒＋黄の大型トンボ。
@@ -3483,9 +3494,10 @@
 
   function specialLilithDropKick(f){
     if(gameOver||!f||f.type!=='purple'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
-    f.specialType='lilithDropKick'; f.specialT=.72; f.attack='kick'; f.attackT=.72; f.attackVariant='mid';
-    f.lilithDropStart=performance.now(); f.lilithDropHitDone=false;
-    f.vx=f.face*560; f.vy=Math.min(f.vy,-35);
+    f.specialType='lilithDropKick'; f.specialT=.86; f.attack='kick'; f.attackT=.86; f.attackVariant='mid';
+    f.lilithDropStart=performance.now(); f.lilithDropHitDone=false; f.lilithDropHitTime=0;
+    f.lilithDropDir=f.face;
+    f.vx=f.face*620; f.vy=Math.min(f.vy,-28);
     comboEl.textContent='ドロップキック!';
     setTimeout(()=>{if(comboEl.textContent==='ドロップキック!')comboEl.textContent='';},620);
     return true;
@@ -5669,12 +5681,23 @@
 
     if(f.specialType==='lilithDropKick'){
       const other=f.isPlayer?enemy:player;
-      f.vx=f.face*560;
-      f.vy*=.78;
-      if(other && !f.lilithDropHitDone && Math.abs(other.x-f.x)<82 && Math.abs(other.y-f.y)<66){
-        f.lilithDropHitDone=true;
-        damageHit(f,other,7.2*f.damageMul,245*f.face,-72);
-        spawnImpact(other.x,other.y,'hit');
+      const dir=f.lilithDropDir||f.face;
+      if(!f.lilithDropHitDone){
+        // まず90度だけ回転した両足突進。敵が右なら反時計回り。
+        f.vx=dir*620;
+        f.vy*=.78;
+        if(other && Math.abs(other.x-f.x)<82 && Math.abs(other.y-f.y)<66){
+          f.lilithDropHitDone=true; f.lilithDropHitTime=performance.now();
+          damageHit(f,other,7.2*f.damageMul,245*dir,-72);
+          spawnImpact(other.x,other.y,'hit');
+          // 命中後はいったん少し後ろへ跳ね返る。
+          f.vx=-dir*185; f.vy=-42;
+        }
+      }else{
+        const after=(performance.now()-(f.lilithDropHitTime||performance.now()))/1000;
+        // 残り270度を回り切る間は軽く後退。最後は速度を落とす。
+        f.vx=-dir*Math.max(0,185*(1-after/.34));
+        if(after>.34){ f.vx*=.55; }
       }
     }
 
