@@ -106,6 +106,8 @@
   let flaurosGroundShots=[];
   let samaelGroundGates=[];
   let samaelGroundShots=[];
+  let sarielGroundSlashes=[];
+  let sarielGroundBloodMoons=[];
   let burstWaves = [];
   let leafTargets=[];
   let leafMiniActive=false;
@@ -1056,7 +1058,7 @@
         if(this.throwState){
           this.spinAngle += this.throwState.spinSpeed * dt;
         }
-      } else if(this.specialType!=='seraphicCyclone' && this.specialType!=='seraphielGroundCyclone') {
+      } else if(this.specialType!=='seraphicCyclone' && this.specialType!=='seraphielGroundCyclone' && this.specialType!=='sarielGroundMoonSalt') {
         this.spinAngle *= Math.pow(.03, dt);
       }
 
@@ -2481,7 +2483,7 @@
     }));
 
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[];
-    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
+    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; sarielGroundSlashes=[]; sarielGroundBloodMoons=[]; burstWaves=[];
 
     for(let i=0;i<12;i++){
       spawnLeafTarget(i,true);
@@ -2565,7 +2567,7 @@
     if(practiceExitButton){practiceExitButton.hidden=false;practiceExitButton.textContent='ミニゲーム終了';}
     if(practiceLabel) practiceLabel.style.display='none';
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[]; siltClouds=[];
-    catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
+    catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; sarielGroundSlashes=[]; sarielGroundBloodMoons=[]; burstWaves=[];
 
     // 最初は1体だけ。いきなり複数が同時に来ないようにする。
     spawnGuardTarget();
@@ -2785,7 +2787,7 @@
       jihal:['前 ＋ パンチ：ボルトショット','前 ＋ キック：ライトニングダッシュ','後ろ ＋ キック長押し → 離す：サンダーチャージ','下 ＋ パンチ：サンダースパーク'],
       remiel:['↑ ＋ ガード：ミラージュ（前）','↓ ＋ ガード：ミラージュ（後）','後ろ ＋ ガード：ミラージュカウンター','前 ＋ ガード：アクアパリィ','前 ＋ パンチ：フロストショット','前 ＋ キック：ミラージュキック'],
       seraphiel:['↑ ＋ パンチ：セラフィックアッパー','前 ＋ キック：セラフィックキック','後ろ ＋ パンチ：セラフィックショット','下 → 後ろ ＋ キック：セラフィックサイクロン','下 → 前 ＋ パンチ：セラフィックレイ'],
-      sariel:['↑ ＋ パンチ：ルナ・スラッシュ','前 ＋ ガード：イーブルアイ','後ろ ＋ ガード：ブラッドムーン','↑ ＋ キック：ムーンサルトキック'],
+      sariel:['↑ ＋ パンチ：ルナ・スラッシュ（上弧）','↓ ＋ パンチ：ルナ・スラッシュ（下弧）','前 ＋ ガード：イーブルアイ（3秒麻痺）','後ろ ＋ ガード：ブラッドムーン（成立で10秒スロー）','↑ ＋ キック：ムーンサルトキック（回転多段）'],
       kokabiel:['前 ＋ パンチ：グラビティボール','後ろ ＋ ガード：グラビティゾーン','下 ＋ パンチ：メテオレイン','下 ＋ キック：グラビティダイブ'],
       flauros:['↑ ＋ パンチ：ヘルフレイム','前 ＋ パンチ：フレイムクロー','前 ＋ キック：レオパードストライク','↑ ＋ キック：インフェルノクロー'],
       samael:['方向 ＋ パンチ：ポイズンゲート（指定方向に毒の発生点 → 相手へ毒弾）','舌：ヴェノムタン（舌先から毒弾）','前 → 下 → 後ろ ＋ キック：デッドリー・アクア'],
@@ -2878,7 +2880,7 @@
 
   function resetBattleEffects(){
     particles=[]; hitRings=[]; guardWaves=[]; aquaTornadoes=[]; aquaVortices=[];
-    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; burstWaves=[];
+    siltClouds=[]; webTraps=[]; ceilingWebs=[]; belialPoisonShots=[]; catfishCharges=[]; lilithBubbleShots=[]; pressureBlades=[]; jihalGroundBolts=[]; jihalGroundSparks=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; remielGroundMirages=[]; remielGroundShots=[]; remielGhostShots=[]; seraphielGroundShots=[]; seraphielGroundRays=[]; sarielGroundSlashes=[]; sarielGroundBloodMoons=[]; burstWaves=[];
     leafTargets=[]; guardTargets=[]; toxicWaters=[]; bossFish=[]; abyssShocks=[]; kawazuShots=[]; kawazuGhosts=[];
   }
 
@@ -4491,10 +4493,11 @@
       if(kind==='kick'&&compatDir(f,'forward',forward,520)){clearCommand();return specialSeraphielGroundKick(f);}
     }
     if(f.type==='sariel'){
-      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return compatShot(f,'ルナ・スラッシュ!');}
-      if(kind==='kick'&&compatDir(f,'up','up',520)){clearCommand();return compatUpper(f,'ムーンサルトキック!');}
-      if(kind==='guard'&&compatDir(f,'forward',forward,520)){f.counterReady=true;f.counterT=.55;compatLabel('イーブルアイ!');clearCommand();return true;}
-      if(kind==='guard'&&compatDir(f,'back',back,520)){f.hp=Math.min(100,f.hp+2);if(f.isPlayer)updateHud();compatLabel('ブラッドムーン!');clearCommand();return true;}
+      if(kind==='punch'&&compatDir(f,'up','up',520)){clearCommand();return specialSarielGroundLuna(f,'up');}
+      if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return specialSarielGroundLuna(f,'down');}
+      if(kind==='kick'&&compatDir(f,'up','up',520)){clearCommand();return specialSarielGroundMoonSalt(f);}
+      if(kind==='guard'&&compatDir(f,'forward',forward,520)){clearCommand();return specialSarielGroundEvilEye(f);}
+      if(kind==='guard'&&compatDir(f,'back',back,520)){clearCommand();return specialSarielGroundBloodMoon(f);}
     }
     if(f.type==='kokabiel'){
       if(kind==='punch'&&compatDir(f,'down','down',520)){clearCommand();return compatBurst(f,'メテオレイン!');}
@@ -4523,6 +4526,30 @@
       if(kind==='kick'&&compatDir(f,'down','down',520)){clearCommand();return specialSatanaelGroundWave(f);}
     }
     return false;
+  }
+
+  // v2.7.1 サリエル: 水中2の月刃・邪眼・血月・ムーンサルトを地上向けに移植。
+  function specialSarielGroundLuna(f,arc){
+    if(gameOver||!f||f.type!=='sariel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='sarielGroundLuna';f.specialT=.50;f.attack='punch';f.attackT=.50;
+    sarielGroundSlashes.push({owner:f,arc,dir:f.face||1,baseX:f.x,baseY:f.y-8,x:f.x,y:f.y-8,t:1.55,life:1.55,age:0,damage:6.2,hit:false});
+    compatLabel(arc==='up'?'ルナ・スラッシュ（上）!':'ルナ・スラッシュ（下）!');return true;
+  }
+  function specialSarielGroundEvilEye(f){
+    if(gameOver||!f||f.type!=='sariel'||f.stun>0||f.specialT>0)return false;
+    f.guard=false;f.specialType='sarielGroundEvilEye';f.specialT=.72;f.sarielEyeHit=false;compatLabel('イーブルアイ…');return true;
+  }
+  function specialSarielGroundBloodMoon(f){
+    if(gameOver||!f||f.type!=='sariel'||f.stun>0||f.specialT>0)return false;
+    f.guard=false;f.specialType='sarielGroundBloodMoon';f.specialT=3.25;
+    sarielGroundBloodMoons=sarielGroundBloodMoons.filter(m=>m.owner!==f);
+    sarielGroundBloodMoons.push({owner:f,t:3.0,life:3.0,broken:false,startHp:f.hp});
+    compatLabel('ブラッドムーン…');return true;
+  }
+  function specialSarielGroundMoonSalt(f){
+    if(gameOver||!f||f.type!=='sariel'||f.stun>0||f.guard||f.specialT>0||f.attackT>0)return false;
+    f.specialType='sarielGroundMoonSalt';f.specialT=.82;f.attack='kick';f.attackT=.82;f.sarielMoonHits=0;f.sarielMoonHitCd=0;f.spinAngle=0;f.vy=-360;f.vx=(f.face||1)*145;
+    compatLabel('ムーンサルトキック!');return true;
   }
 
   function specialSamaelGroundGate(f,side){
@@ -5972,6 +5999,43 @@ function drawBackground(dt){
         }
       });
 
+      // サリエル：水中2準拠。月刃・邪眼・血月・ムーンサルト。
+      [player,enemy].forEach(f=>{
+        if(!f)return;
+        if((f.sarielParalyzeT||0)>0){f.sarielParalyzeT=Math.max(0,f.sarielParalyzeT-dt);f.vx*=.42;f.vy*=.72;}
+        if((f.bloodSlowT||0)>0){f.bloodSlowT=Math.max(0,f.bloodSlowT-dt);f.vx*=.86;f.vy*=.90;}
+        if(f.type!=='sariel')return;
+        const o=f.isPlayer?enemy:player;if(!o)return;
+        if(f.specialType==='sarielGroundEvilEye'&&f.specialT>0&&!f.sarielEyeHit){
+          const facing=(f.face>0&&o.x>f.x)||(f.face<0&&o.x<f.x);
+          if(facing&&Math.abs(o.y-f.y)<135&&Math.abs(o.x-f.x)<430&&!o.guard){f.sarielEyeHit=true;o.sarielParalyzeT=3;o.vx=0;o.vy=0;compatLabel('イーブルアイ：3秒麻痺!');}
+        }
+        if(f.specialType==='sarielGroundMoonSalt'&&f.specialT>0){
+          f.spinAngle=(f.spinAngle||0)+dt*34*(f.face>0?1:-1);f.sarielMoonHitCd=Math.max(0,(f.sarielMoonHitCd||0)-dt);
+          if(f.vy>90)f.vy=90;
+          if((f.sarielMoonHits||0)<6&&f.sarielMoonHitCd<=0&&Math.abs(o.x-f.x)<88&&Math.abs(o.y-f.y)<92){
+            f.sarielMoonHits=(f.sarielMoonHits||0)+1;f.sarielMoonHitCd=.09;const last=f.sarielMoonHits>=6;
+            damageHit(f,o,(last?3.8:1.45)*f.damageMul,(last?145:24)*(f.face||1),last?-210:-22);spawnImpact(o.x,o.y,'hit');
+          }
+        } else if(f.specialType!=='sarielGroundMoonSalt' && Math.abs(f.spinAngle||0)>0){f.spinAngle*=Math.pow(.03,dt);}
+      });
+      sarielGroundSlashes.forEach(q=>{
+        q.t-=dt;q.age+=dt;const p=Math.min(1,q.age/1.45),a=Math.PI*p;
+        q.x=q.baseX+Math.sin(a)*q.dir*285;q.y=q.baseY+(q.arc==='up'?-1:1)*Math.sin(a)*92;
+        const t=q.owner&&q.owner.isPlayer?enemy:player;
+        if(t&&!q.hit&&Math.abs(q.x-t.x)<t.radius+30&&Math.abs(q.y-t.y)<t.radius+30){
+          if(t.guard){q.owner=t;q.baseX=t.x;q.baseY=t.y;q.dir=t.face||1;q.arc=q.arc==='up'?'down':'up';q.age=0;spawnImpact(t.x,t.y,'guard');}
+          else{q.hit=true;damageHit(q.owner,t,q.damage,125*q.dir,q.arc==='up'?-45:45);spawnImpact(q.x,q.y,'hit');}
+        }
+      });
+      sarielGroundSlashes=sarielGroundSlashes.filter(q=>q.t>0&&q.age<1.52&&!q.hit);
+      sarielGroundBloodMoons.forEach(m=>{
+        m.t-=dt;const o=m.owner,t=o&&o.isPlayer?enemy:player;if(!o||!t||m.broken)return;
+        if(o.hp<m.startHp-.05){m.broken=true;o.specialT=Math.min(o.specialT,.15);compatLabel('ブラッドムーン破壊!');return;}
+        if(m.t<=0){t.bloodSlowT=10;m.broken=true;compatLabel('ブラッドムーン：10秒スロー!');}
+      });
+      sarielGroundBloodMoons=sarielGroundBloodMoons.filter(m=>!m.broken&&m.t>0);
+
       // サタナエル：水中2と同じ4技を地上物理へ移植。
       satanaelGroundFlares.forEach(q=>{
         q.t-=dt;q.x+=q.vx*dt;
@@ -6777,6 +6841,10 @@ function drawBackground(dt){
 
     ctx.save();
     enemy.draw();
+    // サリエル固有エフェクト（水中2準拠）
+    sarielGroundSlashes.forEach(q=>{ctx.save();ctx.translate(q.x,q.y);ctx.globalCompositeOperation='lighter';ctx.rotate(q.age*12*(q.dir||1));ctx.shadowColor='#dce5ff';ctx.shadowBlur=16;ctx.fillStyle='#eef3ff';ctx.beginPath();ctx.arc(0,0,25,-1.2,1.2);ctx.arc(-10,0,20,1.1,-1.1,true);ctx.closePath();ctx.fill();ctx.strokeStyle='#9fdbea';ctx.lineWidth=2;ctx.stroke();ctx.restore();});
+    sarielGroundBloodMoons.forEach(m=>{const o=m.owner;if(!o)return;const p=Math.max(0,Math.min(1,1-m.t/m.life)),r=31;ctx.save();ctx.translate(o.x,o.y-112);ctx.shadowColor='#e9e6ff';ctx.shadowBlur=13;ctx.fillStyle='#e9e8f4';ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.save();ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.clip();ctx.fillStyle='#b61f35';ctx.fillRect(-r,r-2*r*p,2*r,2*r*p);ctx.restore();ctx.strokeStyle='#fff';ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();ctx.restore();});
+    [player,enemy].forEach(f=>{if(!f)return;if(f.type==='sariel'&&f.specialType==='sarielGroundEvilEye'&&f.specialT>0){ctx.save();ctx.translate(f.x,f.y);ctx.globalCompositeOperation='lighter';ctx.fillStyle='#ff334c';ctx.shadowColor='#ff1f38';ctx.shadowBlur=18;ctx.beginPath();ctx.arc(-19,-29,6,0,Math.PI*2);ctx.arc(19,-29,6,0,Math.PI*2);ctx.fill();ctx.restore();}if((f.sarielParalyzeT||0)>0){ctx.save();ctx.translate(f.x,f.y);ctx.globalCompositeOperation='lighter';ctx.strokeStyle='#ff465b';ctx.lineWidth=3;ctx.globalAlpha=.45;for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,10,43+i*7,i,Math.PI+i);ctx.stroke();}ctx.restore();}if((f.bloodSlowT||0)>0){ctx.save();ctx.translate(f.x,f.y);ctx.globalAlpha=.22;ctx.fillStyle='#8e1e35';ctx.beginPath();ctx.ellipse(0,18,48,62,0,0,Math.PI*2);ctx.fill();ctx.restore();}});
     ctx.restore();
 
 
